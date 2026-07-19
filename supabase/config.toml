@@ -1,0 +1,7 @@
+project_id = "jmwwekevytagyyrnqqps"
+
+[auth.email]
+enable_signup = true
+# Mirrors the intended production setting: password signup creates a session immediately.
+# Also switch off "Confirm email" in the hosted Supabase Authentication settings.
+enable_confirmations = false
