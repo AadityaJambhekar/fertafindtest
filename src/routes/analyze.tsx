@@ -20,7 +20,10 @@ import {
 } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
 import { LocationMapPicker } from "@/components/location-map-picker";
-import { GoogleRecaptcha, type GoogleRecaptchaHandle } from "@/components/google-recaptcha";
+import {
+  GoogleRecaptcha,
+  type GoogleRecaptchaHandle,
+} from "@/components/google-recaptcha";
 import { catalogSupportsCrop } from "@/lib/partner-catalog";
 import {
   analysisStorageKey,
@@ -34,18 +37,20 @@ import {
   QUOTE_FILE_ACCEPT,
   QUOTE_FILE_HELP_TEXT,
 } from "@/lib/quote-files";
+import { pageMeta, jsonLdScript, breadcrumbLd } from "@/lib/seo";
+import { track } from "@/lib/analytics";
 
 export const Route = createFileRoute("/analyze")({
   head: () => ({
-    meta: [
-      { title: "Analyze fertilizer quotes — FertaFind" },
-      {
-        name: "description",
-        content:
-          "Upload your fertilizer quotes and get an AI-ranked recommendation by ROI, nutrient value and delivery cost.",
-      },
+    ...pageMeta("analyze"),
+    scripts: [
+      jsonLdScript(
+        breadcrumbLd([
+          { name: "Home", path: "/" },
+          { name: "Analyze", path: "/analyze" },
+        ]),
+      ),
     ],
-    links: [{ rel: "canonical", href: "https://fertafind.com/analyze/" }],
   }),
   component: AnalyzePage,
 });
@@ -137,8 +142,19 @@ const CROP_STAGES: Record<string, string[]> = {
     "Grain filling",
     "Maturity",
   ],
-  Cotton: ["Establishment", "Squaring", "Flowering", "Boll development", "Maturity"],
-  Sugarcane: ["Planting / establishment", "Tillering", "Grand growth", "Maturation"],
+  Cotton: [
+    "Establishment",
+    "Squaring",
+    "Flowering",
+    "Boll development",
+    "Maturity",
+  ],
+  Sugarcane: [
+    "Planting / establishment",
+    "Tillering",
+    "Grand growth",
+    "Maturation",
+  ],
   Potatoes: [
     "Planting / emergence",
     "Vegetative",
@@ -153,7 +169,15 @@ const CROP_STAGES: Record<string, string[]> = {
     "Recovery",
     "Dormant",
   ],
-  Beans: ["Pre-plant", "VE–V2", "V3–Vn", "Flowering", "Pod formation", "Grain filling", "Maturity"],
+  Beans: [
+    "Pre-plant",
+    "VE–V2",
+    "V3–Vn",
+    "Flowering",
+    "Pod formation",
+    "Grain filling",
+    "Maturity",
+  ],
   Lettuce: [
     "Transplant / establishment",
     "Vegetative growth",
@@ -176,7 +200,13 @@ const CROP_STAGES: Record<string, string[]> = {
     "Fruit growth",
     "Maturation / harvest",
   ],
-  Cassava: ["Establishment", "Vegetative growth", "Tuber initiation", "Root bulking", "Maturity"],
+  Cassava: [
+    "Establishment",
+    "Vegetative growth",
+    "Tuber initiation",
+    "Root bulking",
+    "Maturity",
+  ],
   Grapes: [
     "Bud break",
     "Pre-flowering / flowering",
@@ -185,24 +215,41 @@ const CROP_STAGES: Record<string, string[]> = {
     "Maturation",
     "Post-harvest",
   ],
-  Vegetables: ["Establishment", "Vegetative", "Flowering", "Fruit / root development", "Harvest"],
-  Other: ["Pre-plant", "Establishment", "Vegetative", "Reproductive", "Maturity"],
+  Vegetables: [
+    "Establishment",
+    "Vegetative",
+    "Flowering",
+    "Fruit / root development",
+    "Harvest",
+  ],
+  Other: [
+    "Pre-plant",
+    "Establishment",
+    "Vegetative",
+    "Reproductive",
+    "Maturity",
+  ],
 };
 
 function AnalyzePage() {
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>(0);
   const [location, setLocation] = useState("");
-  const [matchedLocation, setMatchedLocation] = useState<MatchedLocation | null>(null);
+  const [matchedLocation, setMatchedLocation] =
+    useState<MatchedLocation | null>(null);
   const [locationError, setLocationError] = useState("");
   const [isCheckingLocation, setIsCheckingLocation] = useState(false);
-  const [locationSuggestions, setLocationSuggestions] = useState<MatchedLocation[]>([]);
+  const [locationSuggestions, setLocationSuggestions] = useState<
+    MatchedLocation[]
+  >([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showMapPicker, setShowMapPicker] = useState(false);
   const radius = 50;
   const [crops, setCrops] = useState<string[]>([]);
-  const [decisionGoal, setDecisionGoal] = useState<"yield" | "cost" | "balanced" | "">("");
+  const [decisionGoal, setDecisionGoal] = useState<
+    "yield" | "cost" | "balanced" | ""
+  >("");
   const [fertilizerFormPreference, setFertilizerFormPreference] = useState<
     "liquid" | "dry" | "either" | ""
   >("");
@@ -227,17 +274,22 @@ function AnalyzePage() {
   const [soilOrganicMatter, setSoilOrganicMatter] = useState("");
   const [soilCec, setSoilCec] = useState("");
   const [soilTexture, setSoilTexture] = useState("");
-  const [soilMicronutrients, setSoilMicronutrients] = useState<Record<string, string>>({
+  const [soilMicronutrients, setSoilMicronutrients] = useState<
+    Record<string, string>
+  >({
     zinc: "",
   });
   const [soilTestFile, setSoilTestFile] = useState<File | null>(null);
   const [isReadingSoilTest, setIsReadingSoilTest] = useState(false);
   const [soilTestReadError, setSoilTestReadError] = useState("");
-  const [soilTestReadWarnings, setSoilTestReadWarnings] = useState<string[]>([]);
-  const [priorFertilizerApplied, setPriorFertilizerApplied] = useState<"yes" | "no" | "">("");
-  const [priorFertilizerApplications, setPriorFertilizerApplications] = useState<
-    PriorApplicationDraft[]
-  >([]);
+  const [soilTestReadWarnings, setSoilTestReadWarnings] = useState<string[]>(
+    [],
+  );
+  const [priorFertilizerApplied, setPriorFertilizerApplied] = useState<
+    "yes" | "no" | ""
+  >("");
+  const [priorFertilizerApplications, setPriorFertilizerApplications] =
+    useState<PriorApplicationDraft[]>([]);
   const [measuredSoilMoisture, setMeasuredSoilMoisture] = useState("");
   const [measuredSoilTemperature, setMeasuredSoilTemperature] = useState("");
   const [irrigationStatus, setIrrigationStatus] = useState<
@@ -251,7 +303,9 @@ function AnalyzePage() {
   const [targetPhosphorusKgHa, setTargetPhosphorusKgHa] = useState("");
   const [targetPotassiumKgHa, setTargetPotassiumKgHa] = useState("");
   const [targetSulfurKgHa, setTargetSulfurKgHa] = useState("");
-  const [priorityNutrients, setPriorityNutrients] = useState<Array<"N" | "P" | "K" | "Zn">>([]);
+  const [priorityNutrients, setPriorityNutrients] = useState<
+    Array<"N" | "P" | "K" | "Zn">
+  >([]);
   const [photos, setPhotos] = useState<File[]>([]);
   const [analysisError, setAnalysisError] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
@@ -261,6 +315,12 @@ function AnalyzePage() {
   const soilRecaptchaRef = useRef<GoogleRecaptchaHandle>(null);
   const pendingSoilTestFileRef = useRef<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // Analytics: the grower has entered the Analyze workflow. No form data is sent.
+    track("analyze_start", { page_path: "/analyze" });
+  }, []);
+
   const canNext =
     (step === 0 && location.trim().length > 2) ||
     (step === 1 &&
@@ -268,7 +328,8 @@ function AnalyzePage() {
       decisionGoal !== "" &&
       fertilizerFormPreference !== "" &&
       fertilizerOriginPreference !== "" &&
-      (fertilizerOriginPreference !== "organic" || organicCertification !== "") &&
+      (fertilizerOriginPreference !== "organic" ||
+        organicCertification !== "") &&
       Number(fieldSize) > 0 &&
       irrigationStatus !== "" &&
       crops.every((crop) => Boolean(cropStages[crop]))) ||
@@ -298,7 +359,9 @@ function AnalyzePage() {
 
       const messages = [...errors];
       if (uniqueIncoming.length > slotsLeft) {
-        messages.push(`Only ${MAX_QUOTE_FILES} quote files can be analyzed at once.`);
+        messages.push(
+          `Only ${MAX_QUOTE_FILES} quote files can be analyzed at once.`,
+        );
       }
       setAnalysisError(messages[0] ?? "");
 
@@ -344,9 +407,12 @@ function AnalyzePage() {
     const timer = window.setTimeout(async () => {
       setIsLoadingSuggestions(true);
       try {
-        const response = await fetch(`/api/geocode?q=${encodeURIComponent(query)}&suggestions=1`, {
-          signal: controller.signal,
-        });
+        const response = await fetch(
+          `/api/geocode?q=${encodeURIComponent(query)}&suggestions=1`,
+          {
+            signal: controller.signal,
+          },
+        );
         const data = (await response.json()) as { results?: MatchedLocation[] };
         if (response.ok && !controller.signal.aborted) {
           setLocationSuggestions(data.results ?? []);
@@ -387,7 +453,9 @@ function AnalyzePage() {
     setLocationError("");
 
     try {
-      const response = await fetch(`/api/geocode?q=${encodeURIComponent(normalizedQuery)}`);
+      const response = await fetch(
+        `/api/geocode?q=${encodeURIComponent(normalizedQuery)}`,
+      );
       const data = (await response.json()) as {
         result?: MatchedLocation | null;
         error?: string;
@@ -396,7 +464,8 @@ function AnalyzePage() {
       if (!response.ok || !data.result) {
         setMatchedLocation(null);
         setLocationError(
-          data.error ?? "We couldn't find that location. Check the spelling and try again.",
+          data.error ??
+            "We couldn't find that location. Check the spelling and try again.",
         );
         return;
       }
@@ -412,29 +481,40 @@ function AnalyzePage() {
     }
   };
 
-  const handleMapPinDrop = useCallback(async (coordinates: { lat: number; lon: number }) => {
-    setIsCheckingLocation(true);
-    setLocationError("");
-    setShowSuggestions(false);
-    try {
-      const response = await fetch(
-        `/api/reverse-geocode?lat=${encodeURIComponent(String(coordinates.lat))}&lon=${encodeURIComponent(String(coordinates.lon))}`,
-      );
-      const data = (await response.json()) as { result?: MatchedLocation; error?: string };
-      if (!response.ok || !data.result) {
-        setLocationError(data.error ?? "We couldn't identify that map pin. Try another point.");
-        return;
-      }
+  const handleMapPinDrop = useCallback(
+    async (coordinates: { lat: number; lon: number }) => {
+      setIsCheckingLocation(true);
+      setLocationError("");
+      setShowSuggestions(false);
+      try {
+        const response = await fetch(
+          `/api/reverse-geocode?lat=${encodeURIComponent(String(coordinates.lat))}&lon=${encodeURIComponent(String(coordinates.lon))}`,
+        );
+        const data = (await response.json()) as {
+          result?: MatchedLocation;
+          error?: string;
+        };
+        if (!response.ok || !data.result) {
+          setLocationError(
+            data.error ??
+              "We couldn't identify that map pin. Try another point.",
+          );
+          return;
+        }
 
-      setMatchedLocation(data.result);
-      setLocation(data.result.display_name);
-      setLocationSuggestions([]);
-    } catch {
-      setLocationError("We couldn't identify that map pin. Try another point.");
-    } finally {
-      setIsCheckingLocation(false);
-    }
-  }, []);
+        setMatchedLocation(data.result);
+        setLocation(data.result.display_name);
+        setLocationSuggestions([]);
+      } catch {
+        setLocationError(
+          "We couldn't identify that map pin. Try another point.",
+        );
+      } finally {
+        setIsCheckingLocation(false);
+      }
+    },
+    [],
+  );
 
   const readSoilTest = useCallback(async (token: string) => {
     const file = pendingSoilTestFileRef.current;
@@ -444,30 +524,43 @@ function AnalyzePage() {
     form.set("soilTest", file);
     form.set("recaptchaToken", token);
     try {
-      const response = await fetch("/api/extract-soil-test", { method: "POST", body: form });
-      const data = (await response.json()) as { values?: SoilTestExtraction; error?: string };
+      const response = await fetch("/api/extract-soil-test", {
+        method: "POST",
+        body: form,
+      });
+      const data = (await response.json()) as {
+        values?: SoilTestExtraction;
+        error?: string;
+      };
       if (!response.ok || !data.values)
         throw new Error(data.error || "The soil test could not be read.");
 
       const values = data.values;
       if (values.soilTestDate) setSoilTestDate(values.soilTestDate);
-      if (values.soilSampleDepthCm) setSoilSampleDepthCm(values.soilSampleDepthCm);
+      if (values.soilSampleDepthCm)
+        setSoilSampleDepthCm(values.soilSampleDepthCm);
       if (values.soilTestMethod) setSoilTestMethod(values.soilTestMethod);
       if (values.soilNitrogen) setSoilNitrogen(values.soilNitrogen);
       if (values.soilPhosphorus) setSoilPhosphorus(values.soilPhosphorus);
       if (values.soilPotassium) setSoilPotassium(values.soilPotassium);
       if (values.soilSulfur) setSoilSulfur(values.soilSulfur);
       if (values.soilPh) setSoilPh(values.soilPh);
-      if (values.soilOrganicMatter) setSoilOrganicMatter(values.soilOrganicMatter);
+      if (values.soilOrganicMatter)
+        setSoilOrganicMatter(values.soilOrganicMatter);
       if (values.soilCec) setSoilCec(values.soilCec);
       if (values.soilTexture) setSoilTexture(values.soilTexture);
       if (values.soilMicronutrients) {
-        setSoilMicronutrients((current) => ({ ...current, ...values.soilMicronutrients }));
+        setSoilMicronutrients((current) => ({
+          ...current,
+          ...values.soilMicronutrients,
+        }));
       }
       setSoilTestReadWarnings(values.warnings ?? []);
     } catch (error) {
       setSoilTestReadError(
-        error instanceof Error ? error.message : "The soil test could not be read.",
+        error instanceof Error
+          ? error.message
+          : "The soil test could not be read.",
       );
       soilRecaptchaRef.current?.reset();
     } finally {
@@ -478,9 +571,16 @@ function AnalyzePage() {
 
   const handleSoilTestFile = (file: File | null) => {
     if (!file) return;
-    const allowed = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+    const allowed = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "application/pdf",
+    ];
     if (!allowed.includes(file.type) || file.size > 10 * 1024 * 1024) {
-      setSoilTestReadError("Use a JPG, PNG, WebP or PDF soil report under 10 MB.");
+      setSoilTestReadError(
+        "Use a JPG, PNG, WebP or PDF soil report under 10 MB.",
+      );
       return;
     }
     setSoilTestFile(file);
@@ -490,7 +590,9 @@ function AnalyzePage() {
     setIsReadingSoilTest(true);
     pendingSoilTestFileRef.current = file;
     if (!soilRecaptchaRef.current?.execute()) {
-      setSoilTestReadError("Verification is still loading. Try the report again in a moment.");
+      setSoilTestReadError(
+        "Verification is still loading. Try the report again in a moment.",
+      );
       pendingSoilTestFileRef.current = null;
       setIsReadingSoilTest(false);
     }
@@ -520,7 +622,9 @@ function AnalyzePage() {
       form.set("unit", unit);
       form.set(
         "cropStage",
-        crops.map((crop) => `${crop}: ${cropStages[crop] || "Not sure"}`).join("; "),
+        crops
+          .map((crop) => `${crop}: ${cropStages[crop] || "Not sure"}`)
+          .join("; "),
       );
       form.set("soilTestAvailable", String(soilTestAvailable));
       form.set("soilTestDate", soilTestDate);
@@ -579,10 +683,17 @@ function AnalyzePage() {
           throw new Error(data.error || "The quote analysis failed.");
         }
 
-        localStorage.setItem(analysisStorageKey(data.analysis.id), JSON.stringify(data.analysis));
+        localStorage.setItem(
+          analysisStorageKey(data.analysis.id),
+          JSON.stringify(data.analysis),
+        );
+        // Analytics: analysis finished. Only the page path is recorded, no analysis data.
+        track("analyze_complete", { page_path: "/analyze" });
         navigate({ to: "/results/$id", params: { id: data.analysis.id } });
       } catch (error) {
-        setAnalysisError(error instanceof Error ? error.message : "The quote analysis failed.");
+        setAnalysisError(
+          error instanceof Error ? error.message : "The quote analysis failed.",
+        );
         recaptchaRef.current?.reset();
         setStep(2);
       } finally {
@@ -646,7 +757,9 @@ function AnalyzePage() {
   const beginAnalysis = () => {
     setAnalysisError("");
     if (!hasAgreedToTerms) {
-      setAnalysisError("Agree to the Terms of Service before analyzing your quotes.");
+      setAnalysisError(
+        "Agree to the Terms of Service before analyzing your quotes.",
+      );
       return;
     }
     setIsVerifying(true);
@@ -679,11 +792,14 @@ function AnalyzePage() {
                       autoFocus
                       role="combobox"
                       aria-autocomplete="list"
-                      aria-expanded={showSuggestions && locationSuggestions.length > 0}
+                      aria-expanded={
+                        showSuggestions && locationSuggestions.length > 0
+                      }
                       aria-controls="location-suggestions"
                       value={location}
                       onFocus={() => {
-                        if (locationSuggestions.length) setShowSuggestions(true);
+                        if (locationSuggestions.length)
+                          setShowSuggestions(true);
                       }}
                       onChange={(e) => {
                         setLocation(e.target.value);
@@ -740,7 +856,11 @@ function AnalyzePage() {
                               {suggestion.display_name.split(",")[0]}
                             </span>
                             <span className="mt-0.5 block truncate text-xs text-muted-foreground">
-                              {suggestion.display_name.split(",").slice(1).join(",").trim()}
+                              {suggestion.display_name
+                                .split(",")
+                                .slice(1)
+                                .join(",")
+                                .trim()}
                             </span>
                           </span>
                         </button>
@@ -762,7 +882,9 @@ function AnalyzePage() {
                   <div className="mt-3 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                     <div className="flex items-center justify-between border-b border-border px-4 py-3">
                       <div>
-                        <p className="text-sm font-semibold text-foreground">Set your farm pin</p>
+                        <p className="text-sm font-semibold text-foreground">
+                          Set your farm pin
+                        </p>
                         <p className="text-xs text-muted-foreground">
                           Click the map or drag the green marker.
                         </p>
@@ -774,7 +896,10 @@ function AnalyzePage() {
                     <LocationMapPicker
                       center={
                         matchedLocation
-                          ? { lat: Number(matchedLocation.lat), lon: Number(matchedLocation.lon) }
+                          ? {
+                              lat: Number(matchedLocation.lat),
+                              lon: Number(matchedLocation.lon),
+                            }
                           : null
                       }
                       onPinDrop={handleMapPinDrop}
@@ -833,7 +958,9 @@ function AnalyzePage() {
                       aria-pressed={selected}
                       onClick={() => {
                         setCrops((current) =>
-                          selected ? current.filter((item) => item !== c) : [...current, c],
+                          selected
+                            ? current.filter((item) => item !== c)
+                            : [...current, c],
                         );
                         if (selected) {
                           setCropStages((current) => {
@@ -870,7 +997,9 @@ function AnalyzePage() {
               </div>
               <div className="mt-8 grid gap-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
                 <label className="block">
-                  <span className="text-sm font-medium text-foreground">Field size</span>
+                  <span className="text-sm font-medium text-foreground">
+                    Field size
+                  </span>
                   <div className="mt-2 flex items-center gap-2 rounded-2xl border border-input bg-background px-4 py-3 focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30">
                     <Sprout className="h-5 w-5 text-muted-foreground" />
                     <input
@@ -884,7 +1013,9 @@ function AnalyzePage() {
                   </div>
                 </label>
                 <div className="min-w-40">
-                  <span className="block text-sm font-medium text-foreground">Unit</span>
+                  <span className="block text-sm font-medium text-foreground">
+                    Unit
+                  </span>
                   <div className="mt-2 grid h-[50px] grid-cols-2 gap-1 rounded-2xl border border-input bg-muted/60 p-1">
                     {(["ha", "ac"] as const).map((u) => (
                       <button
@@ -905,9 +1036,12 @@ function AnalyzePage() {
                 </div>
               </div>
               <section className="mt-8 rounded-2xl border border-primary/25 bg-primary/5 p-5">
-                <h2 className="font-semibold text-foreground">What matters most to you?</h2>
+                <h2 className="font-semibold text-foreground">
+                  What matters most to you?
+                </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  This changes how suitable quotes are ranked. It never overrides agronomic safety.
+                  This changes how suitable quotes are ranked. It never
+                  overrides agronomic safety.
                 </p>
                 <div className="mt-4 grid gap-2 sm:grid-cols-3">
                   {(
@@ -946,7 +1080,9 @@ function AnalyzePage() {
                         }`}
                       >
                         <GoalIcon className="h-5 w-5" />
-                        <span className="mt-3 block text-sm font-semibold">{label}</span>
+                        <span className="mt-3 block text-sm font-semibold">
+                          {label}
+                        </span>
                         <span
                           className={`mt-1 block text-xs leading-5 ${selected ? "text-primary-foreground/75" : "text-muted-foreground"}`}
                         >
@@ -962,11 +1098,14 @@ function AnalyzePage() {
                   What kind of fertilizer do you prefer?
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  We use these preferences after checking crop, soil and application suitability.
+                  We use these preferences after checking crop, soil and
+                  application suitability.
                 </p>
                 <div className="mt-5 grid gap-5 lg:grid-cols-2">
                   <fieldset>
-                    <legend className="text-sm font-semibold text-foreground">Product form</legend>
+                    <legend className="text-sm font-semibold text-foreground">
+                      Product form
+                    </legend>
                     <div className="mt-2 grid grid-cols-3 gap-2">
                       {(
                         [
@@ -988,7 +1127,9 @@ function AnalyzePage() {
                     </div>
                   </fieldset>
                   <fieldset>
-                    <legend className="text-sm font-semibold text-foreground">Product type</legend>
+                    <legend className="text-sm font-semibold text-foreground">
+                      Product type
+                    </legend>
                     <div className="mt-2 grid grid-cols-3 gap-2">
                       {(
                         [
@@ -1003,7 +1144,8 @@ function AnalyzePage() {
                           aria-pressed={fertilizerOriginPreference === value}
                           onClick={() => {
                             setFertilizerOriginPreference(value);
-                            if (value !== "organic") setOrganicCertification("");
+                            if (value !== "organic")
+                              setOrganicCertification("");
                           }}
                           className={`min-h-12 rounded-xl border px-3 py-2 text-sm font-semibold transition ${fertilizerOriginPreference === value ? "border-primary bg-primary text-primary-foreground" : "border-border bg-muted/30 text-foreground hover:border-primary/50"}`}
                         >
@@ -1014,7 +1156,8 @@ function AnalyzePage() {
                     {fertilizerOriginPreference === "organic" && (
                       <div className="mt-4 rounded-xl border border-primary/25 bg-primary/5 p-4">
                         <p className="text-sm font-semibold text-foreground">
-                          Are you certified organic? <span className="text-destructive">*</span>
+                          Are you certified organic?{" "}
+                          <span className="text-destructive">*</span>
                         </p>
                         <div className="mt-3 grid gap-2 sm:grid-cols-2">
                           {(
@@ -1035,7 +1178,8 @@ function AnalyzePage() {
                           ))}
                         </div>
                         <p className="mt-2 text-xs text-muted-foreground">
-                          Certified farms will only receive products with verified OMRI approval.
+                          Certified farms will only receive products with
+                          verified OMRI approval.
                         </p>
                       </div>
                     )}
@@ -1049,30 +1193,39 @@ function AnalyzePage() {
                       <Sprout className="h-4 w-4" />
                     </span>
                     <div>
-                      <h2 className="font-semibold text-foreground">Growing conditions</h2>
+                      <h2 className="font-semibold text-foreground">
+                        Growing conditions
+                      </h2>
                       <p className="mt-0.5 text-sm text-muted-foreground">
-                        Stage changes product fit and application-timing checks. Choose “Not sure”
-                        if needed.
+                        Stage changes product fit and application-timing checks.
+                        Choose “Not sure” if needed.
                       </p>
                     </div>
                   </div>
                   <div className="mt-5 grid gap-4 sm:grid-cols-2">
                     {crops.map((crop) => (
                       <label key={crop} className="block">
-                        <span className="text-sm font-medium text-foreground">{crop} stage</span>
+                        <span className="text-sm font-medium text-foreground">
+                          {crop} stage
+                        </span>
                         <select
                           value={cropStages[crop] || ""}
                           onChange={(event) =>
-                            setCropStages((current) => ({ ...current, [crop]: event.target.value }))
+                            setCropStages((current) => ({
+                              ...current,
+                              [crop]: event.target.value,
+                            }))
                           }
                           className="mt-2 w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
                         >
                           <option value="">Select a stage</option>
-                          {(CROP_STAGES[crop] || CROP_STAGES.Other).map((stageOption) => (
-                            <option key={stageOption} value={stageOption}>
-                              {stageOption}
-                            </option>
-                          ))}
+                          {(CROP_STAGES[crop] || CROP_STAGES.Other).map(
+                            (stageOption) => (
+                              <option key={stageOption} value={stageOption}>
+                                {stageOption}
+                              </option>
+                            ),
+                          )}
                           <option value="Not sure">Not sure</option>
                         </select>
                       </label>
@@ -1084,21 +1237,25 @@ function AnalyzePage() {
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
                       <div className="flex items-center gap-2">
-                        <h2 className="font-semibold text-foreground">Laboratory soil test</h2>
+                        <h2 className="font-semibold text-foreground">
+                          Laboratory soil test
+                        </h2>
                         <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-primary">
                           Optional · recommended
                         </span>
                       </div>
                       <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-                        Use values from a recent lab report. Test method and sample depth matter, so
-                        include them when shown.
+                        Use values from a recent lab report. Test method and
+                        sample depth matter, so include them when shown.
                       </p>
                     </div>
                     <label className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-sm font-semibold">
                       <input
                         type="checkbox"
                         checked={soilTestAvailable}
-                        onChange={(event) => setSoilTestAvailable(event.target.checked)}
+                        onChange={(event) =>
+                          setSoilTestAvailable(event.target.checked)
+                        }
                         className="h-4 w-4 accent-primary"
                       />
                       I have a soil test
@@ -1113,7 +1270,8 @@ function AnalyzePage() {
                               Upload your lab report to fill this form
                             </p>
                             <p className="mt-1 text-xs text-muted-foreground">
-                              JPG, PNG, WebP or PDF · 10 MB max. Review every extracted value below.
+                              JPG, PNG, WebP or PDF · 10 MB max. Review every
+                              extracted value below.
                             </p>
                           </div>
                           <label
@@ -1124,27 +1282,37 @@ function AnalyzePage() {
                             ) : (
                               <Upload className="h-4 w-4" />
                             )}
-                            {isReadingSoilTest ? "Reading report…" : "Choose soil test"}
+                            {isReadingSoilTest
+                              ? "Reading report…"
+                              : "Choose soil test"}
                             <input
                               type="file"
                               className="sr-only"
                               disabled={isReadingSoilTest}
                               accept="image/jpeg,image/png,image/webp,application/pdf,.jpg,.jpeg,.png,.webp,.pdf"
                               onChange={(event) => {
-                                handleSoilTestFile(event.target.files?.[0] ?? null);
+                                handleSoilTestFile(
+                                  event.target.files?.[0] ?? null,
+                                );
                                 event.currentTarget.value = "";
                               }}
                             />
                           </label>
                         </div>
-                        {soilTestFile && !isReadingSoilTest && !soilTestReadError ? (
+                        {soilTestFile &&
+                        !isReadingSoilTest &&
+                        !soilTestReadError ? (
                           <p className="mt-3 inline-flex items-center gap-2 text-xs font-medium text-primary">
                             <Check className="h-3.5 w-3.5" />
-                            {soilTestFile.name} read. Check and edit the values below.
+                            {soilTestFile.name} read. Check and edit the values
+                            below.
                           </p>
                         ) : null}
                         {soilTestReadError ? (
-                          <p className="mt-3 text-sm text-destructive" role="alert">
+                          <p
+                            className="mt-3 text-sm text-destructive"
+                            role="alert"
+                          >
                             {soilTestReadError}
                           </p>
                         ) : null}
@@ -1167,11 +1335,15 @@ function AnalyzePage() {
                       </div>
                       <div className="grid gap-4 sm:grid-cols-3">
                         <label className="block">
-                          <span className="text-sm font-medium text-foreground">Test date</span>
+                          <span className="text-sm font-medium text-foreground">
+                            Test date
+                          </span>
                           <input
                             type="date"
                             value={soilTestDate}
-                            onChange={(event) => setSoilTestDate(event.target.value)}
+                            onChange={(event) =>
+                              setSoilTestDate(event.target.value)
+                            }
                             className="mt-2 w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
                           />
                         </label>
@@ -1243,10 +1415,13 @@ function AnalyzePage() {
                       <div className="rounded-2xl border border-border bg-background p-4">
                         <h4 className="font-semibold text-foreground">
                           Micronutrients{" "}
-                          <span className="font-normal text-muted-foreground">(optional)</span>
+                          <span className="font-normal text-muted-foreground">
+                            (optional)
+                          </span>
                         </h4>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          Enter laboratory results only. Leave any unavailable value blank.
+                          Enter laboratory results only. Leave any unavailable
+                          value blank.
                         </p>
                         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                           {MICRONUTRIENT_FIELDS.map((field) => (
@@ -1269,8 +1444,8 @@ function AnalyzePage() {
                     </div>
                   ) : (
                     <p className="mt-4 rounded-xl bg-background px-4 py-3 text-sm text-muted-foreground">
-                      You can continue without a soil test. The result will clearly flag that
-                      nutrient fit is less certain.
+                      You can continue without a soil test. The result will
+                      clearly flag that nutrient fit is less certain.
                     </p>
                   )}
                 </section>
@@ -1280,8 +1455,8 @@ function AnalyzePage() {
                     Prior fertilizer applications this season
                   </h2>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Optional. This helps avoid recommending nutrients that may already have been
-                    applied.
+                    Optional. This helps avoid recommending nutrients that may
+                    already have been applied.
                   </p>
                   <div className="mt-4 grid gap-2 sm:grid-cols-2">
                     {(
@@ -1299,7 +1474,10 @@ function AnalyzePage() {
                           if (value === "no") {
                             setPriorFertilizerApplications([]);
                           }
-                          if (value === "yes" && !priorFertilizerApplications.length) {
+                          if (
+                            value === "yes" &&
+                            !priorFertilizerApplications.length
+                          ) {
                             setPriorFertilizerApplications([
                               {
                                 id: `application-${Date.now()}`,
@@ -1334,7 +1512,9 @@ function AnalyzePage() {
                                 aria-label={`Remove application ${index + 1}`}
                                 onClick={() =>
                                   setPriorFertilizerApplications((current) =>
-                                    current.filter((item) => item.id !== application.id),
+                                    current.filter(
+                                      (item) => item.id !== application.id,
+                                    ),
                                   )
                                 }
                                 className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-destructive"
@@ -1355,7 +1535,10 @@ function AnalyzePage() {
                                   setPriorFertilizerApplications((current) =>
                                     current.map((item) =>
                                       item.id === application.id
-                                        ? { ...item, applicationDate: event.target.value }
+                                        ? {
+                                            ...item,
+                                            applicationDate: event.target.value,
+                                          }
                                         : item,
                                     ),
                                   )
@@ -1393,7 +1576,9 @@ function AnalyzePage() {
                               type="number"
                             />
                             <label className="block">
-                              <span className="text-sm font-medium text-foreground">Unit</span>
+                              <span className="text-sm font-medium text-foreground">
+                                Unit
+                              </span>
                               <select
                                 value={application.unit}
                                 onChange={(event) =>
@@ -1444,10 +1629,12 @@ function AnalyzePage() {
                 </section>
 
                 <section className="rounded-2xl border border-border bg-muted/35 p-5">
-                  <h2 className="font-semibold text-foreground">Water and soil conditions</h2>
+                  <h2 className="font-semibold text-foreground">
+                    Water and soil conditions
+                  </h2>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Required: tell us whether rainfall or irrigation will move nutrients into the
-                    root zone.
+                    Required: tell us whether rainfall or irrigation will move
+                    nutrients into the root zone.
                   </p>
                   <div className="mt-4 grid gap-2 sm:grid-cols-3">
                     {(
@@ -1489,7 +1676,9 @@ function AnalyzePage() {
                         <input
                           type="date"
                           value={nextWateringDate}
-                          onChange={(event) => setNextWateringDate(event.target.value)}
+                          onChange={(event) =>
+                            setNextWateringDate(event.target.value)
+                          }
                           className="mt-2 w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
                         />
                       </label>
@@ -1514,19 +1703,22 @@ function AnalyzePage() {
                 <section className="rounded-2xl border border-border bg-muted/35 p-5">
                   <h3 className="font-semibold text-foreground">
                     Target nutrient plan{" "}
-                    <span className="font-normal text-muted-foreground">(optional)</span>
+                    <span className="font-normal text-muted-foreground">
+                      (optional)
+                    </span>
                   </h3>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Use targets from a qualified agronomist or nutrient plan. These values directly
-                    affect the ranking.
+                    Use targets from a qualified agronomist or nutrient plan.
+                    These values directly affect the ranking.
                   </p>
                   <fieldset className="mt-4">
                     <legend className="text-sm font-medium text-foreground">
                       Nutrients to prioritize
                     </legend>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Choose known needs from your soil test or agronomist. This steers the product
-                      choice without guessing an application rate.
+                      Choose known needs from your soil test or agronomist. This
+                      steers the product choice without guessing an application
+                      rate.
                     </p>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {(
@@ -1546,7 +1738,9 @@ function AnalyzePage() {
                             onClick={() =>
                               setPriorityNutrients((current) =>
                                 selected
-                                  ? current.filter((nutrient) => nutrient !== value)
+                                  ? current.filter(
+                                      (nutrient) => nutrient !== value,
+                                    )
                                   : [...current, value],
                               )
                             }
@@ -1637,7 +1831,11 @@ function AnalyzePage() {
                     setIsDragging(true);
                   }}
                   onDragLeave={(event) => {
-                    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                    if (
+                      !event.currentTarget.contains(
+                        event.relatedTarget as Node | null,
+                      )
+                    ) {
                       setIsDragging(false);
                     }
                   }}
@@ -1658,7 +1856,9 @@ function AnalyzePage() {
                   <p className="mt-4 font-display text-lg font-semibold text-foreground">
                     Drop, tap, or paste quotes here
                   </p>
-                  <p className="mt-1 text-sm text-muted-foreground">{QUOTE_FILE_HELP_TEXT}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {QUOTE_FILE_HELP_TEXT}
+                  </p>
                 </div>
               </div>
 
@@ -1681,7 +1881,9 @@ function AnalyzePage() {
                       </div>
                       <button
                         type="button"
-                        onClick={() => setPhotos((prev) => prev.filter((_, j) => j !== i))}
+                        onClick={() =>
+                          setPhotos((prev) => prev.filter((_, j) => j !== i))
+                        }
                         className="absolute -right-2 -top-2 grid h-6 w-6 place-items-center rounded-full bg-foreground text-background opacity-0 transition-opacity group-hover:opacity-100"
                       >
                         <X className="h-3 w-3" />
@@ -1735,7 +1937,8 @@ function AnalyzePage() {
                 Analyzing your quotes…
               </h2>
               <p className="mt-2 text-sm text-muted-foreground">
-                Extracting nutrient values, comparing suppliers in your area, and calculating ROI.
+                Extracting nutrient values, comparing suppliers in your area,
+                and calculating landed cost.
               </p>
             </div>
           )}
@@ -1778,6 +1981,16 @@ function AnalyzePage() {
             </div>
           )}
         </div>
+        <p className="mt-8 text-center text-sm text-muted-foreground">
+          Want to see who you could be matched with?{" "}
+          <Link
+            to="/suppliers"
+            className="font-semibold text-primary hover:underline"
+          >
+            View fertilizer suppliers on FertaFind
+          </Link>
+          .
+        </p>
       </section>
       <SiteFooter />
     </div>
@@ -1795,7 +2008,9 @@ function StepShell({
 }) {
   return (
     <div>
-      <h1 className="font-display text-3xl font-semibold text-foreground">{title}</h1>
+      <h1 className="font-display text-3xl font-semibold text-foreground">
+        {title}
+      </h1>
       <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
       <div className="mt-8">{children}</div>
     </div>
@@ -1857,7 +2072,9 @@ function StepIndicator({ step }: { step: Step }) {
             >
               {label}
             </span>
-            {i < labels.length - 1 && <span className="mx-1 h-px w-6 bg-border sm:w-10" />}
+            {i < labels.length - 1 && (
+              <span className="mx-1 h-px w-6 bg-border sm:w-10" />
+            )}
           </li>
         );
       })}

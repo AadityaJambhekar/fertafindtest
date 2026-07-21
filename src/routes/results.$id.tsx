@@ -18,13 +18,20 @@ import {
   type CropPartnerRecommendation,
   type EvaluatedPartnerProduct,
 } from "@/lib/partner-recommendations";
-import { analysisStorageKey, type AnalyzedQuote, type QuoteAnalysis } from "@/lib/quote-analysis";
+import {
+  analysisStorageKey,
+  type AnalyzedQuote,
+  type QuoteAnalysis,
+} from "@/lib/quote-analysis";
+import { track } from "@/lib/analytics";
 
 export const Route = createFileRoute("/results/$id")({
   head: () => ({
     meta: [
       { title: "Your fertilizer recommendation — FertaFind" },
-      { name: "robots", content: "noindex" },
+      // Customer-specific page: keep it out of every index. A matching X-Robots-Tag
+      // header is also delivered server-side (see src/server.ts).
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
   component: ResultsPage,
@@ -41,7 +48,9 @@ function scoreQuote(q: AnalyzedQuote) {
     nutrientKgPerBag,
     landedPerBag,
     costPerKgNutrient: landedPerBag / nutrientKgPerBag,
-    costPerHectare: q.applicationRateKgHa ? (q.applicationRateKgHa / q.bagKg) * landedPerBag : null,
+    costPerHectare: q.applicationRateKgHa
+      ? (q.applicationRateKgHa / q.bagKg) * landedPerBag
+      : null,
   };
 }
 
@@ -54,7 +63,9 @@ function nutrientFitScore(q: AnalyzedQuote, analysis: QuoteAnalysis) {
     Number(plan.targetPhosphorusKgHa),
     Number(plan.targetPotassiumKgHa),
   ];
-  const supplied = q.npk.map((percentage) => q.applicationRateKgHa! * (percentage / 100));
+  const supplied = q.npk.map(
+    (percentage) => q.applicationRateKgHa! * (percentage / 100),
+  );
   const componentScores = targets.flatMap((target, index) => {
     if (!Number.isFinite(target) || target <= 0) return [];
     const difference = Math.abs(supplied[index] - target) / target;
@@ -62,11 +73,19 @@ function nutrientFitScore(q: AnalyzedQuote, analysis: QuoteAnalysis) {
   });
 
   if (!componentScores.length) return null;
-  return componentScores.reduce((total, score) => total + score, 0) / componentScores.length;
+  return (
+    componentScores.reduce((total, score) => total + score, 0) /
+    componentScores.length
+  );
 }
 
 function fieldFitScore(q: AnalyzedQuote) {
-  const base = q.agronomicFit === "suitable" ? 100 : q.agronomicFit === "caution" ? 55 : 35;
+  const base =
+    q.agronomicFit === "suitable"
+      ? 100
+      : q.agronomicFit === "caution"
+        ? 55
+        : 35;
   if (q.stageFit === "incompatible") return Math.min(base, 15);
   if (q.stageFit === "unknown") return Math.min(base, 55);
   return base;
@@ -90,7 +109,10 @@ function rankQuotes(analysis: QuoteAnalysis): RankedQuote[] {
   }));
   const costValues = scored
     .map((item) => item.s?.costPerKgNutrient)
-    .filter((value): value is number => typeof value === "number" && Number.isFinite(value));
+    .filter(
+      (value): value is number =>
+        typeof value === "number" && Number.isFinite(value),
+    );
   const lowestCost = Math.min(...costValues);
   const highestCost = Math.max(...costValues);
 
@@ -99,7 +121,10 @@ function rankQuotes(analysis: QuoteAnalysis): RankedQuote[] {
       item.s && costValues.length
         ? lowestCost === highestCost
           ? 100
-          : 100 - ((item.s.costPerKgNutrient - lowestCost) / (highestCost - lowestCost)) * 100
+          : 100 -
+            ((item.s.costPerKgNutrient - lowestCost) /
+              (highestCost - lowestCost)) *
+              100
         : null;
     const hasNutrientPlan = item.nutrientFit !== null;
     const goal = analysis.decisionGoal ?? "balanced";
@@ -116,9 +141,13 @@ function rankQuotes(analysis: QuoteAnalysis): RankedQuote[] {
           : { cost: 0.7, nutrient: 0, field: 0.3 };
     const weighted = [
       costScore === null ? null : { value: costScore, weight: weights.cost },
-      hasNutrientPlan ? { value: item.nutrientFit!, weight: weights.nutrient } : null,
+      hasNutrientPlan
+        ? { value: item.nutrientFit!, weight: weights.nutrient }
+        : null,
       { value: item.fieldFit, weight: weights.field },
-    ].filter((part): part is { value: number; weight: number } => part !== null);
+    ].filter(
+      (part): part is { value: number; weight: number } => part !== null,
+    );
     item.decisionScore =
       weighted.reduce((total, part) => total + part.value * part.weight, 0) /
       weighted.reduce((total, part) => total + part.weight, 0);
@@ -133,7 +162,8 @@ function rankQuotes(analysis: QuoteAnalysis): RankedQuote[] {
 }
 
 function money(value: number | null | undefined, currency: string, digits = 0) {
-  if (value === null || value === undefined || !Number.isFinite(value)) return "Not stated";
+  if (value === null || value === undefined || !Number.isFinite(value))
+    return "Not stated";
   try {
     return new Intl.NumberFormat(undefined, {
       style: "currency",
@@ -152,7 +182,9 @@ function decisionGoalLabel(goal: QuoteAnalysis["decisionGoal"] | undefined) {
   return "Balance yield and cost";
 }
 
-function preferenceLabel(preferences: QuoteAnalysis["preferences"] | undefined) {
+function preferenceLabel(
+  preferences: QuoteAnalysis["preferences"] | undefined,
+) {
   if (!preferences) return null;
   const form =
     preferences.fertilizerForm === "liquid"
@@ -172,7 +204,9 @@ function preferenceLabel(preferences: QuoteAnalysis["preferences"] | undefined) 
 function ResultsPage() {
   const { id } = Route.useParams();
   const [analysis, setAnalysis] = useState<QuoteAnalysis | null | undefined>();
-  const [sortBy, setSortBy] = useState<"recommended" | "lowest-cost">("recommended");
+  const [sortBy, setSortBy] = useState<"recommended" | "lowest-cost">(
+    "recommended",
+  );
 
   useEffect(() => {
     const saved = localStorage.getItem(analysisStorageKey(id));
@@ -187,7 +221,15 @@ function ResultsPage() {
     }
   }, [id]);
 
-  const ranked = useMemo(() => (analysis ? rankQuotes(analysis) : []), [analysis]);
+  useEffect(() => {
+    // Analytics: a recommendation was viewed. Only the page path is recorded.
+    if (analysis) track("recommendation_view", { page_path: "/results" });
+  }, [analysis]);
+
+  const ranked = useMemo(
+    () => (analysis ? rankQuotes(analysis) : []),
+    [analysis],
+  );
   const displayedQuotes = useMemo(() => {
     if (sortBy === "recommended") return ranked;
     return [...ranked].sort((a, b) => {
@@ -199,7 +241,8 @@ function ResultsPage() {
     });
   }, [ranked, sortBy]);
 
-  if (analysis === undefined) return <StatusPage title="Loading your recommendation…" />;
+  if (analysis === undefined)
+    return <StatusPage title="Loading your recommendation…" />;
   if (!analysis) {
     return (
       <StatusPage
@@ -238,7 +281,8 @@ function ResultsPage() {
             Your recommendation
           </h1>
           <p className="mt-3 text-base text-muted-foreground">
-            {analysis.crop} · {analysis.fieldSize} {analysis.unit} · {analysis.location.displayName}
+            {analysis.crop} · {analysis.fieldSize} {analysis.unit} ·{" "}
+            {analysis.location.displayName}
             <span className="mt-1 block text-sm">
               Priority: {decisionGoalLabel(analysis.decisionGoal)}
             </span>
@@ -292,7 +336,9 @@ function ResultsPage() {
             <div className="flex gap-3">
               <FileWarning className="mt-0.5 h-5 w-5 shrink-0 text-foreground" />
               <div>
-                <h2 className="font-semibold text-foreground">Check before buying</h2>
+                <h2 className="font-semibold text-foreground">
+                  Check before buying
+                </h2>
                 <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm leading-6 text-muted-foreground">
                   {analysis.warnings.map((warning) => (
                     <li key={warning}>{warning}</li>
@@ -312,8 +358,8 @@ function ResultsPage() {
               What changed the result
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-              Each input below must be used, flagged as incomplete, or shown as missing. Nothing
-              here proves a universal prescription.
+              Each input below must be used, flagged as incomplete, or shown as
+              missing. Nothing here proves a universal prescription.
             </p>
             <div className="mt-5 grid gap-3 md:grid-cols-2">
               {(
@@ -326,7 +372,10 @@ function ResultsPage() {
                   ["Weather", agronomy.factorChecks.weather],
                   ["Watering", agronomy.factorChecks.irrigation],
                   ["Nutrient targets", agronomy.factorChecks.nutrientTargets],
-                  ["Product preferences", agronomy.factorChecks.productPreferences],
+                  [
+                    "Product preferences",
+                    agronomy.factorChecks.productPreferences,
+                  ],
                 ] as const
               ).map(([label, check]) => (
                 <FactorCheck
@@ -356,33 +405,55 @@ function ResultsPage() {
                 <WeatherStat
                   icon={<Thermometer className="h-4 w-4" />}
                   label="Air"
-                  value={weather.temperatureC == null ? "—" : `${weather.temperatureC}°C`}
+                  value={
+                    weather.temperatureC == null
+                      ? "—"
+                      : `${weather.temperatureC}°C`
+                  }
                 />
                 <WeatherStat
                   icon={<Droplets className="h-4 w-4" />}
                   label="Humidity"
-                  value={weather.humidityPercent == null ? "—" : `${weather.humidityPercent}%`}
+                  value={
+                    weather.humidityPercent == null
+                      ? "—"
+                      : `${weather.humidityPercent}%`
+                  }
                 />
                 <WeatherStat
                   icon={<CloudSun className="h-4 w-4" />}
                   label="3-day rain"
-                  value={weather.next3DaysRainMm == null ? "—" : `${weather.next3DaysRainMm} mm`}
+                  value={
+                    weather.next3DaysRainMm == null
+                      ? "—"
+                      : `${weather.next3DaysRainMm} mm`
+                  }
                 />
                 <WeatherStat
                   icon={<Wind className="h-4 w-4" />}
                   label="Wind"
-                  value={weather.windSpeedKph == null ? "—" : `${weather.windSpeedKph} km/h`}
+                  value={
+                    weather.windSpeedKph == null
+                      ? "—"
+                      : `${weather.windSpeedKph} km/h`
+                  }
                 />
                 <WeatherStat
                   icon={<Thermometer className="h-4 w-4" />}
                   label="Surface soil"
-                  value={weather.soilTemperatureC == null ? "—" : `${weather.soilTemperatureC}°C`}
+                  value={
+                    weather.soilTemperatureC == null
+                      ? "—"
+                      : `${weather.soilTemperatureC}°C`
+                  }
                 />
                 <WeatherStat
                   icon={<Droplets className="h-4 w-4" />}
                   label="3-day ET₀"
                   value={
-                    weather.next3DaysEt0Mm == null ? "—" : `${weather.next3DaysEt0Mm.toFixed(1)} mm`
+                    weather.next3DaysEt0Mm == null
+                      ? "—"
+                      : `${weather.next3DaysEt0Mm.toFixed(1)} mm`
                   }
                 />
               </div>
@@ -399,7 +470,10 @@ function ResultsPage() {
                 />
                 <GuidanceCard
                   label="Watering"
-                  text={agronomy.irrigationGuidance || "No irrigation guidance was returned."}
+                  text={
+                    agronomy.irrigationGuidance ||
+                    "No irrigation guidance was returned."
+                  }
                 />
                 <GuidanceCard label="Caution" text={agronomy.caution} />
               </div>
@@ -410,20 +484,24 @@ function ResultsPage() {
               </p>
               <ul className="mt-2 list-disc space-y-1 pl-5 text-xs leading-5 text-muted-foreground">
                 <li>
-                  Quote product, nutrient and price values were extracted by AI from the uploaded
-                  files and must be checked against the original quote.
+                  Quote product, nutrient and price values were extracted by AI
+                  from the uploaded files and must be checked against the
+                  original quote.
                 </li>
                 <li>
-                  Soil and irrigation values are farmer-entered or laboratory-supplied; FertaFind
-                  does not independently verify them.
+                  Soil and irrigation values are farmer-entered or
+                  laboratory-supplied; FertaFind does not independently verify
+                  them.
                 </li>
                 <li>
-                  Weather and surface-soil estimates come from Open-Meteo for the selected
-                  coordinates and may differ from field measurements.
+                  Weather and surface-soil estimates come from Open-Meteo for
+                  the selected coordinates and may differ from field
+                  measurements.
                 </li>
                 <li>
-                  Partner rates and trial results are supplier-reported. A crop match is not proof
-                  that a product is the best option for a specific field.
+                  Partner rates and trial results are supplier-reported. A crop
+                  match is not proof that a product is the best option for a
+                  specific field.
                 </li>
               </ul>
             </div>
@@ -455,7 +533,9 @@ function ResultsPage() {
                 <select
                   value={sortBy}
                   onChange={(event) =>
-                    setSortBy(event.target.value as "recommended" | "lowest-cost")
+                    setSortBy(
+                      event.target.value as "recommended" | "lowest-cost",
+                    )
                   }
                   className="min-w-52 rounded-xl border border-border bg-card px-3 py-2.5 text-sm font-medium normal-case tracking-normal text-foreground outline-none focus:border-primary focus:ring-4 focus:ring-primary/10"
                 >
@@ -489,14 +569,19 @@ function ResultsPage() {
                       )}
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      {q.supplier || "Supplier not stated"} · NPK {q.npk.join("-")} ·{" "}
+                      {q.supplier || "Supplier not stated"} · NPK{" "}
+                      {q.npk.join("-")} ·{" "}
                       {q.bagKg ? `${q.bagKg} kg unit` : "unit size not stated"}
                     </p>
                     <p className="mt-2 text-xs leading-5 text-muted-foreground">
-                      {q.fitReason || q.notes || `Extracted from ${q.sourceFile}`}
+                      {q.fitReason ||
+                        q.notes ||
+                        `Extracted from ${q.sourceFile}`}
                     </p>
                     <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                      <span className="font-semibold text-foreground">Lifecycle check:</span>{" "}
+                      <span className="font-semibold text-foreground">
+                        Lifecycle check:
+                      </span>{" "}
                       {q.stageReason ||
                         "The quote did not provide enough timing detail to verify this stage."}
                     </p>
@@ -504,34 +589,44 @@ function ResultsPage() {
                   <div className="grid min-w-[250px] grid-cols-3 gap-4 text-right">
                     <MiniStat
                       label="Nutrient cost"
-                      value={s ? money(s.costPerKgNutrient, q.currency, 2) : "—"}
+                      value={
+                        s ? money(s.costPerKgNutrient, q.currency, 2) : "—"
+                      }
                     />
                     <MiniStat
-                      label={s?.costPerHectare == null ? "Quoted / unit" : "Cost / ha"}
+                      label={
+                        s?.costPerHectare == null
+                          ? "Quoted / unit"
+                          : "Cost / ha"
+                      }
                       value={
                         s?.costPerHectare == null
                           ? money(q.pricePerBag, q.currency)
                           : money(s.costPerHectare, q.currency)
                       }
                     />
-                    <MiniStat label="Score" value={`${Math.round(decisionScore)}/100`} />
+                    <MiniStat
+                      label="Score"
+                      value={`${Math.round(decisionScore)}/100`}
+                    />
                   </div>
                 </div>
               </article>
             ))}
             {displayedQuotes.length === 0 && (
               <div className="rounded-2xl border border-border bg-card p-6 text-sm leading-6 text-muted-foreground">
-                No fertilizer product was extracted from the uploaded files. Try a clearer quote
-                image or PDF. This does not change the separate partner-product result above.
+                No fertilizer product was extracted from the uploaded files. Try
+                a clearer quote image or PDF. This does not change the separate
+                partner-product result above.
               </div>
             )}
           </div>
         </section>
 
         <p className="mt-9 text-center text-xs leading-5 text-muted-foreground">
-          AI extraction and recommendations can be wrong. Confirm the product, rate, nutrient
-          analysis, price and freight with the supplier and a qualified local agronomist before
-          applying or purchasing.
+          AI extraction and recommendations can be wrong. Confirm the product,
+          rate, nutrient analysis, price and freight with the supplier and a
+          qualified local agronomist before applying or purchasing.
         </p>
       </main>
       <SiteFooter />
@@ -544,7 +639,9 @@ function StatusPage({ title, detail }: { title: string; detail?: string }) {
     <div className="min-h-screen bg-background">
       <SiteHeader />
       <main className="mx-auto max-w-2xl px-6 py-24 text-center">
-        <h1 className="font-display text-3xl font-semibold text-foreground">{title}</h1>
+        <h1 className="font-display text-3xl font-semibold text-foreground">
+          {title}
+        </h1>
         {detail && <p className="mt-3 text-muted-foreground">{detail}</p>}
         <Link
           to="/analyze"
@@ -575,7 +672,9 @@ function PartnerRecommendationCard({
             {unsupported
               ? "No participating partner match"
               : recommendation.selectedProducts.length
-                ? recommendation.selectedProducts.map((product) => product.product.name).join(" + ")
+                ? recommendation.selectedProducts
+                    .map((product) => product.product.name)
+                    .join(" + ")
                 : "No stage-compatible partner product"}
           </h2>
           {!unsupported && (
@@ -612,7 +711,8 @@ function PartnerRecommendationCard({
               <li key={factor.label} className="flex gap-2">
                 <Check className="mt-1 h-4 w-4 shrink-0 text-primary" />
                 <span>
-                  <strong className="text-foreground">{factor.label}:</strong> {factor.detail}
+                  <strong className="text-foreground">{factor.label}:</strong>{" "}
+                  {factor.detail}
                 </span>
               </li>
             ))}
@@ -622,7 +722,9 @@ function PartnerRecommendationCard({
 
       {recommendation.missingInformation.length > 0 && (
         <p className="mt-4 text-xs leading-5 text-muted-foreground">
-          <span className="font-semibold text-foreground">Missing information: </span>
+          <span className="font-semibold text-foreground">
+            Missing information:{" "}
+          </span>
           {recommendation.missingInformation.join("; ")}.
         </p>
       )}
@@ -630,7 +732,8 @@ function PartnerRecommendationCard({
       {recommendation.alternatives.length > 0 && (
         <details className="mt-4 border-t border-border pt-4">
           <summary className="cursor-pointer text-sm font-semibold text-foreground">
-            Other documented partner alternatives ({recommendation.alternatives.length})
+            Other documented partner alternatives (
+            {recommendation.alternatives.length})
           </summary>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             {recommendation.alternatives.map((alternative) => (
@@ -638,9 +741,12 @@ function PartnerRecommendationCard({
                 key={`${alternative.product.id}-${alternative.use.protocolId}`}
                 className="rounded-xl bg-muted/50 p-3"
               >
-                <p className="text-sm font-semibold text-foreground">{alternative.product.name}</p>
+                <p className="text-sm font-semibold text-foreground">
+                  {alternative.product.name}
+                </p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  {alternative.use.timing} · {alternative.use.rate || "Confirm rate with supplier"}
+                  {alternative.use.timing} ·{" "}
+                  {alternative.use.rate || "Confirm rate with supplier"}
                   {" · "}
                   {alternative.score}/100
                 </p>
@@ -658,7 +764,8 @@ function PartnerRecommendationCard({
           <ul className="mt-2 list-disc space-y-1 pl-5 text-xs leading-5 text-muted-foreground">
             {recommendation.excluded.map((item) => (
               <li key={`${item.productName}-${item.reason}`}>
-                <strong className="text-foreground">{item.productName}:</strong> {item.reason}
+                <strong className="text-foreground">{item.productName}:</strong>{" "}
+                {item.reason}
               </li>
             ))}
           </ul>
@@ -677,12 +784,15 @@ function PartnerProductCard({ product }: { product: EvaluatedPartnerProduct }) {
             {product.product.name}
           </h3>
           <p className="mt-1 text-xs text-muted-foreground">
-            {product.product.supplier} · {product.product.form} · Suitability score {product.score}
+            {product.product.supplier} · {product.product.form} · Suitability
+            score {product.score}
             /100
           </p>
         </div>
         <span className="rounded-full bg-secondary/20 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-foreground">
-          {product.suitability === "compatible" ? "Compatible" : "Needs verification"}
+          {product.suitability === "compatible"
+            ? "Compatible"
+            : "Needs verification"}
         </span>
       </div>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -691,7 +801,8 @@ function PartnerProductCard({ product }: { product: EvaluatedPartnerProduct }) {
             Guaranteed analysis
           </p>
           <p className="mt-1 text-sm font-semibold text-foreground">
-            {product.product.guaranteedAnalysis || "Confirm composition with supplier"}
+            {product.product.guaranteedAnalysis ||
+              "Confirm composition with supplier"}
           </p>
         </div>
         <div className="rounded-xl bg-muted/55 p-3">
@@ -699,7 +810,8 @@ function PartnerProductCard({ product }: { product: EvaluatedPartnerProduct }) {
             Product focus
           </p>
           <p className="mt-1 text-sm font-semibold text-foreground">
-            {product.product.lifecycleFocus || "Confirm lifecycle focus with supplier"}
+            {product.product.lifecycleFocus ||
+              "Confirm lifecycle focus with supplier"}
           </p>
         </div>
         <div className="rounded-xl bg-muted/55 p-3">
@@ -714,7 +826,9 @@ function PartnerProductCard({ product }: { product: EvaluatedPartnerProduct }) {
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             Verified timing
           </p>
-          <p className="mt-1 text-sm font-semibold text-foreground">{product.use.timing}</p>
+          <p className="mt-1 text-sm font-semibold text-foreground">
+            {product.use.timing}
+          </p>
         </div>
         <div className="rounded-xl bg-muted/55 p-3">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -775,14 +889,24 @@ function PartnerProductCard({ product }: { product: EvaluatedPartnerProduct }) {
   );
 }
 
-function WeatherStat({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
+function WeatherStat({
+  icon,
+  label,
+  value,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+}) {
   return (
     <div className="rounded-xl bg-muted/60 p-3">
       <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
         {icon}
         {label}
       </div>
-      <p className="mt-1 font-display text-base font-semibold text-foreground">{value}</p>
+      <p className="mt-1 font-display text-base font-semibold text-foreground">
+        {value}
+      </p>
     </div>
   );
 }
@@ -790,7 +914,9 @@ function WeatherStat({ icon, label, value }: { icon: ReactNode; label: string; v
 function GuidanceCard({ label, text }: { label: string; text: string }) {
   return (
     <div className="rounded-2xl border border-border bg-background p-4">
-      <p className="text-xs font-semibold uppercase tracking-wider text-primary">{label}</p>
+      <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+        {label}
+      </p>
       <p className="mt-2 text-sm leading-6 text-muted-foreground">{text}</p>
     </div>
   );
@@ -799,7 +925,9 @@ function GuidanceCard({ label, text }: { label: string; text: string }) {
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div className="font-display text-base font-semibold text-foreground sm:text-lg">{value}</div>
+      <div className="font-display text-base font-semibold text-foreground sm:text-lg">
+        {value}
+      </div>
       <div className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
       </div>
@@ -816,7 +944,8 @@ function FactorCheck({
   status: "used" | "missing" | "caution";
   effect: string;
 }) {
-  const statusLabel = status === "used" ? "Used" : status === "missing" ? "Missing" : "Check";
+  const statusLabel =
+    status === "used" ? "Used" : status === "missing" ? "Missing" : "Check";
   return (
     <div className="rounded-2xl border border-border bg-background p-4">
       <div className="flex items-center justify-between gap-3">

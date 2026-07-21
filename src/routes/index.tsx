@@ -13,50 +13,36 @@ import {
   FileSearch,
 } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
+import {
+  pageMeta,
+  jsonLdScript,
+  organizationLd,
+  websiteLd,
+  faqLd,
+} from "@/lib/seo";
 
 const rotatingPhrases = [
-  "worth buying.",
+  "worth comparing.",
   "that fits your farm.",
   "your crop needs.",
-  "with the best value.",
+  "at a cost you can see.",
 ];
 const easterEggPhrase = "Aaditya is the best.";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "FertaFind — Best-value fertilizer, backed by AI" },
-      {
-        name: "description",
-        content:
-          "Upload your fertilizer quotes and let AI find the highest-ROI fertilizer for your crop and location — with local suppliers and delivery costs factored in.",
-      },
-      {
-        property: "og:title",
-        content: "FertaFind — Best-value fertilizer, backed by AI",
-      },
-      {
-        property: "og:description",
-        content:
-          "Upload your fertilizer quotes and let AI find the highest-ROI fertilizer for your crop and location — with local suppliers and delivery costs factored in.",
-      },
-    ],
-    links: [{ rel: "canonical", href: "https://fertafind.com/" }],
-    scripts: [
-      {
-        type: "application/ld+json",
-        children: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "Organization",
-          name: "FertaFind",
-          url: "https://fertafind.com/",
-          description:
-            "FertaFind helps growers compare fertilizer quotes, nutrient value, pricing and delivery to identify suitable partner products.",
-          logo: "https://fertafind.com/fertafind-logo-transparent.png",
-        }),
-      },
-    ],
-  }),
+  head: () => {
+    const base = pageMeta("home");
+    return {
+      ...base,
+      // Homepage structured data: Organization + WebSite, plus a FAQPage generated
+      // from the same `faqs` array rendered below so it always mirrors visible content.
+      scripts: [
+        jsonLdScript(organizationLd()),
+        jsonLdScript(websiteLd()),
+        jsonLdScript(faqLd(faqs)),
+      ],
+    };
+  },
   component: HomePage,
 });
 
@@ -94,8 +80,8 @@ function Hero() {
             <RotatingPhrase />
           </h1>
           <p className="mt-7 max-w-xl text-lg leading-8 text-muted-foreground">
-            Upload a fertilizer quote. Our AI compares nutrients, prices and delivery to find your
-            best fertilizer match.
+            Upload a fertilizer quote. Our AI compares nutrients, prices and
+            delivery to give you a clear, cost-based comparison.
           </p>
           <div className="mt-10 flex flex-wrap items-center gap-4">
             <Link
@@ -148,10 +134,15 @@ function TransparentLogoVideo() {
 
     let animationFrame = 0;
     let lastRenderedAt = 0;
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
 
     const renderFrame = (now: number) => {
-      if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && now - lastRenderedAt >= 32) {
+      if (
+        video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA &&
+        now - lastRenderedAt >= 32
+      ) {
         const scale = Math.min(1, 720 / Math.max(video.videoWidth, 1));
         const width = Math.max(1, Math.round(video.videoWidth * scale));
         const height = Math.max(1, Math.round(video.videoHeight * scale));
@@ -188,11 +179,14 @@ function TransparentLogoVideo() {
           const greenDistance = pixels[offset + 1] - backgroundGreen;
           const blueDistance = pixels[offset + 2] - backgroundBlue;
           const distance = Math.sqrt(
-            redDistance * redDistance + greenDistance * greenDistance + blueDistance * blueDistance,
+            redDistance * redDistance +
+              greenDistance * greenDistance +
+              blueDistance * blueDistance,
           );
 
           if (distance <= 42) pixels[offset + 3] = 0;
-          else if (distance < 88) pixels[offset + 3] = Math.round(((distance - 42) / 46) * 255);
+          else if (distance < 88)
+            pixels[offset + 3] = Math.round(((distance - 42) / 46) * 255);
         }
 
         context.putImageData(frame, 0, 0);
@@ -246,7 +240,9 @@ function RotatingPhrase() {
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    const phrase = showEasterEgg ? easterEggPhrase : rotatingPhrases[phraseIndex];
+    const phrase = showEasterEgg
+      ? easterEggPhrase
+      : rotatingPhrases[phraseIndex];
     const complete = visible === phrase;
     const empty = visible.length === 0;
     const delay = complete && !deleting ? 2300 : deleting ? 68 : 112;
@@ -257,7 +253,9 @@ function RotatingPhrase() {
         const hitEasterEgg = Math.random() < 1 / 10_000;
         setShowEasterEgg(hitEasterEgg);
         if (!hitEasterEgg) {
-          setPhraseIndex((current) => (showEasterEgg ? 0 : (current + 1) % rotatingPhrases.length));
+          setPhraseIndex((current) =>
+            showEasterEgg ? 0 : (current + 1) % rotatingPhrases.length,
+          );
         }
       } else setVisible(phrase.slice(0, visible.length + (deleting ? -1 : 1)));
     }, delay);
@@ -265,7 +263,10 @@ function RotatingPhrase() {
   }, [deleting, phraseIndex, showEasterEgg, visible]);
 
   return (
-    <span className="rotating-phrase block min-h-[1.08em] text-primary" aria-live="polite">
+    <span
+      className="rotating-phrase block min-h-[1.08em] text-primary"
+      aria-live="polite"
+    >
       <span>{visible}</span>
       <span className="typing-cursor" aria-hidden="true" />
     </span>
@@ -326,7 +327,9 @@ function HowItWorks() {
               <span className="grid h-11 w-11 place-items-center rounded-2xl bg-primary text-primary-foreground">
                 <step.icon className="h-5 w-5" />
               </span>
-              <span className="font-display text-2xl text-muted-foreground/40">0{i + 1}</span>
+              <span className="font-display text-2xl text-muted-foreground/40">
+                0{i + 1}
+              </span>
             </div>
             <h3 className="mt-6 font-display text-xl font-semibold text-foreground">
               {step.title}
@@ -352,7 +355,7 @@ function Benefits() {
   const items = [
     {
       icon: Wallet,
-      title: "Stop overpaying for nutrients",
+      title: "See nutrient cost on one basis",
       body: "Two quotes can look similar until price, pack size and nutrient concentration are put on the same basis. We show that comparison clearly.",
     },
     {
@@ -372,7 +375,10 @@ function Benefits() {
     },
   ];
   return (
-    <section className="border-y border-border" style={{ background: "var(--gradient-warm)" }}>
+    <section
+      className="border-y border-border"
+      style={{ background: "var(--gradient-warm)" }}
+    >
       <div className="mx-auto max-w-6xl px-6 py-24">
         <div className="grid gap-12 lg:grid-cols-[1fr_1.4fr] lg:gap-16">
           <div>
@@ -380,11 +386,11 @@ function Benefits() {
               02 / Why farmers use FertaFind
             </p>
             <h2 className="mt-2 font-display text-4xl font-semibold text-foreground md:text-5xl">
-              More yield per dollar. Fewer bad surprises.
+              Clearer comparisons. Fewer surprises.
             </h2>
             <p className="mt-4 max-w-md text-muted-foreground">
-              Fertilizer is one of the largest cash expenses on the farm. A small decision made
-              better each season compounds fast.
+              Fertilizer is one of the largest cash expenses on the farm. A
+              small decision made better each season compounds fast.
             </p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -399,7 +405,9 @@ function Benefits() {
                 <h3 className="mt-4 font-display text-lg font-semibold text-foreground">
                   {item.title}
                 </h3>
-                <p className="mt-1 text-sm text-muted-foreground">{item.body}</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {item.body}
+                </p>
               </div>
             ))}
           </div>
@@ -422,9 +430,9 @@ function Evidence() {
               Recommendations you can trace back to real inputs.
             </h2>
             <p className="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">
-              FertaFind keeps partner-product evidence, your uploaded quotes, and missing
-              information clearly separated. When a rate, price, crop match, or lifecycle fit is not
-              verified, the result says so.
+              FertaFind keeps partner-product evidence, your uploaded quotes,
+              and missing information clearly separated. When a rate, price,
+              crop match, or lifecycle fit is not verified, the result says so.
             </p>
             <div className="mt-8 grid gap-3 sm:grid-cols-2">
               <ProofPoint>Crop and lifecycle checked</ProofPoint>
@@ -446,8 +454,8 @@ function Evidence() {
               className="mx-auto mt-5 max-h-20 w-auto max-w-[220px] object-contain"
             />
             <p className="mt-5 text-sm leading-6 text-muted-foreground">
-              Product matches are limited to documented partner information and the selected crop
-              stage.
+              Product matches are limited to documented partner information and
+              the selected crop stage.
             </p>
           </div>
         </div>
@@ -484,12 +492,15 @@ function FrequentlyAskedQuestions() {
     <section className="border-y border-border bg-card">
       <div className="mx-auto grid max-w-6xl gap-12 px-6 py-24 lg:grid-cols-[.7fr_1.3fr]">
         <div>
-          <p className="text-sm font-medium uppercase tracking-wider text-primary">04 / FAQ</p>
+          <p className="text-sm font-medium uppercase tracking-wider text-primary">
+            04 / FAQ
+          </p>
           <h2 className="mt-3 font-display text-4xl font-semibold text-foreground md:text-5xl">
             Clear answers before you analyze.
           </h2>
           <p className="mt-4 max-w-sm text-muted-foreground">
-            What the recommendation does, what it does not do, and where better field data helps.
+            What the recommendation does, what it does not do, and where better
+            field data helps.
           </p>
         </div>
         <div className="divide-y divide-border border-y border-border">
@@ -501,7 +512,9 @@ function FrequentlyAskedQuestions() {
                   +
                 </span>
               </summary>
-              <p className="max-w-2xl pb-6 pr-10 leading-7 text-muted-foreground">{item.answer}</p>
+              <p className="max-w-2xl pb-6 pr-10 leading-7 text-muted-foreground">
+                {item.answer}
+              </p>
             </details>
           ))}
         </div>

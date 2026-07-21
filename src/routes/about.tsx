@@ -1,26 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
+import { pageMeta, jsonLdScript, breadcrumbLd } from "@/lib/seo";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
-    meta: [
-      { title: "About FertaFind — Better fertilizer decisions for growers" },
-      {
-        name: "description",
-        content:
-          "FertaFind connects farmers to the best-value fertilizer suppliers in their radius. Learn how we save you money and lift your yield.",
-      },
-      {
-        property: "og:title",
-        content: "About FertaFind",
-      },
-      {
-        property: "og:description",
-        content: "How FertaFind helps farmers get the highest ROI from every fertilizer dollar.",
-      },
+    ...pageMeta("about"),
+    scripts: [
+      jsonLdScript(
+        breadcrumbLd([
+          { name: "Home", path: "/" },
+          { name: "About", path: "/about" },
+        ]),
+      ),
     ],
-    links: [{ rel: "canonical", href: "https://fertafind.com/about/" }],
   }),
   component: AboutPage,
 });
@@ -37,20 +30,27 @@ function AboutPage() {
           Farmers deserve better fertilizer decisions.
         </h1>
         <p className="mt-6 text-lg text-muted-foreground">
-          Fertilizer quotes make comparison harder than it should be. Different NPK blends, bag
-          sizes, prices and delivery terms can hide the true cost.
+          Fertilizer quotes make comparison harder than it should be. Different
+          NPK blends, bag sizes, prices and delivery terms can hide the true
+          cost.
         </p>
         <p className="mt-4 text-lg text-muted-foreground">
-          Upload your quotes and FertaFind turns them into consistent numbers, then ranks the
-          comparable options by value.
+          Upload your quotes and FertaFind turns them into consistent numbers,
+          then ranks the comparable options by cost and fit.
         </p>
 
         <div className="mt-16 grid gap-6 md:grid-cols-3">
-          <ValueBlock title="Compare clearly" body="See every quote in the same format." />
-          <ValueBlock title="See true costs" body="Factor in nutrients, pack size and delivery." />
+          <ValueBlock
+            title="Compare clearly"
+            body="See every quote in the same format."
+          />
+          <ValueBlock
+            title="See true costs"
+            body="Factor in nutrients, pack size and delivery."
+          />
           <ValueBlock
             title="Choose confidently"
-            body="Rank comparable products by delivered value."
+            body="Rank comparable products by delivered cost."
           />
         </div>
 
@@ -72,7 +72,9 @@ function AboutPage() {
 function ValueBlock({ title, body }: { title: string; body: string }) {
   return (
     <div className="rounded-3xl border border-border bg-card p-6 shadow-[var(--shadow-soft)]">
-      <h3 className="font-display text-xl font-semibold text-foreground">{title}</h3>
+      <h3 className="font-display text-xl font-semibold text-foreground">
+        {title}
+      </h3>
       <p className="mt-2 text-sm text-muted-foreground">{body}</p>
     </div>
   );

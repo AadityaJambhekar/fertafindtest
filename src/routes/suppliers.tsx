@@ -1,18 +1,27 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { BarChart3, CheckCircle2, FlaskConical, Leaf, MapPinned, Wheat } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  ArrowRight,
+  BarChart3,
+  CheckCircle2,
+  FlaskConical,
+  Leaf,
+  MapPinned,
+  Wheat,
+} from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
+import { pageMeta, jsonLdScript, breadcrumbLd } from "@/lib/seo";
 
 export const Route = createFileRoute("/suppliers")({
   head: () => ({
-    meta: [
-      { title: "FertaFind suppliers — Nanofert" },
-      {
-        name: "description",
-        content:
-          "Meet fertilizer suppliers featured by FertaFind and review their crop programs and supplier-reported field results.",
-      },
+    ...pageMeta("suppliers"),
+    scripts: [
+      jsonLdScript(
+        breadcrumbLd([
+          { name: "Home", path: "/" },
+          { name: "Suppliers", path: "/suppliers" },
+        ]),
+      ),
     ],
-    links: [{ rel: "canonical", href: "https://fertafind.com/suppliers/" }],
   }),
   component: SuppliersPage,
 });
@@ -45,43 +54,50 @@ const cropPrograms = [
     icon: Leaf,
     crop: "Soybean",
     program: "Nano Nitro + Nano Plus",
-    timing: "Foliar program around reproductive growth; confirm exact timing locally.",
+    timing:
+      "Foliar program around reproductive growth; confirm exact timing locally.",
   },
   {
     icon: Wheat,
     crop: "Corn",
     program: "Nano Nitro + Nano Plus",
-    timing: "Reported positioning at V6-V7, approximately 35-40 days after emergence.",
+    timing:
+      "Reported positioning at V6-V7, approximately 35-40 days after emergence.",
   },
   {
     icon: FlaskConical,
     crop: "Beans",
     program: "Nano Nitro, Nano Phos + Nano Plus",
-    timing: "Vegetative nutrition followed by flowering and early pod-formation support.",
+    timing:
+      "Vegetative nutrition followed by flowering and early pod-formation support.",
   },
   {
     icon: Wheat,
     crop: "Sugarcane",
     program: "Nano Nitro + Nano Plus / Nano-DAP trial programs",
-    timing: "Two foliar applications; confirm the specific trial protocol and field stage.",
+    timing:
+      "Two foliar applications; confirm the specific trial protocol and field stage.",
   },
   {
     icon: Leaf,
     crop: "Lettuce",
     program: "Nano Phos + Nano Plus, then Nano Kali + Nano Plus",
-    timing: "Programs positioned around 10-15 and 20-30 days after transplanting.",
+    timing:
+      "Programs positioned around 10-15 and 20-30 days after transplanting.",
   },
   {
     icon: Leaf,
     crop: "Tomato",
     program: "Nano Nitro, Zin, Phos, Plus and Kali",
-    timing: "Stage-specific program spanning establishment through fruit growth.",
+    timing:
+      "Stage-specific program spanning establishment through fruit growth.",
   },
   {
     icon: Leaf,
     crop: "Pepper",
     program: "Nano Nitro, Zin, Phos, Plus and Kali",
-    timing: "Stage-specific program spanning establishment through fruit growth.",
+    timing:
+      "Stage-specific program spanning establishment through fruit growth.",
   },
   {
     icon: FlaskConical,
@@ -93,7 +109,8 @@ const cropPrograms = [
     icon: Leaf,
     crop: "Table grapes",
     program: "Seven-product lifecycle program",
-    timing: "Bud break through flowering, berry growth, maturation and post-harvest.",
+    timing:
+      "Bud break through flowering, berry growth, maturation and post-harvest.",
   },
 ];
 
@@ -110,9 +127,9 @@ function SuppliersPage() {
             Suppliers, shown clearly.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
-            Explore the products and field information shared by fertilizer suppliers available
-            through FertaFind. Recommendations still depend on your crop, soil, weather, quote and
-            application plan.
+            Explore the products and field information shared by fertilizer
+            suppliers available through FertaFind. Recommendations still depend
+            on your crop, soil, weather, quote and application plan.
           </p>
         </section>
 
@@ -133,14 +150,17 @@ function SuppliersPage() {
                 <span className="w-fit rounded-full border border-white/25 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-white/80">
                   Featured supplier
                 </span>
-                <h2 className="mt-5 font-display text-4xl font-semibold">Nanofert</h2>
+                <h2 className="mt-5 font-display text-4xl font-semibold">
+                  Nanofert
+                </h2>
                 <p className="mt-4 max-w-xl text-base leading-7 text-white/75">
-                  Foliar nano-fertilizer programs presented for soybean, corn, pasture, beans,
-                  sugarcane, fruit and vegetable crops.
+                  Foliar nano-fertilizer programs presented for soybean, corn,
+                  pasture, beans, sugarcane, fruit and vegetable crops.
                 </p>
                 <div className="mt-8 flex flex-wrap gap-3 text-sm text-white/85">
                   <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2">
-                    <MapPinned className="h-4 w-4" /> Field data from 8 Brazilian states
+                    <MapPinned className="h-4 w-4" /> Field data from 8
+                    Brazilian states
                   </span>
                   <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2">
                     <BarChart3 className="h-4 w-4" /> 2025/26 commercial results
@@ -159,8 +179,12 @@ function SuppliersPage() {
                     <p className="font-display text-3xl font-semibold text-[#067e62]">
                       {stat.value}
                     </p>
-                    <p className="mt-1 font-semibold text-foreground">{stat.label}</p>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{stat.detail}</p>
+                    <p className="mt-1 font-semibold text-foreground">
+                      {stat.label}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                      {stat.detail}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -172,8 +196,12 @@ function SuppliersPage() {
                     <h3 className="mt-4 font-display text-xl font-semibold text-foreground">
                       {item.crop}
                     </h3>
-                    <p className="mt-1 text-sm font-semibold text-foreground">{item.program}</p>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.timing}</p>
+                    <p className="mt-1 text-sm font-semibold text-foreground">
+                      {item.program}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                      {item.timing}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -181,15 +209,37 @@ function SuppliersPage() {
               <div className="mt-8 flex items-start gap-3 rounded-2xl border border-[#04966f]/25 bg-[#04966f]/5 p-5">
                 <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-[#067e62]" />
                 <p className="text-sm leading-6 text-muted-foreground">
-                  <span className="font-semibold text-foreground">Data note: </span>
-                  figures above are supplier-reported results from Nanofert&apos;s 2025/26 crop
-                  positioning material provided to FertaFind. They are not independent FertaFind
-                  trials or guaranteed outcomes. Local conditions, rates and agronomic advice
-                  matter.
+                  <span className="font-semibold text-foreground">
+                    Data note:{" "}
+                  </span>
+                  figures above are supplier-reported results from
+                  Nanofert&apos;s 2025/26 crop positioning material provided to
+                  FertaFind. They are not independent FertaFind trials or
+                  guaranteed outcomes. Local conditions, rates and agronomic
+                  advice matter.
                 </p>
               </div>
             </div>
           </article>
+        </section>
+
+        <section className="mx-auto max-w-6xl px-6 pb-24">
+          <div className="rounded-3xl border border-border bg-card p-8 text-center shadow-[var(--shadow-soft)] sm:p-12">
+            <h2 className="font-display text-3xl font-semibold text-foreground">
+              Compare these programs against your own quotes
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">
+              Upload your fertilizer quotes to see how supplier programs line up
+              with your crop, field, location and quote details.
+            </p>
+            <Link
+              to="/analyze"
+              className="mt-6 inline-flex h-12 items-center gap-2 rounded-full bg-primary px-7 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-all hover:-translate-y-0.5 hover:bg-primary-soft"
+            >
+              Analyze my quotes
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
         </section>
       </main>
       <SiteFooter />
