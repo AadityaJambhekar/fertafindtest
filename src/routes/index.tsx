@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowRight,
   Camera,
@@ -10,7 +10,7 @@ import {
   ShieldCheck,
   Wallet,
   Check,
-  FileSearch,
+  ExternalLink,
 } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
 import {
@@ -22,7 +22,7 @@ import {
 } from "@/lib/seo";
 
 const rotatingPhrases = [
-  "worth comparing.",
+  "worth buying.",
   "that fits your farm.",
   "your crop needs.",
   "at a cost you can see.",
@@ -53,7 +53,7 @@ function HomePage() {
       <Hero />
       <HowItWorks />
       <Benefits />
-      <Evidence />
+      <Partners />
       <FrequentlyAskedQuestions />
       <div className="[&>footer]:mt-0">
         <SiteFooter />
@@ -70,10 +70,19 @@ function Hero() {
     >
       <div className="mx-auto grid min-h-[680px] max-w-6xl items-center gap-14 px-6 py-20 lg:grid-cols-[1.05fr_.95fr]">
         <div className="max-w-3xl">
-          <span className="inline-flex items-center gap-2 text-sm font-semibold text-primary">
-            <Sparkles className="h-3.5 w-3.5" />
-            AI-powered fertilizer intelligence for farmers
-          </span>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-semibold">
+            <span className="inline-flex items-center gap-2 text-primary">
+              <Sparkles className="h-3.5 w-3.5" />
+              AI-powered fertilizer intelligence
+            </span>
+            <a
+              href="#partners"
+              className="inline-flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Working with Nanofert
+              <span aria-hidden="true">↘</span>
+            </a>
+          </div>
           <h1 className="mt-6 font-display text-5xl font-extrabold leading-[1.02] text-foreground md:text-7xl">
             Find the fertilizer
             <br />
@@ -81,22 +90,23 @@ function Hero() {
           </h1>
           <p className="mt-7 max-w-xl text-lg leading-8 text-muted-foreground">
             Upload a fertilizer quote. Our AI compares nutrients, prices and
-            delivery to give you a clear, cost-based comparison.
+            delivery to find a strong match for healthier crops and better yield
+            decisions.
           </p>
           <div className="mt-10 flex flex-wrap items-center gap-4">
             <Link
               to="/analyze"
               className="inline-flex h-12 items-center gap-2 rounded-full bg-primary px-7 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-colors hover:bg-primary-soft"
             >
-              Analyze my quotes
+              Analyze for free
               <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link
-              to="/about"
+            <a
+              href="#how"
               className="inline-flex h-12 items-center rounded-full border border-border bg-background px-7 text-sm font-medium text-foreground transition-colors hover:border-primary hover:text-primary"
             >
               How it works
-            </Link>
+            </a>
           </div>
           <div className="mt-12 flex max-w-2xl flex-wrap gap-x-6 gap-y-3 border-t border-border pt-6">
             <ProofPoint>Verified partner data</ProofPoint>
@@ -113,122 +123,16 @@ function Hero() {
 function HeroBrandVisual() {
   return (
     <div className="hero-brand-visual hidden lg:flex">
-      <div className="hero-brand-mark-wrap">
-        <TransparentLogoVideo />
-      </div>
-    </div>
-  );
-}
-
-function TransparentLogoVideo() {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    if (!video || !canvas) return;
-
-    const context = canvas.getContext("2d", { willReadFrequently: true });
-    if (!context) return;
-
-    let animationFrame = 0;
-    let lastRenderedAt = 0;
-    const reducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-
-    const renderFrame = (now: number) => {
-      if (
-        video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA &&
-        now - lastRenderedAt >= 32
-      ) {
-        const scale = Math.min(1, 720 / Math.max(video.videoWidth, 1));
-        const width = Math.max(1, Math.round(video.videoWidth * scale));
-        const height = Math.max(1, Math.round(video.videoHeight * scale));
-        if (canvas.width !== width || canvas.height !== height) {
-          canvas.width = width;
-          canvas.height = height;
-        }
-
-        context.drawImage(video, 0, 0, width, height);
-        const frame = context.getImageData(0, 0, width, height);
-        const pixels = frame.data;
-        const samplePoints = [
-          [2, 2],
-          [width - 3, 2],
-          [2, height - 3],
-          [width - 3, height - 3],
-        ];
-        const background = samplePoints.reduce(
-          (sum, [x, y]) => {
-            const offset = (Math.max(0, y) * width + Math.max(0, x)) * 4;
-            sum[0] += pixels[offset];
-            sum[1] += pixels[offset + 1];
-            sum[2] += pixels[offset + 2];
-            return sum;
-          },
-          [0, 0, 0],
-        );
-        const backgroundRed = background[0] / samplePoints.length;
-        const backgroundGreen = background[1] / samplePoints.length;
-        const backgroundBlue = background[2] / samplePoints.length;
-
-        for (let offset = 0; offset < pixels.length; offset += 4) {
-          const redDistance = pixels[offset] - backgroundRed;
-          const greenDistance = pixels[offset + 1] - backgroundGreen;
-          const blueDistance = pixels[offset + 2] - backgroundBlue;
-          const distance = Math.sqrt(
-            redDistance * redDistance +
-              greenDistance * greenDistance +
-              blueDistance * blueDistance,
-          );
-
-          if (distance <= 42) pixels[offset + 3] = 0;
-          else if (distance < 88)
-            pixels[offset + 3] = Math.round(((distance - 42) / 46) * 255);
-        }
-
-        context.putImageData(frame, 0, 0);
-        lastRenderedAt = now;
-        if (reducedMotion) {
-          video.pause();
-          return;
-        }
-      }
-      animationFrame = window.requestAnimationFrame(renderFrame);
-    };
-
-    const start = () => {
-      void video.play().catch(() => undefined);
-      animationFrame = window.requestAnimationFrame(renderFrame);
-    };
-
-    video.addEventListener("loadeddata", start, { once: true });
-    if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) start();
-
-    return () => {
-      video.removeEventListener("loadeddata", start);
-      window.cancelAnimationFrame(animationFrame);
-    };
-  }, []);
-
-  return (
-    <div
-      className="hero-logo-video-shell"
-      aria-label="Animated FertaFind logo growing into a plant"
-    >
-      <video
-        ref={videoRef}
-        className="hero-logo-video-source"
-        src="/fertafind-logo-growth.mp4"
-        muted
-        loop
-        playsInline
-        preload="auto"
-        aria-hidden="true"
-      />
-      <canvas ref={canvasRef} className="hero-logo-canvas" aria-hidden="true" />
+      <figure className="hero-crop-photo-shell">
+        <img
+          src="/healthy-crop-hero.jpg"
+          alt="Healthy green crop growing in a fertile field"
+          className="hero-crop-photo"
+        />
+        <figcaption className="hero-crop-photo-caption">
+          Better fertilizer decisions for healthier crops
+        </figcaption>
+      </figure>
     </div>
   );
 }
@@ -376,7 +280,8 @@ function Benefits() {
   ];
   return (
     <section
-      className="border-y border-border"
+      id="why"
+      className="scroll-mt-28 border-y border-border"
       style={{ background: "var(--gradient-warm)" }}
     >
       <div className="mx-auto max-w-6xl px-6 py-24">
@@ -386,7 +291,7 @@ function Benefits() {
               02 / Why farmers use FertaFind
             </p>
             <h2 className="mt-2 font-display text-4xl font-semibold text-foreground md:text-5xl">
-              Clearer comparisons. Fewer surprises.
+              Clearer comparisons. Fewer bad surprises.
             </h2>
             <p className="mt-4 max-w-md text-muted-foreground">
               Fertilizer is one of the largest cash expenses on the farm. A
@@ -417,46 +322,55 @@ function Benefits() {
   );
 }
 
-function Evidence() {
+function Partners() {
   return (
-    <section className="mx-auto max-w-6xl px-6 py-28">
-      <div className="overflow-hidden rounded-[2rem] border border-border bg-card shadow-[var(--shadow-soft)]">
-        <div className="grid items-center gap-10 p-8 md:p-12 lg:grid-cols-[1.2fr_.8fr] lg:p-16">
-          <div>
-            <p className="text-sm font-medium uppercase tracking-wider text-primary">
-              03 / Evidence before claims
+    <section
+      id="partners"
+      className="scroll-mt-28 border-b border-border bg-card"
+    >
+      <div className="mx-auto grid max-w-6xl items-center gap-8 px-6 py-20 lg:grid-cols-[1.15fr_.85fr] lg:gap-14">
+        <div>
+          <p className="text-sm font-medium uppercase tracking-wider text-primary">
+            03 / Our partners
+          </p>
+          <h2 className="mt-3 font-display text-4xl font-semibold text-foreground md:text-5xl">
+            Fertilizer partners we work with.
+          </h2>
+          <p className="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">
+            FertaFind evaluates verified products from participating suppliers
+            against your crop, lifecycle stage and field information. Our
+            partner network can grow without changing how your analysis works.
+          </p>
+          <div className="mt-7 border-l-2 border-primary pl-5">
+            <h3 className="font-display text-2xl font-semibold text-foreground">
+              Nanofert
+            </h3>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+              Our current participating supplier provides liquid nano-fertilizer
+              products with documented crop and lifecycle programs. Rates,
+              availability and final pricing should still be confirmed before
+              purchase.
             </p>
-            <h2 className="mt-3 max-w-2xl font-display text-4xl font-semibold text-foreground md:text-5xl">
-              Recommendations you can trace back to real inputs.
-            </h2>
-            <p className="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">
-              FertaFind keeps partner-product evidence, your uploaded quotes,
-              and missing information clearly separated. When a rate, price,
-              crop match, or lifecycle fit is not verified, the result says so.
-            </p>
-            <div className="mt-8 grid gap-3 sm:grid-cols-2">
-              <ProofPoint>Crop and lifecycle checked</ProofPoint>
-              <ProofPoint>Soil and weather considered</ProofPoint>
-              <ProofPoint>Prior applications accounted for</ProofPoint>
-              <ProofPoint>Unknown values never invented</ProofPoint>
-            </div>
           </div>
-          <div className="rounded-[1.75rem] bg-background p-8 text-center ring-1 ring-border">
-            <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-primary text-primary-foreground">
-              <FileSearch className="h-7 w-7" />
-            </div>
-            <p className="mt-5 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-              Current participating supplier
-            </p>
-            <img
-              src="/nanofert-partner.png"
-              alt="Nanofert partner logo"
-              className="mx-auto mt-5 max-h-20 w-auto max-w-[220px] object-contain"
-            />
-            <p className="mt-5 text-sm leading-6 text-muted-foreground">
-              Product matches are limited to documented partner information and
-              the selected crop stage.
-            </p>
+          <a
+            href="https://www.nanofert.com.br/"
+            target="_blank"
+            rel="noreferrer"
+            className="mt-7 inline-flex h-12 items-center gap-2 rounded-full bg-primary px-7 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-all hover:-translate-y-0.5 hover:bg-primary-soft"
+          >
+            Visit Nanofert
+            <ExternalLink className="h-4 w-4" />
+          </a>
+        </div>
+        <div className="rounded-[2rem] border border-border bg-background p-6 shadow-[var(--shadow-soft)] sm:p-9">
+          <img
+            src="/nanofert-partner.png"
+            alt="Nanofert logo"
+            className="mx-auto max-h-28 w-full max-w-sm object-contain"
+          />
+          <div className="mt-6 grid gap-3 text-sm text-muted-foreground min-[420px]:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+            <ProofPoint>Crop-stage matching</ProofPoint>
+            <ProofPoint>Verified details only</ProofPoint>
           </div>
         </div>
       </div>
@@ -489,7 +403,7 @@ const faqs = [
 
 function FrequentlyAskedQuestions() {
   return (
-    <section className="border-y border-border bg-card">
+    <section id="faq" className="scroll-mt-28 border-y border-border bg-card">
       <div className="mx-auto grid max-w-6xl gap-12 px-6 py-24 lg:grid-cols-[.7fr_1.3fr]">
         <div>
           <p className="text-sm font-medium uppercase tracking-wider text-primary">

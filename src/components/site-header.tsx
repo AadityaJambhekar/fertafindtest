@@ -4,46 +4,80 @@ import { BrandMark } from "@/components/brand-mark";
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-md">
-      <div className="mx-auto flex h-20 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-        <Link to="/" className="flex items-center gap-2 group">
-          <BrandMark className="h-12 w-12" />
-          <span className="hidden font-display text-xl font-bold tracking-[-0.04em] text-foreground sm:inline">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-4 sm:h-20 sm:gap-4 sm:px-6">
+        <Link to="/" className="group flex min-w-0 items-center gap-2">
+          <BrandMark className="h-10 w-10 sm:h-12 sm:w-12" />
+          <span className="hidden truncate font-display text-lg font-bold tracking-[-0.04em] text-foreground min-[360px]:inline sm:text-xl">
             FertaFind
           </span>
         </Link>
-        <nav className="hidden items-center gap-8 md:flex">
-          <Link
-            to="/"
+        <nav
+          className="hidden items-center gap-8 md:flex"
+          aria-label="Homepage sections"
+        >
+          <a
+            href="/#how"
             className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            activeOptions={{ exact: true }}
-            activeProps={{ className: "text-foreground" }}
           >
-            Home
-          </Link>
-          <Link
-            to="/about"
+            How it works
+          </a>
+          <a
+            href="/#why"
             className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            activeProps={{ className: "text-foreground" }}
           >
-            About
-          </Link>
-          <Link
-            to="/suppliers"
+            Why FertaFind
+          </a>
+          <a
+            href="/#partners"
             className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            activeProps={{ className: "text-foreground" }}
           >
-            Suppliers
-          </Link>
+            Partners
+          </a>
+          <a
+            href="/#faq"
+            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            FAQ
+          </a>
         </nav>
         <div className="flex items-center">
           <Link
             to="/analyze"
-            className="inline-flex h-11 items-center rounded-full bg-primary px-4 text-xs font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-all hover:-translate-y-0.5 hover:bg-primary-soft sm:px-6 sm:text-sm"
+            className="inline-flex h-10 shrink-0 items-center rounded-full bg-primary px-4 text-xs font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-all hover:-translate-y-0.5 hover:bg-primary-soft sm:h-11 sm:px-6 sm:text-sm"
           >
             Analyze quotes
           </Link>
         </div>
       </div>
+      <nav
+        className="flex items-center justify-center gap-5 overflow-x-auto border-t border-border/70 px-4 py-2.5 md:hidden"
+        aria-label="Homepage sections"
+      >
+        <a
+          href="/#how"
+          className="shrink-0 text-xs font-semibold text-muted-foreground"
+        >
+          How it works
+        </a>
+        <a
+          href="/#why"
+          className="shrink-0 text-xs font-semibold text-muted-foreground"
+        >
+          Why FertaFind
+        </a>
+        <a
+          href="/#partners"
+          className="shrink-0 text-xs font-semibold text-muted-foreground"
+        >
+          Partners
+        </a>
+        <a
+          href="/#faq"
+          className="shrink-0 text-xs font-semibold text-muted-foreground"
+        >
+          FAQ
+        </a>
+      </nav>
     </header>
   );
 }
@@ -73,14 +107,19 @@ export function SiteFooter() {
               </Link>
             </li>
             <li>
-              <Link to="/about" className="hover:text-primary-foreground">
+              <a href="/#how" className="hover:text-primary-foreground">
                 How it works
-              </Link>
+              </a>
             </li>
             <li>
-              <Link to="/suppliers" className="hover:text-primary-foreground">
-                Suppliers
-              </Link>
+              <a href="/#partners" className="hover:text-primary-foreground">
+                Partners
+              </a>
+            </li>
+            <li>
+              <a href="/#faq" className="hover:text-primary-foreground">
+                FAQ
+              </a>
             </li>
             <li>
               <Link to="/terms" className="hover:text-primary-foreground">
