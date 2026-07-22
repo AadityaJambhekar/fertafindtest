@@ -2,12 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { PAGES, canonicalUrl, type PageKey } from "./seo.ts";
+import { buildSitemapXml } from "./content.ts";
 
 const ROOT = process.cwd();
 const read = (rel: string) => readFileSync(join(ROOT, rel), "utf8");
-
-const PAGE_KEYS: PageKey[] = ["home", "analyze", "terms"];
 
 // Files that make up the public marketing surface. Claims here must stay truthful.
 const MARKETING_FILES = [
@@ -17,7 +15,17 @@ const MARKETING_FILES = [
   "src/routes/analyze.tsx",
   "src/routes/suppliers.tsx",
   "src/routes/terms.tsx",
+  "src/routes/resources.tsx",
+  "src/routes/guides.how-to-compare-fertilizer-quotes.tsx",
+  "src/routes/guides.fertilizer-cost-per-acre.tsx",
+  "src/routes/guides.cost-per-pound-of-nitrogen.tsx",
+  "src/routes/guides.how-freight-affects-fertilizer-cost.tsx",
+  "src/routes/compare.dap-vs-map.tsx",
+  "src/routes/compare.urea-vs-uan.tsx",
+  "src/routes/methodology.usda-ams-fertilizer-data.tsx",
   "src/components/site-header.tsx",
+  "src/components/content-page.tsx",
+  "src/lib/content.ts",
 ];
 
 const BANNED_CLAIMS = [
@@ -37,10 +45,12 @@ function locs(sitemap: string): string[] {
   return [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1].trim());
 }
 
-test("sitemap.xml lists exactly the public routes on the www host", () => {
-  const found = new Set(locs(read("public/sitemap.xml")));
-  const expected = new Set(PAGE_KEYS.map((k) => canonicalUrl(PAGES[k].path)));
-  assert.deepEqual(found, expected);
+test("public/sitemap.xml is generated from the content registry (single source of truth)", () => {
+  assert.equal(
+    read("public/sitemap.xml"),
+    buildSitemapXml(),
+    "public/sitemap.xml is out of date — regenerate it from buildSitemapXml()",
+  );
 });
 
 test("every sitemap URL uses the approved www host", () => {
@@ -67,6 +77,12 @@ test("robots.txt points at the www sitemap and never the apex host", () => {
     /Sitemap:\s*https:\/\/www\.fertafind\.com\/sitemap\.xml/,
   );
   assert.match(robots, /User-agent:/i);
+  assert.match(robots, /Allow:\s*\//i, "robots.txt allows crawling public pages");
+  assert.match(
+    robots,
+    /Disallow:\s*\/results\//i,
+    "robots.txt must exclude private /results/ pages",
+  );
   assert.ok(
     !/\/\/fertafind\.com/.test(robots),
     "robots.txt must not reference the apex host",

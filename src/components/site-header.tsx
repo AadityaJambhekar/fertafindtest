@@ -76,14 +76,14 @@ export function SiteFooter() {
             <BrandMark className="h-12 w-12" />
             <span className="font-display text-xl font-semibold">FertaFind</span>
           </div>
-          <p className="mt-3 max-w-xs text-sm text-primary-foreground/70">
+          <p className="mt-3 max-w-xs text-sm text-primary-foreground/80">
             Smarter fertilizer decisions for growers. Compare quotes on one
             clear, cost-based basis.
           </p>
         </div>
         <div className="text-sm">
-          <h4 className="font-display text-base">Product</h4>
-          <ul className="mt-3 space-y-2 text-primary-foreground/70">
+          <h2 className="font-display text-base">Product</h2>
+          <ul className="mt-3 space-y-2 text-primary-foreground/80">
             <li>
               <Link to="/analyze" className="hover:text-primary-foreground">
                 Analyze quotes
@@ -105,6 +105,11 @@ export function SiteFooter() {
               </a>
             </li>
             <li>
+              <a href="/resources" className="hover:text-primary-foreground">
+                Resources
+              </a>
+            </li>
+            <li>
               <Link to="/terms" className="hover:text-primary-foreground">
                 Terms
               </Link>
@@ -112,11 +117,11 @@ export function SiteFooter() {
           </ul>
         </div>
         <div className="text-sm">
-          <h4 className="font-display text-base">Contact</h4>
-          <p className="mt-3 text-primary-foreground/70">fertafind@gmail.com</p>
+          <h2 className="font-display text-base">Contact</h2>
+          <p className="mt-3 text-primary-foreground/80">fertafind@gmail.com</p>
         </div>
       </div>
-      <div className="border-t border-primary-foreground/10 py-4 text-center text-xs text-primary-foreground/60">
+      <div className="border-t border-primary-foreground/10 py-4 text-center text-xs text-primary-foreground/80">
         © {new Date().getFullYear()} FertaFind. All rights reserved.
       </div>
     </footer>

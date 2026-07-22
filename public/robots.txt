@@ -1,3 +1,23 @@
+# FertaFind robots.txt
+# Search engines and AI-search assistants are welcome to crawl public pages.
+# Private, customer-specific result pages are excluded from crawling and are
+# also served with a noindex, nofollow directive and an X-Robots-Tag header.
+
+# AI-search crawlers (explicitly allowed)
+User-agent: GPTBot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: ClaudeBot
+User-agent: Claude-User
+User-agent: PerplexityBot
+User-agent: Google-Extended
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /results/
+
+# All other crawlers
 User-agent: *
 Allow: /
+Disallow: /results/
+
 Sitemap: https://www.fertafind.com/sitemap.xml

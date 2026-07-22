@@ -50,11 +50,13 @@ function HomePage() {
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
-      <Hero />
-      <HowItWorks />
-      <Benefits />
-      <PartnerSpotlight />
-      <FrequentlyAskedQuestions />
+      <main>
+        <Hero />
+        <HowItWorks />
+        <Benefits />
+        <PartnerSpotlight />
+        <FrequentlyAskedQuestions />
+      </main>
       <div className="[&>footer]:mt-0">
         <SiteFooter />
       </div>
@@ -71,7 +73,7 @@ function Hero() {
       <div className="mx-auto grid min-h-[620px] max-w-6xl items-center gap-14 px-4 py-16 sm:min-h-[680px] sm:px-6 sm:py-20 lg:grid-cols-[1.05fr_.95fr]">
         <div className="max-w-3xl">
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-semibold">
-            <span className="inline-flex items-center gap-2 text-primary">
+            <span className="eyebrow-accent inline-flex items-center gap-2">
               <Sparkles className="h-3.5 w-3.5" />
               AI-powered fertilizer intelligence
             </span>
@@ -162,7 +164,7 @@ function RotatingPhrase() {
   }, [deleting, phraseIndex, showEasterEgg, visible]);
 
   return (
-    <span className="rotating-phrase block min-h-[1.08em] text-primary" aria-live="polite">
+    <span className="rotating-phrase block min-h-[1.08em]" aria-live="polite">
       <span>{visible}</span>
       <span className="typing-cursor" aria-hidden="true" />
     </span>
@@ -206,7 +208,7 @@ function HowItWorks() {
   return (
     <section id="how" className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24 lg:py-28">
       <div className="max-w-2xl">
-        <p className="text-sm font-medium uppercase tracking-wider text-primary-soft">
+        <p className="text-sm font-medium uppercase tracking-wider eyebrow-accent">
           01 / How it works
         </p>
         <h2 className="mt-2 font-display text-3xl font-semibold text-foreground sm:text-4xl md:text-5xl">
@@ -223,7 +225,7 @@ function HowItWorks() {
               <span className="grid h-11 w-11 place-items-center rounded-2xl bg-primary text-primary-foreground">
                 <step.icon className="h-5 w-5" />
               </span>
-              <span className="font-display text-2xl text-muted-foreground/40">0{i + 1}</span>
+              <span className="font-display text-2xl text-muted-foreground/72">0{i + 1}</span>
             </div>
             <h3 className="mt-6 font-display text-xl font-semibold text-foreground">
               {step.title}
@@ -277,7 +279,7 @@ function Benefits() {
       <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
         <div className="grid gap-12 lg:grid-cols-[1fr_1.4fr] lg:gap-16">
           <div>
-            <p className="text-sm font-medium uppercase tracking-wider text-primary">
+            <p className="text-sm font-medium uppercase tracking-wider eyebrow-accent">
               02 / Why farmers use FertaFind
             </p>
             <h2 className="mt-2 font-display text-3xl font-semibold text-foreground sm:text-4xl md:text-5xl">
@@ -315,7 +317,7 @@ function PartnerSpotlight() {
     <section id="partners" className="scroll-mt-28 border-b border-border bg-card">
       <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-[1.15fr_.85fr] lg:gap-14">
         <div>
-          <p className="text-sm font-medium uppercase tracking-wider text-primary">
+          <p className="text-sm font-medium uppercase tracking-wider eyebrow-accent">
             03 / Our partners
           </p>
           <h2 className="mt-3 font-display text-4xl font-semibold text-foreground sm:text-5xl">
@@ -388,7 +390,7 @@ function FrequentlyAskedQuestions() {
     <section id="faq" className="scroll-mt-28 border-y border-border bg-card">
       <div className="mx-auto grid max-w-6xl gap-9 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-[.7fr_1.3fr] lg:gap-12">
         <div>
-          <p className="text-sm font-medium uppercase tracking-wider text-primary">04 / FAQ</p>
+          <p className="text-sm font-medium uppercase tracking-wider eyebrow-accent">04 / FAQ</p>
           <h2 className="mt-3 font-display text-3xl font-semibold text-foreground sm:text-4xl md:text-5xl">
             Clear answers before you analyze.
           </h2>
