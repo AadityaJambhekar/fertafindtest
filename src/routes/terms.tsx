@@ -1,18 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AlertCircle } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
+import { pageMeta, jsonLdScript, breadcrumbLd } from "@/lib/seo";
 
 export const Route = createFileRoute("/terms")({
   head: () => ({
-    meta: [
-      { title: "FertaFind terms of use" },
-      {
-        name: "description",
-        content:
-          "Read FertaFind's terms for partner recommendations, fertilizer analysis, supplier purchases, delivery responsibilities and use of farm data.",
-      },
+    ...pageMeta("terms"),
+    scripts: [
+      jsonLdScript(
+        breadcrumbLd([
+          { name: "Home", path: "/" },
+          { name: "Terms", path: "/terms" },
+        ]),
+      ),
     ],
-    links: [{ rel: "canonical", href: "https://fertafind.com/terms/" }],
   }),
   component: TermsPage,
 });

@@ -13,6 +13,13 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
+import {
+  pageMeta,
+  jsonLdScript,
+  organizationLd,
+  websiteLd,
+  faqLd,
+} from "@/lib/seo";
 
 const rotatingPhrases = [
   "worth buying.",
@@ -23,40 +30,19 @@ const rotatingPhrases = [
 const easterEggPhrase = "Aaditya is the best.";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "FertaFind — Best-value fertilizer, backed by AI" },
-      {
-        name: "description",
-        content:
-          "Upload your fertilizer quotes and let AI find the highest-ROI fertilizer for your crop and location — with local suppliers and delivery costs factored in.",
-      },
-      {
-        property: "og:title",
-        content: "FertaFind — Best-value fertilizer, backed by AI",
-      },
-      {
-        property: "og:description",
-        content:
-          "Upload your fertilizer quotes and let AI find the highest-ROI fertilizer for your crop and location — with local suppliers and delivery costs factored in.",
-      },
-    ],
-    links: [{ rel: "canonical", href: "https://fertafind.com/" }],
-    scripts: [
-      {
-        type: "application/ld+json",
-        children: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "Organization",
-          name: "FertaFind",
-          url: "https://fertafind.com/",
-          description:
-            "FertaFind helps growers compare fertilizer quotes, nutrient value, pricing and delivery to identify suitable partner products.",
-          logo: "https://fertafind.com/fertafind-logo-transparent.png",
-        }),
-      },
-    ],
-  }),
+  head: () => {
+    const base = pageMeta("home");
+    return {
+      ...base,
+      // Homepage structured data: Organization + WebSite, plus a FAQPage generated
+      // from the same `faqs` array rendered below so it always mirrors visible content.
+      scripts: [
+        jsonLdScript(organizationLd()),
+        jsonLdScript(websiteLd()),
+        jsonLdScript(faqLd(faqs)),
+      ],
+    };
+  },
   component: HomePage,
 });
 
@@ -263,7 +249,7 @@ function Benefits() {
   const items = [
     {
       icon: Wallet,
-      title: "Stop overpaying for nutrients",
+      title: "See nutrient cost on one basis",
       body: "Two quotes can look similar until price, pack size and nutrient concentration are put on the same basis. We show that comparison clearly.",
     },
     {
@@ -295,7 +281,7 @@ function Benefits() {
               02 / Why farmers use FertaFind
             </p>
             <h2 className="mt-2 font-display text-3xl font-semibold text-foreground sm:text-4xl md:text-5xl">
-              More yield per dollar. Fewer bad surprises.
+              Clearer comparisons. Fewer bad surprises.
             </h2>
             <p className="mt-4 max-w-md text-muted-foreground">
               Fertilizer is one of the largest cash expenses on the farm. A small decision made

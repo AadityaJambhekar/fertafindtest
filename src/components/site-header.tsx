@@ -77,7 +77,8 @@ export function SiteFooter() {
             <span className="font-display text-xl font-semibold">FertaFind</span>
           </div>
           <p className="mt-3 max-w-xs text-sm text-primary-foreground/70">
-            Smarter fertilizer decisions for growers. Best value nutrients, delivered.
+            Smarter fertilizer decisions for growers. Compare quotes on one
+            clear, cost-based basis.
           </p>
         </div>
         <div className="text-sm">

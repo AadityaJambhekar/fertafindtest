@@ -35,18 +35,19 @@ import {
   QUOTE_FILE_ACCEPT,
   QUOTE_FILE_HELP_TEXT,
 } from "@/lib/quote-files";
+import { pageMeta, jsonLdScript, breadcrumbLd } from "@/lib/seo";
 
 export const Route = createFileRoute("/analyze")({
   head: () => ({
-    meta: [
-      { title: "Analyze fertilizer quotes — FertaFind" },
-      {
-        name: "description",
-        content:
-          "Upload your fertilizer quotes and get an AI-ranked recommendation by ROI, nutrient value and delivery cost.",
-      },
+    ...pageMeta("analyze"),
+    scripts: [
+      jsonLdScript(
+        breadcrumbLd([
+          { name: "Home", path: "/" },
+          { name: "Analyze", path: "/analyze" },
+        ]),
+      ),
     ],
-    links: [{ rel: "canonical", href: "https://fertafind.com/analyze/" }],
   }),
   component: AnalyzePage,
 });
@@ -1761,7 +1762,7 @@ function AnalyzePage() {
                 Analyzing your quotes…
               </h2>
               <p className="mt-2 text-sm text-muted-foreground">
-                Extracting nutrient values, comparing suppliers in your area, and calculating ROI.
+                Extracting nutrient values, comparing suppliers in your area, and calculating landed cost.
               </p>
             </div>
           )}
