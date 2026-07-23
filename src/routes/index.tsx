@@ -245,7 +245,7 @@ function Benefits() {
     {
       icon: Wallet,
       title: "Stop overpaying for nutrients",
-      body: "Two quotes can look similar until price, pack size and nutrient concentration are put on the same basis. We show that comparison clearly.",
+      body: "Quotes can look similar until price, pack size and nutrient concentration are put on the same basis. We show that clearly for one quote or several.",
     },
     {
       icon: Truck,

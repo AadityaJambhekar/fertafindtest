@@ -5,7 +5,7 @@ import type {
   PriorFertilizerApplication,
   QuoteAnalysis,
 } from "@/lib/quote-analysis";
-import { getQuoteFileDescriptor, MAX_QUOTE_FILES, quoteFileError } from "@/lib/quote-files";
+import { getQuoteFileDescriptor, quoteCountError, quoteFileError } from "@/lib/quote-files";
 import { getFarmWeather } from "@/lib/weather";
 
 const MAX_REQUEST_BYTES = 82 * 1024 * 1024;
@@ -411,11 +411,9 @@ export const Route = createFileRoute("/api/analyze-quotes")({
             );
           }
         }
-        if (!files.length || files.length > MAX_QUOTE_FILES) {
-          return Response.json(
-            { error: `Upload between 1 and ${MAX_QUOTE_FILES} quote files.` },
-            { status: 400 },
-          );
+        const countError = quoteCountError(files.length);
+        if (countError) {
+          return Response.json({ error: countError }, { status: 400 });
         }
         for (const file of files) {
           const error = quoteFileError(file);
