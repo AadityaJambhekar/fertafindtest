@@ -10,6 +10,8 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { DEFAULT_OG_IMAGE, SITE_NAME } from "@/lib/seo";
+import { bootstrapAnalytics } from "@/lib/analytics";
 
 function NotFoundComponent() {
   return (
@@ -73,42 +75,49 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 
 export const Route = createRootRoute({
   head: () => ({
+    // Global fallback + shared social/theme tags only. Each page supplies its own
+    // title, description, canonical and Open Graph copy (see src/lib/seo.ts), so
+    // inner pages never inherit the homepage's metadata.
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "FertaFind — Best-value fertilizer, backed by AI" },
+      { title: "FertaFind — Compare fertilizer quotes with AI" },
       {
         name: "description",
         content:
-          "Upload your fertilizer quotes and let AI find the highest-ROI fertilizer for your crop and location — with local suppliers and delivery costs factored in.",
-      },
-      { property: "og:title", content: "FertaFind — Best-value fertilizer, backed by AI" },
-      {
-        property: "og:description",
-        content:
-          "Upload your fertilizer quotes and let AI find the highest-ROI fertilizer for your crop and location — with local suppliers and delivery costs factored in.",
+          "FertaFind helps farmers compare fertilizer quotes and receive an AI-assisted, cost-based recommendation based on their crop, field, location, and quote information.",
       },
       { property: "og:type", content: "website" },
-      {
-        property: "og:image",
-        content: "https://fertafind.com/fertafind-logo-transparent.png",
-      },
+      { property: "og:site_name", content: SITE_NAME },
+      { property: "og:image", content: DEFAULT_OG_IMAGE },
       { name: "twitter:card", content: "summary_large_image" },
-      {
-        name: "twitter:image",
-        content: "https://fertafind.com/fertafind-logo-transparent.png",
-      },
+      { name: "twitter:image", content: DEFAULT_OG_IMAGE },
       { name: "theme-color", content: "#284a36" },
-      { name: "twitter:title", content: "FertaFind — Best-value fertilizer, backed by AI" },
-      {
-        name: "twitter:description",
-        content:
-          "Upload your fertilizer quotes and let AI find the highest-ROI fertilizer for your crop and location — with local suppliers and delivery costs factored in.",
-      },
+      // Search-engine verification is environment-driven; tokens are never committed.
+      ...(import.meta.env.VITE_GOOGLE_SITE_VERIFICATION
+        ? [
+            {
+              name: "google-site-verification",
+              content: import.meta.env.VITE_GOOGLE_SITE_VERIFICATION,
+            },
+          ]
+        : []),
+      ...(import.meta.env.VITE_BING_SITE_VERIFICATION
+        ? [
+            {
+              name: "msvalidate.01",
+              content: import.meta.env.VITE_BING_SITE_VERIFICATION,
+            },
+          ]
+        : []),
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/fertafind-logo-transparent.png", type: "image/png" },
+      {
+        rel: "icon",
+        href: "/fertafind-logo-transparent.png",
+        type: "image/png",
+      },
       { rel: "apple-touch-icon", href: "/fertafind-logo-transparent.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       {
@@ -143,6 +152,11 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 function RootComponent() {
+  useEffect(() => {
+    // Client-only: initialise analytics (if configured) and record AI-search referrals once.
+    bootstrapAnalytics();
+  }, []);
+
   return (
     // Required: nested routes render here. Removing <Outlet /> breaks all child routes.
     <Outlet />

@@ -1,12 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import type {
-  AnalyzedQuote,
-  AgronomyGuidance,
-  PriorFertilizerApplication,
-  QuoteAnalysis,
-} from "@/lib/quote-analysis";
+import type { PriorFertilizerApplication, QuoteAnalysis } from "@/lib/quote-analysis";
 import { getQuoteFileDescriptor, quoteCountError, quoteFileError } from "@/lib/quote-files";
 import { getFarmWeather } from "@/lib/weather";
+import { parseQuoteAnalysis, parseFailureMessage, type OpenAIResponse } from "@/lib/quote-response";
 
 const MAX_REQUEST_BYTES = 82 * 1024 * 1024;
 const ANALYSIS_LIMIT = 3;
@@ -192,20 +188,6 @@ const quoteSchema = {
     },
   },
 } as const;
-
-type OpenAIResult = {
-  output_text?: string;
-  output?: Array<{ content?: Array<{ type?: string; text?: string }> }>;
-  error?: { message?: string };
-};
-
-function textFromResponse(result: OpenAIResult) {
-  if (result.output_text) return result.output_text;
-  return (
-    result.output?.flatMap((item) => item.content ?? []).find((item) => item.type === "output_text")
-      ?.text ?? ""
-  );
-}
 
 function field(form: FormData, name: string) {
   const value = form.get(name);
@@ -482,55 +464,94 @@ Complete all nine factorChecks. Each effect must state how that factor changed t
 
 Do not treat modeled surface conditions as a substitute for a field measurement or laboratory test. If soil-test units, extraction method, sample depth, timing, irrigation detail, application rate, or crop requirement are missing, say so and use "not_enough_information" or "caution" rather than guessing. Irrigation guidance must consider whether watering is sufficient to incorporate the quoted product and the risk of loss from heavy rain, saturated soil, heat, wind or poorly timed application. SoilTestSummary must state which supplied soil-test fields were used, or clearly say no lab test was provided. fitReason must be concise, plain-language, and start with exactly one of these verdicts: "Recommended because", "Use caution because", or "Not enough information because". Use "Recommended because" only when agronomicFit is "suitable" and the quote contains enough product and rate information to support it. Never claim a guaranteed yield. Identify sourceFile using one of the supplied filenames. confidence is 0 to 1. Add warnings for unreadable pages or information that prevents a fair comparison.`;
 
-        const upstream = await fetch("https://api.openai.com/v1/responses", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: process.env.OPENAI_QUOTE_MODEL || "gpt-5.6-luna",
-            store: false,
-            input: [
-              {
-                role: "user",
-                content: [{ type: "input_text", text: prompt }, ...fileInputs],
-              },
-            ],
-            text: {
-              format: {
-                type: "json_schema",
-                name: "fertilizer_quote_analysis",
-                strict: true,
-                schema: quoteSchema,
-              },
+        let upstream: Response;
+        try {
+          upstream = await fetch("https://api.openai.com/v1/responses", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              "Content-Type": "application/json",
             },
-          }),
-        });
-
-        const openAIResult = (await upstream.json()) as OpenAIResult;
-        if (!upstream.ok) {
-          console.error(
-            "OpenAI quote analysis failed",
-            upstream.status,
-            openAIResult.error?.message,
+            body: JSON.stringify({
+              model: process.env.OPENAI_QUOTE_MODEL || "gpt-5.6-luna",
+              store: false,
+              input: [
+                {
+                  role: "user",
+                  content: [{ type: "input_text", text: prompt }, ...fileInputs],
+                },
+              ],
+              text: {
+                format: {
+                  type: "json_schema",
+                  name: "fertilizer_quote_analysis",
+                  strict: true,
+                  schema: quoteSchema,
+                },
+              },
+            }),
+            signal: AbortSignal.timeout(90_000),
+          });
+        } catch {
+          // Network/DNS/TLS failure or the 90s timeout aborting the request. Never
+          // surface the raw error; invite a retry.
+          console.error("OpenAI quote analysis request did not complete");
+          return Response.json(
+            {
+              error: "The analysis service did not respond in time. Please try again.",
+              retryable: true,
+            },
+            { status: 504 },
           );
-          return Response.json({ error: analysisErrorMessage(upstream.status) }, { status: 502 });
+        }
+
+        if (!upstream.ok) {
+          // The upstream error body may be JSON or an HTML error page; read it
+          // defensively and log only the status + short message, never the raw body.
+          let upstreamMessage: string | undefined;
+          try {
+            const body = (await upstream.clone().json()) as { error?: { message?: string } };
+            upstreamMessage = body.error?.message;
+          } catch {
+            upstreamMessage = undefined;
+          }
+          console.error("OpenAI quote analysis failed", upstream.status, upstreamMessage);
+          return Response.json(
+            { error: analysisErrorMessage(upstream.status), retryable: upstream.status !== 401 },
+            { status: 502 },
+          );
+        }
+
+        let openAIResult: OpenAIResponse;
+        try {
+          openAIResult = (await upstream.json()) as OpenAIResponse;
+        } catch {
+          // A 2xx response with a non-JSON body (e.g. an HTML proxy/error page).
+          console.error("OpenAI quote analysis returned a non-JSON body");
+          return Response.json(
+            { error: "The AI returned an unreadable analysis. Please try again.", retryable: true },
+            { status: 502 },
+          );
+        }
+
+        const parsed = parseQuoteAnalysis(openAIResult);
+        if (!parsed.ok) {
+          // Empty / refusal / truncated / malformed / schema-invalid model output.
+          console.error("Quote analysis parse failure", parsed.reason);
+          return Response.json(
+            { error: parseFailureMessage(parsed.reason), retryable: true },
+            { status: 502 },
+          );
+        }
+        const extracted = parsed.data;
+        if (!extracted.quotes.length) {
+          extracted.warnings = [
+            "No identifiable fertilizer product or fertilizer grade was found in the uploaded files. Check that the upload shows the product name or analysis clearly.",
+            ...extracted.warnings,
+          ];
         }
 
         try {
-          const extracted = JSON.parse(textFromResponse(openAIResult)) as {
-            quotes: Omit<AnalyzedQuote, "id">[];
-            warnings: string[];
-            agronomy: AgronomyGuidance;
-          };
-          if (!extracted.quotes.length) {
-            extracted.warnings = [
-              "No identifiable fertilizer product or fertilizer grade was found in the uploaded files. Check that the upload shows the product name or analysis clearly.",
-              ...extracted.warnings,
-            ];
-          }
-
           const id = crypto.randomUUID();
           const analysis: QuoteAnalysis = {
             id,
@@ -606,9 +627,10 @@ Do not treat modeled surface conditions as a substitute for a field measurement 
           };
           return Response.json({ analysis });
         } catch (error) {
-          console.error("Invalid structured quote analysis", error);
+          // Defensive net for any unexpected failure while assembling the result.
+          console.error("Failed to assemble quote analysis", error);
           return Response.json(
-            { error: "The AI returned an unreadable analysis. Please try again." },
+            { error: "The AI returned an unreadable analysis. Please try again.", retryable: true },
             { status: 502 },
           );
         }

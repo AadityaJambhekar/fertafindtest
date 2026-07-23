@@ -13,3 +13,32 @@ dist/
 # Logs & OS files
 *.log
 .DS_Store
+
+# --- Additional ignore patterns recovered from the project archive ---
+# Framework/build caches (TanStack Start / Nitro / Vinxi)
+.output
+.vinxi
+.nitro
+.tanstack/**
+dist-ssr
+.pnpm-store/
+
+# Vite local files
+*.local
+
+# Cloudflare Wrangler — never commit local secrets
+.wrangler/
+.dev.vars
+
+# Lovable scratch
+.lovable/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

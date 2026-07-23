@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   ArrowRight,
+  Building2,
   Camera,
   MapPin,
   Sparkles,
@@ -13,6 +14,8 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
+import { pageMeta, jsonLdScript, organizationLd, websiteLd, faqLd } from "@/lib/seo";
+import { listPublicSuppliers } from "@/lib/suppliers";
 
 const rotatingPhrases = [
   "worth buying.",
@@ -23,40 +26,19 @@ const rotatingPhrases = [
 const easterEggPhrase = "Aaditya is the best.";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "FertaFind — Best-value fertilizer, backed by AI" },
-      {
-        name: "description",
-        content:
-          "Upload your fertilizer quotes and let AI find the highest-ROI fertilizer for your crop and location — with local suppliers and delivery costs factored in.",
-      },
-      {
-        property: "og:title",
-        content: "FertaFind — Best-value fertilizer, backed by AI",
-      },
-      {
-        property: "og:description",
-        content:
-          "Upload your fertilizer quotes and let AI find the highest-ROI fertilizer for your crop and location — with local suppliers and delivery costs factored in.",
-      },
-    ],
-    links: [{ rel: "canonical", href: "https://fertafind.com/" }],
-    scripts: [
-      {
-        type: "application/ld+json",
-        children: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "Organization",
-          name: "FertaFind",
-          url: "https://fertafind.com/",
-          description:
-            "FertaFind helps growers compare fertilizer quotes, nutrient value, pricing and delivery to identify suitable partner products.",
-          logo: "https://fertafind.com/fertafind-logo-transparent.png",
-        }),
-      },
-    ],
-  }),
+  head: () => {
+    const base = pageMeta("home");
+    return {
+      ...base,
+      // Homepage structured data: Organization + WebSite, plus a FAQPage generated
+      // from the same `faqs` array rendered below so it always mirrors visible content.
+      scripts: [
+        jsonLdScript(organizationLd()),
+        jsonLdScript(websiteLd()),
+        jsonLdScript(faqLd(faqs)),
+      ],
+    };
+  },
   component: HomePage,
 });
 
@@ -64,11 +46,14 @@ function HomePage() {
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
-      <Hero />
-      <HowItWorks />
-      <Benefits />
-      <PartnerSpotlight />
-      <FrequentlyAskedQuestions />
+      <main>
+        <Hero />
+        <HowItWorks />
+        <Benefits />
+        <PartnerSpotlight />
+        <FeaturedSuppliers />
+        <FrequentlyAskedQuestions />
+      </main>
       <div className="[&>footer]:mt-0">
         <SiteFooter />
       </div>
@@ -201,7 +186,7 @@ function HowItWorks() {
   return (
     <section id="how" className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24 lg:py-28">
       <div className="max-w-2xl">
-        <p className="text-sm font-medium uppercase tracking-wider text-primary-soft">
+        <p className="text-sm font-medium uppercase tracking-wider eyebrow-accent">
           01 / How it works
         </p>
         <h2 className="mt-2 font-display text-3xl font-semibold text-foreground sm:text-4xl md:text-5xl">
@@ -218,7 +203,7 @@ function HowItWorks() {
               <span className="grid h-11 w-11 place-items-center rounded-2xl bg-primary text-primary-foreground">
                 <step.icon className="h-5 w-5" />
               </span>
-              <span className="font-display text-2xl text-muted-foreground/40">0{i + 1}</span>
+              <span className="font-display text-2xl text-muted-foreground/72">0{i + 1}</span>
             </div>
             <h3 className="mt-6 font-display text-xl font-semibold text-foreground">
               {step.title}
@@ -244,7 +229,7 @@ function Benefits() {
   const items = [
     {
       icon: Wallet,
-      title: "Stop overpaying for nutrients",
+      title: "See nutrient cost on one basis",
       body: "Quotes can look similar until price, pack size and nutrient concentration are put on the same basis. We show that clearly for one quote or several.",
     },
     {
@@ -272,11 +257,11 @@ function Benefits() {
       <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
         <div className="grid gap-12 lg:grid-cols-[1fr_1.4fr] lg:gap-16">
           <div>
-            <p className="text-sm font-medium uppercase tracking-wider text-primary">
+            <p className="text-sm font-medium uppercase tracking-wider eyebrow-accent">
               02 / Why farmers use FertaFind
             </p>
             <h2 className="mt-2 font-display text-3xl font-semibold text-foreground sm:text-4xl md:text-5xl">
-              More yield per dollar. Fewer bad surprises.
+              Clearer comparisons. Fewer bad surprises.
             </h2>
             <p className="mt-4 max-w-md text-muted-foreground">
               Fertilizer is one of the largest cash expenses on the farm. A small decision made
@@ -310,7 +295,7 @@ function PartnerSpotlight() {
     <section id="partners" className="scroll-mt-28 border-b border-border bg-card">
       <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-[1.15fr_.85fr] lg:gap-14">
         <div>
-          <p className="text-sm font-medium uppercase tracking-wider text-primary">
+          <p className="text-sm font-medium uppercase tracking-wider eyebrow-accent">
             03 / Our partners
           </p>
           <h2 className="mt-3 font-display text-4xl font-semibold text-foreground sm:text-5xl">
@@ -355,6 +340,79 @@ function PartnerSpotlight() {
   );
 }
 
+function FeaturedSuppliers() {
+  const suppliers = listPublicSuppliers().slice(0, 3);
+  return (
+    <section id="suppliers" className="scroll-mt-28 border-b border-border">
+      <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+        <div className="max-w-2xl">
+          <p className="text-sm font-medium uppercase tracking-wider eyebrow-accent">Suppliers</p>
+          <h2 className="mt-3 font-display text-4xl font-semibold text-foreground sm:text-5xl">
+            Browse fertilizer suppliers
+          </h2>
+          <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
+            Find fertilizer suppliers and manufacturers in the FertaFind directory. We verify a
+            supplier&apos;s details before listing it publicly, so the directory grows over time.
+          </p>
+        </div>
+
+        {suppliers.length > 0 ? (
+          <>
+            <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {suppliers.map((s) => (
+                <Link
+                  key={s.id}
+                  to="/suppliers/$slug"
+                  params={{ slug: s.slug }}
+                  className="group rounded-2xl border border-border bg-card p-6 transition-all hover:-translate-y-1 hover:border-foreground hover:shadow-[var(--shadow-soft)]"
+                >
+                  <span className="grid h-11 w-11 place-items-center rounded-2xl bg-primary/10 text-primary">
+                    <Building2 className="h-5 w-5" />
+                  </span>
+                  <h3 className="mt-4 font-display text-xl font-semibold text-foreground">
+                    {s.displayName}
+                  </h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {[s.city, s.state, s.country].filter(Boolean).join(", ")}
+                  </p>
+                </Link>
+              ))}
+            </div>
+            <div className="mt-8">
+              <Link
+                to="/suppliers"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold content-accent hover:underline"
+              >
+                Browse the full directory
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </>
+        ) : (
+          <div className="mt-9 flex flex-col items-start gap-4 rounded-3xl border border-border bg-card p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
+            <div className="flex items-center gap-4">
+              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
+                <Building2 className="h-6 w-6" />
+              </span>
+              <p className="max-w-xl text-muted-foreground">
+                Verified suppliers are being added. Browse the directory to see who is listed as we
+                confirm each supplier&apos;s details.
+              </p>
+            </div>
+            <Link
+              to="/suppliers"
+              className="inline-flex h-12 shrink-0 items-center gap-2 rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-all hover:-translate-y-0.5 hover:bg-primary-soft"
+            >
+              Browse suppliers
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 const faqs = [
   {
     question: "Does FertaFind recommend the same fertilizer every time?",
@@ -383,7 +441,7 @@ function FrequentlyAskedQuestions() {
     <section id="faq" className="scroll-mt-28 border-y border-border bg-card">
       <div className="mx-auto grid max-w-6xl gap-9 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-[.7fr_1.3fr] lg:gap-12">
         <div>
-          <p className="text-sm font-medium uppercase tracking-wider text-primary">04 / FAQ</p>
+          <p className="text-sm font-medium uppercase tracking-wider eyebrow-accent">04 / FAQ</p>
           <h2 className="mt-3 font-display text-3xl font-semibold text-foreground sm:text-4xl md:text-5xl">
             Clear answers before you analyze.
           </h2>

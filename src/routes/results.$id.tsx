@@ -25,7 +25,9 @@ export const Route = createFileRoute("/results/$id")({
   head: () => ({
     meta: [
       { title: "Your fertilizer recommendation — FertaFind" },
-      { name: "robots", content: "noindex" },
+      // Customer-specific page: keep it out of every index. A matching X-Robots-Tag
+      // header is also delivered server-side (see src/server.ts).
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
   component: ResultsPage,

@@ -1,15 +1,55 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://fertafind.com/</loc>
+    <loc>https://www.fertafind.com/</loc>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://fertafind.com/analyze/</loc>
+    <loc>https://www.fertafind.com/analyze</loc>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://fertafind.com/terms/</loc>
+    <loc>https://www.fertafind.com/suppliers</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/resources</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/guides/how-to-compare-fertilizer-quotes</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/guides/fertilizer-cost-per-acre</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/guides/cost-per-pound-of-nitrogen</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/guides/how-freight-affects-fertilizer-cost</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/compare/dap-vs-map</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/compare/urea-vs-uan</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/methodology/usda-ams-fertilizer-data</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/suppliers/fecoagro</loc>
     <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/terms</loc>
+    <priority>0.4</priority>
   </url>
 </urlset>
