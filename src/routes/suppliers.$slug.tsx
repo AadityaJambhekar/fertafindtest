@@ -1,17 +1,19 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import { ArrowRight, ExternalLink, MapPin, ShieldCheck } from "lucide-react";
+import { AlertTriangle, ArrowRight, Clock, ExternalLink, MapPin, ShieldCheck } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
 import {
   SUPPLIER_TYPE_LABEL,
-  getPublicSupplierBySlug,
+  VERIFICATION_BADGE,
+  SUPPLIER_DISCOVERY_DISCLAIMER,
+  getListedSupplierBySlug,
   supplierDetailRouteHead,
 } from "@/lib/suppliers";
 
 export const Route = createFileRoute("/suppliers/$slug")({
-  // Only verified, public, complete suppliers resolve. Drafts / inactive / unknown
-  // slugs are redirected to the directory — they can never render a detail page.
+  // Any LISTED company (verified or source-listed-unverified) resolves. Draft / inactive /
+  // unknown slugs are redirected to the directory — they can never render a detail page.
   loader: ({ params }) => {
-    const supplier = getPublicSupplierBySlug(params.slug);
+    const supplier = getListedSupplierBySlug(params.slug);
     if (!supplier) throw redirect({ to: "/suppliers" });
     return { supplier };
   },
@@ -41,6 +43,7 @@ function Chips({ label, items }: { label: string; items: string[] }) {
 function SupplierDetailPage() {
   const { supplier } = Route.useLoaderData();
   const place = [supplier.city, supplier.state, supplier.country].filter(Boolean).join(", ");
+  const isVerified = supplier.verificationStatus === "public-source-verified";
 
   return (
     <div className="min-h-screen bg-background">
@@ -72,10 +75,15 @@ function SupplierDetailPage() {
           <p className="text-sm font-semibold uppercase tracking-[0.16em] content-accent">
             Supplier
           </p>
-          {supplier.verified && (
+          {isVerified ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary">
               <ShieldCheck className="h-3 w-3" aria-hidden="true" />
-              Public information verified
+              {VERIFICATION_BADGE["public-source-verified"]}
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-amber-800">
+              <Clock className="h-3 w-3" aria-hidden="true" />
+              {VERIFICATION_BADGE["source-listed-unverified"]}
             </span>
           )}
         </div>
@@ -95,6 +103,27 @@ function SupplierDetailPage() {
           ) : null}
         </p>
 
+        {!isVerified && (
+          <div
+            role="note"
+            className="mt-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4"
+          >
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" aria-hidden="true" />
+            <div>
+              <p className="text-sm font-semibold text-amber-900">
+                Information pending verification
+              </p>
+              <p className="mt-1 text-sm leading-6 text-amber-800">
+                {supplier.displayName}&apos;s information has not been independently verified by
+                FertaFind. It is listed from source material provided to us. Company details,
+                products, contacts and website are not confirmed and are intentionally left blank
+                until verified.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* A "Visit website" link is shown ONLY when a verified website exists. */}
         {(supplier.website || supplier.fertilizerPage) && (
           <div className="mt-5 flex flex-wrap gap-3">
             {supplier.website && (
@@ -169,8 +198,7 @@ function SupplierDetailPage() {
         </div>
 
         <p className="mt-8 text-xs leading-5 text-muted-foreground">
-          Supplier information is provided for discovery and does not imply endorsement or
-          partnership.
+          {SUPPLIER_DISCOVERY_DISCLAIMER}
         </p>
       </main>
       <SiteFooter />

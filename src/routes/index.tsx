@@ -4,6 +4,7 @@ import {
   ArrowRight,
   Building2,
   Camera,
+  Clock,
   MapPin,
   Sparkles,
   Truck,
@@ -15,7 +16,7 @@ import {
 } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
 import { pageMeta, jsonLdScript, organizationLd, websiteLd, faqLd } from "@/lib/seo";
-import { listPublicSuppliers } from "@/lib/suppliers";
+import { listSupplierCompanies, VERIFICATION_BADGE } from "@/lib/suppliers";
 
 const rotatingPhrases = [
   "worth buying.",
@@ -341,7 +342,7 @@ function PartnerSpotlight() {
 }
 
 function FeaturedSuppliers() {
-  const suppliers = listPublicSuppliers().slice(0, 3);
+  const suppliers = listSupplierCompanies();
   return (
     <section id="suppliers" className="scroll-mt-28 border-b border-border">
       <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
@@ -351,63 +352,57 @@ function FeaturedSuppliers() {
             Browse fertilizer suppliers
           </h2>
           <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
-            Find fertilizer suppliers and manufacturers in the FertaFind directory. We verify a
-            supplier&apos;s details before listing it publicly, so the directory grows over time.
+            Find fertilizer suppliers in the FertaFind directory. Each company is clearly marked as
+            verified from public sources or pending independent verification.
           </p>
         </div>
 
-        {suppliers.length > 0 ? (
-          <>
-            <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {suppliers.map((s) => (
-                <Link
-                  key={s.id}
-                  to="/suppliers/$slug"
-                  params={{ slug: s.slug }}
-                  className="group rounded-2xl border border-border bg-card p-6 transition-all hover:-translate-y-1 hover:border-foreground hover:shadow-[var(--shadow-soft)]"
-                >
+        <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {suppliers.map((s) => {
+            const isVerified = s.verificationStatus === "public-source-verified";
+            const place = [s.city, s.state, s.country].filter(Boolean).join(", ");
+            return (
+              <Link
+                key={s.id}
+                to="/suppliers/$slug"
+                params={{ slug: s.slug }}
+                className="group flex flex-col rounded-2xl border border-border bg-card p-6 transition-all hover:-translate-y-1 hover:border-foreground hover:shadow-[var(--shadow-soft)]"
+              >
+                <div className="flex items-start justify-between gap-3">
                   <span className="grid h-11 w-11 place-items-center rounded-2xl bg-primary/10 text-primary">
                     <Building2 className="h-5 w-5" />
                   </span>
-                  <h3 className="mt-4 font-display text-xl font-semibold text-foreground">
-                    {s.displayName}
-                  </h3>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {[s.city, s.state, s.country].filter(Boolean).join(", ")}
-                  </p>
-                </Link>
-              ))}
-            </div>
-            <div className="mt-8">
-              <Link
-                to="/suppliers"
-                className="inline-flex items-center gap-1.5 text-sm font-semibold content-accent hover:underline"
-              >
-                Browse the full directory
-                <ArrowRight className="h-4 w-4" />
+                  {isVerified ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary">
+                      <ShieldCheck className="h-3 w-3" aria-hidden="true" />
+                      {VERIFICATION_BADGE["public-source-verified"]}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-amber-800">
+                      <Clock className="h-3 w-3" aria-hidden="true" />
+                      {VERIFICATION_BADGE["source-listed-unverified"]}
+                    </span>
+                  )}
+                </div>
+                <h3 className="mt-4 font-display text-xl font-semibold text-foreground">
+                  {s.displayName}
+                </h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {place || "Location pending verification"}
+                </p>
               </Link>
-            </div>
-          </>
-        ) : (
-          <div className="mt-9 flex flex-col items-start gap-4 rounded-3xl border border-border bg-card p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
-            <div className="flex items-center gap-4">
-              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
-                <Building2 className="h-6 w-6" />
-              </span>
-              <p className="max-w-xl text-muted-foreground">
-                Verified suppliers are being added. Browse the directory to see who is listed as we
-                confirm each supplier&apos;s details.
-              </p>
-            </div>
-            <Link
-              to="/suppliers"
-              className="inline-flex h-12 shrink-0 items-center gap-2 rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-all hover:-translate-y-0.5 hover:bg-primary-soft"
-            >
-              Browse suppliers
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        )}
+            );
+          })}
+        </div>
+        <div className="mt-8">
+          <Link
+            to="/suppliers"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold content-accent hover:underline"
+          >
+            View all suppliers and sourcing origins
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
       </div>
     </section>
   );

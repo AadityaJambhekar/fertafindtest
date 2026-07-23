@@ -1,16 +1,23 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ArrowRight, List, Map as MapIcon, MapPin, ShieldCheck } from "lucide-react";
+import { ArrowRight, Clock, Globe2, MapPin, ShieldCheck } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
-import { GoogleMap, type GoogleMapMarker } from "@/components/google-map";
 import {
   SUPPLIERS_DIRECTORY,
   SUPPLIER_TYPE_LABEL,
-  listPublicSuppliers,
-  supplierFilterOptions,
+  VERIFICATION_BADGE,
+  SOURCING_DISCLAIMER,
+  SUPPLIER_DISCOVERY_DISCLAIMER,
+  listSupplierCompanies,
+  listSourcingOrigins,
+  directoryFilterOptions,
+  filterSupplierCompanies,
+  filterSourcingOrigins,
   supplierPath,
   suppliersRouteHead,
   type Supplier,
+  type SourcingOrigin,
+  type SupplierDirectoryFilters,
 } from "@/lib/suppliers";
 
 export const Route = createFileRoute("/suppliers/")({
@@ -18,56 +25,33 @@ export const Route = createFileRoute("/suppliers/")({
   component: SuppliersPage,
 });
 
-interface Filters {
-  product: string;
-  grade: string;
-  type: string;
-  country: string;
-  region: string;
-  verifiedOnly: boolean;
-}
-
-const EMPTY_FILTERS: Filters = {
-  product: "",
-  grade: "",
+const EMPTY_FILTERS: SupplierDirectoryFilters = {
+  verification: "",
   type: "",
-  country: "",
-  region: "",
-  verifiedOnly: false,
+  product: "",
+  origin: "",
 };
 
-function matches(s: Supplier, f: Filters): boolean {
-  if (f.product && !s.products.includes(f.product)) return false;
-  if (f.grade && !s.productGrades.includes(f.grade)) return false;
-  if (f.type && s.supplierType !== f.type) return false;
-  if (f.country && s.country !== f.country) return false;
-  if (f.region && !s.serviceRegions.includes(f.region)) return false;
-  if (f.verifiedOnly && !s.verified) return false;
-  return true;
-}
-
 function SuppliersPage() {
-  // Only public, verified, complete records are ever exposed here.
-  const all = listPublicSuppliers();
-  const options = supplierFilterOptions();
-  const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
-  const [view, setView] = useState<"list" | "map">("list");
+  const companies = listSupplierCompanies();
+  const origins = listSourcingOrigins();
+  const options = directoryFilterOptions();
+  const [filters, setFilters] = useState<SupplierDirectoryFilters>(EMPTY_FILTERS);
 
-  const filtered = useMemo(() => all.filter((s) => matches(s, filters)), [all, filters]);
-  const markers: GoogleMapMarker[] = useMemo(
-    () =>
-      filtered
-        .filter((s) => s.latitude != null && s.longitude != null)
-        .map((s) => ({
-          id: s.id,
-          lat: s.latitude as number,
-          lng: s.longitude as number,
-          title: s.displayName,
-        })),
-    [filtered],
+  const filteredCompanies = useMemo(
+    () => filterSupplierCompanies(companies, filters),
+    [companies, filters],
+  );
+  const filteredOrigins = useMemo(
+    () => filterSourcingOrigins(origins, filters),
+    [origins, filters],
   );
 
-  const hasSuppliers = all.length > 0;
+  const isFiltering =
+    filters.verification !== "" ||
+    filters.type !== "" ||
+    filters.product !== "" ||
+    filters.origin !== "";
 
   return (
     <div className="min-h-screen bg-background">
@@ -93,126 +77,133 @@ function SuppliersPage() {
           Directory
         </p>
         <h1 className="mt-3 font-display text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
-          Fertilizer suppliers
+          Suppliers &amp; sourcing origins
         </h1>
         <p className="mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">
           {SUPPLIERS_DIRECTORY.description}
         </p>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
-          Supplier information is provided for discovery and does not imply endorsement or
-          partnership.
+          {SUPPLIER_DISCOVERY_DISCLAIMER}
         </p>
 
-        {hasSuppliers ? (
-          <>
-            <div className="mt-8 flex flex-wrap items-end gap-3 rounded-2xl border border-border bg-card p-4">
-              <FilterSelect
-                label="Product"
-                value={filters.product}
-                onChange={(v) => setFilters((f) => ({ ...f, product: v }))}
-                options={options.products}
-              />
-              <FilterSelect
-                label="Grade"
-                value={filters.grade}
-                onChange={(v) => setFilters((f) => ({ ...f, grade: v }))}
-                options={options.productGrades}
-              />
-              <FilterSelect
-                label="Type"
-                value={filters.type}
-                onChange={(v) => setFilters((f) => ({ ...f, type: v }))}
-                options={options.supplierTypes}
-                labels={SUPPLIER_TYPE_LABEL}
-              />
-              <FilterSelect
-                label="Country"
-                value={filters.country}
-                onChange={(v) => setFilters((f) => ({ ...f, country: v }))}
-                options={options.countries}
-              />
-              <FilterSelect
-                label="Service region"
-                value={filters.region}
-                onChange={(v) => setFilters((f) => ({ ...f, region: v }))}
-                options={options.serviceRegions}
-              />
-              <label className="flex items-center gap-2 text-sm font-medium text-foreground">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-border accent-primary"
-                  checked={filters.verifiedOnly}
-                  onChange={(e) => setFilters((f) => ({ ...f, verifiedOnly: e.target.checked }))}
-                />
-                Verified only
-              </label>
-              <div className="ml-auto flex items-center gap-1 rounded-lg border border-border p-0.5">
-                <ViewToggle
-                  active={view === "list"}
-                  onClick={() => setView("list")}
-                  icon={<List className="h-4 w-4" />}
-                  label="List"
-                />
-                <ViewToggle
-                  active={view === "map"}
-                  onClick={() => setView("map")}
-                  icon={<MapIcon className="h-4 w-4" />}
-                  label="Map"
-                />
-              </div>
-            </div>
-
-            <p className="mt-4 text-sm text-muted-foreground">
-              {filtered.length} {filtered.length === 1 ? "supplier" : "suppliers"}
-            </p>
-
-            {view === "map" ? (
-              <div className="mt-4 overflow-hidden rounded-2xl border border-border">
-                <GoogleMap
-                  center={markers.length ? { lat: markers[0].lat, lng: markers[0].lng } : null}
-                  markers={markers}
-                  height="28rem"
-                  emptyFallback={
-                    <div className="grid h-full place-items-center p-8 text-center text-sm text-muted-foreground">
-                      Map view needs supplier coordinates. Use the list view above.
-                    </div>
-                  }
-                />
-              </div>
-            ) : (
-              <ul className="mt-4 grid gap-4 sm:grid-cols-2">
-                {filtered.map((s) => (
-                  <li key={s.id}>
-                    <SupplierCard supplier={s} />
-                  </li>
-                ))}
-              </ul>
-            )}
-          </>
-        ) : (
-          <section className="mt-10 rounded-3xl border border-border bg-card p-8 text-center sm:p-12">
-            <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-primary/10 text-primary">
-              <ShieldCheck className="h-7 w-7" aria-hidden="true" />
-            </span>
-            <h2 className="mt-5 font-display text-2xl font-semibold text-foreground">
-              Verified suppliers are being added
-            </h2>
-            <p className="mx-auto mt-3 max-w-xl leading-7 text-muted-foreground">
-              We list a supplier only after its details — products, location and contact information
-              — have been independently verified. We are building that list now, so no public
-              suppliers appear here yet. Please check back soon.
-            </p>
-            <Link
-              to="/analyze"
-              className="mt-7 inline-flex h-12 items-center gap-2 rounded-full bg-primary px-7 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-colors hover:bg-primary-soft"
+        {/* Filters */}
+        <div className="mt-8 flex flex-wrap items-end gap-3 rounded-2xl border border-border bg-card p-4">
+          <FilterSelect
+            label="Verification"
+            value={filters.verification}
+            onChange={(v) =>
+              setFilters((f) => ({
+                ...f,
+                verification: v as SupplierDirectoryFilters["verification"],
+              }))
+            }
+            entries={[
+              { value: "verified", label: "Verified" },
+              { value: "pending", label: "Pending verification" },
+            ]}
+          />
+          <FilterSelect
+            label="Supplier type"
+            value={filters.type}
+            onChange={(v) =>
+              setFilters((f) => ({ ...f, type: v as SupplierDirectoryFilters["type"] }))
+            }
+            entries={options.supplierTypes.map((t) => ({
+              value: t,
+              label: SUPPLIER_TYPE_LABEL[t],
+            }))}
+          />
+          <FilterSelect
+            label="Product"
+            value={filters.product}
+            onChange={(v) => setFilters((f) => ({ ...f, product: v }))}
+            entries={options.products.map((p) => ({ value: p, label: p }))}
+          />
+          <FilterSelect
+            label="Country or origin"
+            value={filters.origin}
+            onChange={(v) => setFilters((f) => ({ ...f, origin: v }))}
+            entries={options.origins.map((o) => ({ value: o, label: o }))}
+          />
+          {isFiltering && (
+            <button
+              type="button"
+              onClick={() => setFilters(EMPTY_FILTERS)}
+              className="ml-auto h-9 rounded-lg border border-border px-3 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
             >
-              Analyze your quotes
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </section>
-        )}
+              Clear filters
+            </button>
+          )}
+        </div>
 
-        <div className="mt-14 rounded-3xl border border-border bg-card p-6 sm:p-8">
+        {/* Section 1: Supplier companies */}
+        <section className="mt-12" aria-labelledby="supplier-companies-heading">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2
+              id="supplier-companies-heading"
+              className="font-display text-2xl font-semibold text-foreground"
+            >
+              Supplier companies
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {filteredCompanies.length} {filteredCompanies.length === 1 ? "company" : "companies"}
+            </p>
+          </div>
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">
+            Each company is clearly marked as verified from public sources or pending independent
+            verification.
+          </p>
+
+          {filteredCompanies.length > 0 ? (
+            <ul className="mt-5 grid gap-4 sm:grid-cols-2">
+              {filteredCompanies.map((s) => (
+                <li key={s.id}>
+                  <SupplierCard supplier={s} />
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-5 rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
+              No supplier companies match the current filters.
+            </p>
+          )}
+        </section>
+
+        {/* Section 2: Global sourcing origins */}
+        <section className="mt-14" aria-labelledby="sourcing-origins-heading">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2
+              id="sourcing-origins-heading"
+              className="font-display text-2xl font-semibold text-foreground"
+            >
+              Global sourcing origins
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {filteredOrigins.length} {filteredOrigins.length === 1 ? "origin" : "origins"}
+            </p>
+          </div>
+          <p className="mt-2 rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm leading-6 text-muted-foreground">
+            {SOURCING_DISCLAIMER}
+          </p>
+
+          {filteredOrigins.length > 0 ? (
+            <ul className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {filteredOrigins.map((o) => (
+                <li key={`${o.origin}-${o.product}`}>
+                  <SourcingOriginCard origin={o} />
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-5 rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
+              {filters.verification !== "" || filters.type !== ""
+                ? "Sourcing origins are hidden while a supplier-only filter (verification or supplier type) is active."
+                : "No sourcing origins match the current filters."}
+            </p>
+          )}
+        </section>
+
+        <div className="mt-16 rounded-3xl border border-border bg-card p-6 sm:p-8">
           <h2 className="font-display text-2xl font-semibold text-foreground">
             Already have quotes from a supplier?
           </h2>
@@ -238,14 +229,12 @@ function FilterSelect({
   label,
   value,
   onChange,
-  options,
-  labels,
+  entries,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
-  options: string[];
-  labels?: Record<string, string>;
+  entries: Array<{ value: string; label: string }>;
 }) {
   return (
     <label className="grid gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -253,12 +242,12 @@ function FilterSelect({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="min-w-40 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium normal-case tracking-normal text-foreground outline-none focus:border-primary focus:ring-4 focus:ring-primary/10"
+        className="min-w-44 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium normal-case tracking-normal text-foreground outline-none focus:border-primary focus:ring-4 focus:ring-primary/10"
       >
         <option value="">All</option>
-        {options.map((o) => (
-          <option key={o} value={o}>
-            {labels?.[o] ?? o}
+        {entries.map((entry) => (
+          <option key={entry.value} value={entry.value}>
+            {entry.label}
           </option>
         ))}
       </select>
@@ -266,51 +255,37 @@ function FilterSelect({
   );
 }
 
-function ViewToggle({
-  active,
-  onClick,
-  icon,
-  label,
-}: {
-  active: boolean;
-  onClick: () => void;
-  icon: React.ReactNode;
-  label: string;
-}) {
+function VerifiedBadge() {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-semibold transition-colors ${
-        active
-          ? "bg-primary text-primary-foreground"
-          : "text-muted-foreground hover:text-foreground"
-      }`}
-    >
-      {icon}
-      {label}
-    </button>
+    <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary">
+      <ShieldCheck className="h-3 w-3" aria-hidden="true" />
+      {VERIFICATION_BADGE["public-source-verified"]}
+    </span>
+  );
+}
+
+function PendingBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-amber-800">
+      <Clock className="h-3 w-3" aria-hidden="true" />
+      {VERIFICATION_BADGE["source-listed-unverified"]}
+    </span>
   );
 }
 
 function SupplierCard({ supplier }: { supplier: Supplier }) {
   const place = [supplier.city, supplier.state, supplier.country].filter(Boolean).join(", ");
+  const isVerified = supplier.verificationStatus === "public-source-verified";
   return (
     <Link
       to={supplierPath(supplier.slug)}
       className="group flex h-full flex-col rounded-2xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-foreground hover:shadow-[var(--shadow-soft)]"
     >
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-start justify-between gap-3">
         <h3 className="font-display text-lg font-semibold text-foreground">
           {supplier.displayName}
         </h3>
-        {supplier.verified && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary">
-            <ShieldCheck className="h-3 w-3" aria-hidden="true" />
-            Public information verified
-          </span>
-        )}
+        {isVerified ? <VerifiedBadge /> : <PendingBadge />}
       </div>
       <p className="mt-1 text-sm text-muted-foreground">
         {SUPPLIER_TYPE_LABEL[supplier.supplierType]}
@@ -326,10 +301,32 @@ function SupplierCard({ supplier }: { supplier: Supplier }) {
           {supplier.description}
         </p>
       )}
+      {!isVerified && (
+        <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800">
+          This listing is not independently verified. Company and product details are pending
+          verification.
+        </p>
+      )}
       <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold content-accent">
         View supplier
         <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
       </span>
     </Link>
+  );
+}
+
+function SourcingOriginCard({ origin }: { origin: SourcingOrigin }) {
+  return (
+    <div className="flex h-full flex-col rounded-2xl border border-dashed border-border bg-background p-5">
+      <span className="inline-flex w-fit items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <Globe2 className="h-3 w-3" aria-hidden="true" />
+        Sourcing origin
+      </span>
+      <h3 className="mt-3 font-display text-lg font-semibold text-foreground">{origin.origin}</h3>
+      <p className="mt-1 text-sm text-muted-foreground">{origin.product}</p>
+      <p className="mt-3 text-xs leading-5 text-muted-foreground">
+        Market-discovery reference only — not a verified supplier company.
+      </p>
+    </div>
   );
 }
