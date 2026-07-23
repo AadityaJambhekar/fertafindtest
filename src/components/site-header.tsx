@@ -24,12 +24,6 @@ export function SiteHeader() {
           >
             Why FertaFind
           </a>
-          <a
-            href="/#partners"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Partners
-          </a>
           <Link
             to="/suppliers"
             className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
@@ -61,9 +55,6 @@ export function SiteHeader() {
         </a>
         <a href="/#why" className="shrink-0 text-xs font-semibold text-muted-foreground">
           Why FertaFind
-        </a>
-        <a href="/#partners" className="shrink-0 text-xs font-semibold text-muted-foreground">
-          Partners
         </a>
         <Link to="/suppliers" className="shrink-0 text-xs font-semibold text-muted-foreground">
           Suppliers
@@ -103,7 +94,7 @@ export function SiteFooter() {
               </a>
             </li>
             <li>
-              <a href="/#partners" className="hover:text-primary-foreground">
+              <a href="/suppliers?relationship=partner" className="hover:text-primary-foreground">
                 Partners
               </a>
             </li>

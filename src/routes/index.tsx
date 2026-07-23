@@ -5,6 +5,7 @@ import {
   Building2,
   Camera,
   Clock,
+  Handshake,
   MapPin,
   Sparkles,
   Truck,
@@ -12,11 +13,16 @@ import {
   ShieldCheck,
   Wallet,
   Check,
-  ExternalLink,
 } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
 import { pageMeta, jsonLdScript, organizationLd, websiteLd, faqLd } from "@/lib/seo";
-import { listSupplierCompanies, VERIFICATION_BADGE } from "@/lib/suppliers";
+import {
+  listSupplierCompanies,
+  supplierBadgeKind,
+  SUPPLIER_BADGE_LABEL,
+  type Supplier,
+  type SupplierBadgeKind,
+} from "@/lib/suppliers";
 
 const rotatingPhrases = [
   "worth buying.",
@@ -51,8 +57,7 @@ function HomePage() {
         <Hero />
         <HowItWorks />
         <Benefits />
-        <PartnerSpotlight />
-        <FeaturedSuppliers />
+        <SupplierNetwork />
         <FrequentlyAskedQuestions />
       </main>
       <div className="[&>footer]:mt-0">
@@ -76,7 +81,7 @@ function Hero() {
               AI-powered fertilizer intelligence
             </span>
             <a
-              href="#partners"
+              href="#suppliers"
               className="inline-flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground"
             >
               Working with Nanofert
@@ -291,108 +296,28 @@ function Benefits() {
   );
 }
 
-function PartnerSpotlight() {
-  return (
-    <section id="partners" className="scroll-mt-28 border-b border-border bg-card">
-      <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-[1.15fr_.85fr] lg:gap-14">
-        <div>
-          <p className="text-sm font-medium uppercase tracking-wider eyebrow-accent">
-            03 / Our partners
-          </p>
-          <h2 className="mt-3 font-display text-4xl font-semibold text-foreground sm:text-5xl">
-            Fertilizer partners we work with.
-          </h2>
-          <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
-            FertaFind evaluates verified products from participating suppliers against your crop,
-            lifecycle stage and field information. Our partner network can grow without changing how
-            your analysis works.
-          </p>
-          <div className="mt-7 border-l-2 border-primary pl-5">
-            <h3 className="font-display text-2xl font-semibold text-foreground">Nanofert</h3>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-              Our current participating supplier provides liquid nano-fertilizer products with
-              documented crop and lifecycle programs. Rates, availability and final pricing should
-              still be confirmed before purchase.
-            </p>
-          </div>
-          <a
-            href="https://www.nanofert.com.br/"
-            target="_blank"
-            rel="noreferrer"
-            className="mt-7 inline-flex h-12 items-center gap-2 rounded-lg bg-primary px-7 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-all hover:-translate-y-0.5 hover:bg-primary-soft"
-          >
-            Visit Nanofert
-            <ExternalLink className="h-4 w-4" />
-          </a>
-        </div>
-        <div className="rounded-[2rem] border border-border bg-background p-6 shadow-[var(--shadow-soft)] sm:p-9">
-          <img
-            src="/nanofert-partner.png"
-            alt="Nanofert logo"
-            className="mx-auto max-h-28 w-full max-w-sm object-contain"
-          />
-          <div className="mt-6 grid gap-3 text-sm text-muted-foreground min-[420px]:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-            <ProofPoint>Crop-stage matching</ProofPoint>
-            <ProofPoint>Verified details only</ProofPoint>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function FeaturedSuppliers() {
+function SupplierNetwork() {
   const suppliers = listSupplierCompanies();
   return (
-    <section id="suppliers" className="scroll-mt-28 border-b border-border">
+    <section id="suppliers" className="scroll-mt-28 border-b border-border bg-card">
       <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
         <div className="max-w-2xl">
-          <p className="text-sm font-medium uppercase tracking-wider eyebrow-accent">Suppliers</p>
+          <p className="text-sm font-medium uppercase tracking-wider eyebrow-accent">
+            03 / Our supplier network
+          </p>
           <h2 className="mt-3 font-display text-4xl font-semibold text-foreground sm:text-5xl">
-            Browse fertilizer suppliers
+            Our Supplier Network
           </h2>
           <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
-            Find fertilizer suppliers in the FertaFind directory. Each company is clearly marked as
-            verified from public sources or pending independent verification.
+            The companies in the FertaFind network — each clearly marked as a FertaFind partner,
+            verified from public sources, or pending independent verification.
           </p>
         </div>
 
         <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {suppliers.map((s) => {
-            const isVerified = s.verificationStatus === "public-source-verified";
-            const place = [s.city, s.state, s.country].filter(Boolean).join(", ");
-            return (
-              <Link
-                key={s.id}
-                to="/suppliers/$slug"
-                params={{ slug: s.slug }}
-                className="group flex flex-col rounded-2xl border border-border bg-card p-6 transition-all hover:-translate-y-1 hover:border-foreground hover:shadow-[var(--shadow-soft)]"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <span className="grid h-11 w-11 place-items-center rounded-2xl bg-primary/10 text-primary">
-                    <Building2 className="h-5 w-5" />
-                  </span>
-                  {isVerified ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary">
-                      <ShieldCheck className="h-3 w-3" aria-hidden="true" />
-                      {VERIFICATION_BADGE["public-source-verified"]}
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-amber-800">
-                      <Clock className="h-3 w-3" aria-hidden="true" />
-                      {VERIFICATION_BADGE["source-listed-unverified"]}
-                    </span>
-                  )}
-                </div>
-                <h3 className="mt-4 font-display text-xl font-semibold text-foreground">
-                  {s.displayName}
-                </h3>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {place || "Location pending verification"}
-                </p>
-              </Link>
-            );
-          })}
+          {suppliers.map((s) => (
+            <HomeSupplierCard key={s.id} supplier={s} />
+          ))}
         </div>
         <div className="mt-8">
           <Link
@@ -405,6 +330,53 @@ function FeaturedSuppliers() {
         </div>
       </div>
     </section>
+  );
+}
+
+const HOME_BADGE_STYLE: Record<SupplierBadgeKind, string> = {
+  partner: "bg-primary/10 text-primary",
+  verified: "bg-primary/10 text-primary",
+  pending: "bg-amber-100 text-amber-800",
+};
+
+function HomeSupplierCard({ supplier }: { supplier: Supplier }) {
+  const kind = supplierBadgeKind(supplier);
+  const BadgeIcon = kind === "partner" ? Handshake : kind === "verified" ? ShieldCheck : Clock;
+  const place = [supplier.city, supplier.state, supplier.country].filter(Boolean).join(", ");
+  return (
+    <Link
+      to="/suppliers/$slug"
+      params={{ slug: supplier.slug }}
+      className="group flex flex-col rounded-2xl border border-border bg-background p-6 transition-all hover:-translate-y-1 hover:border-foreground hover:shadow-[var(--shadow-soft)]"
+    >
+      <div className="flex items-start justify-between gap-3">
+        {supplier.logo ? (
+          <span className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-2xl border border-border bg-white p-1">
+            <img
+              src={supplier.logo}
+              alt={`${supplier.displayName} logo`}
+              className="h-full w-full object-contain"
+            />
+          </span>
+        ) : (
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
+            <Building2 className="h-5 w-5" />
+          </span>
+        )}
+        <span
+          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${HOME_BADGE_STYLE[kind]}`}
+        >
+          <BadgeIcon className="h-3 w-3" aria-hidden="true" />
+          {SUPPLIER_BADGE_LABEL[kind]}
+        </span>
+      </div>
+      <h3 className="mt-4 font-display text-xl font-semibold text-foreground">
+        {supplier.displayName}
+      </h3>
+      <p className="mt-1 text-sm text-muted-foreground">
+        {place || "Location pending verification"}
+      </p>
+    </Link>
   );
 }
 

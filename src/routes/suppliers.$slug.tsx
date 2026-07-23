@@ -1,17 +1,28 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import { AlertTriangle, ArrowRight, Clock, ExternalLink, MapPin, ShieldCheck } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  Building2,
+  Clock,
+  ExternalLink,
+  Handshake,
+  MapPin,
+  ShieldCheck,
+} from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
 import {
   SUPPLIER_TYPE_LABEL,
-  VERIFICATION_BADGE,
+  SUPPLIER_BADGE_LABEL,
   SUPPLIER_DISCOVERY_DISCLAIMER,
+  supplierBadgeKind,
   getListedSupplierBySlug,
   supplierDetailRouteHead,
+  type Supplier,
 } from "@/lib/suppliers";
 
 export const Route = createFileRoute("/suppliers/$slug")({
-  // Any LISTED company (verified or source-listed-unverified) resolves. Draft / inactive /
-  // unknown slugs are redirected to the directory — they can never render a detail page.
+  // Any LISTED company (partner / verified / source-listed-unverified) resolves. Draft /
+  // inactive / unknown slugs are redirected to the network — they can never render a page.
   loader: ({ params }) => {
     const supplier = getListedSupplierBySlug(params.slug);
     if (!supplier) throw redirect({ to: "/suppliers" });
@@ -40,10 +51,32 @@ function Chips({ label, items }: { label: string; items: string[] }) {
   );
 }
 
+function SupplierLogo({ supplier }: { supplier: Supplier }) {
+  if (supplier.logo) {
+    return (
+      <span className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-2xl border border-border bg-white p-1.5">
+        <img
+          src={supplier.logo}
+          alt={`${supplier.displayName} logo`}
+          className="h-full w-full object-contain"
+        />
+      </span>
+    );
+  }
+  return (
+    <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
+      <Building2 className="h-6 w-6" aria-hidden="true" />
+    </span>
+  );
+}
+
 function SupplierDetailPage() {
   const { supplier } = Route.useLoaderData();
   const place = [supplier.city, supplier.state, supplier.country].filter(Boolean).join(", ");
-  const isVerified = supplier.verificationStatus === "public-source-verified";
+  const kind = supplierBadgeKind(supplier);
+  const BadgeIcon = kind === "partner" ? Handshake : kind === "verified" ? ShieldCheck : Clock;
+  const badgeStyle =
+    kind === "pending" ? "bg-amber-100 text-amber-800" : "bg-primary/10 text-primary";
 
   return (
     <div className="min-h-screen bg-background">
@@ -71,39 +104,39 @@ function SupplierDetailPage() {
           </ol>
         </nav>
 
-        <div className="mt-6 flex flex-wrap items-center gap-3">
-          <p className="text-sm font-semibold uppercase tracking-[0.16em] content-accent">
-            Supplier
-          </p>
-          {isVerified ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary">
-              <ShieldCheck className="h-3 w-3" aria-hidden="true" />
-              {VERIFICATION_BADGE["public-source-verified"]}
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-amber-800">
-              <Clock className="h-3 w-3" aria-hidden="true" />
-              {VERIFICATION_BADGE["source-listed-unverified"]}
-            </span>
-          )}
-        </div>
-        <h1 className="mt-3 font-display text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
-          {supplier.displayName}
-        </h1>
-        <p className="mt-2 text-muted-foreground">
-          {SUPPLIER_TYPE_LABEL[supplier.supplierType]}
-          {place ? (
-            <>
-              {" · "}
-              <span className="inline-flex items-center gap-1">
-                <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
-                {place}
+        <div className="mt-6 flex items-start gap-4">
+          <SupplierLogo supplier={supplier} />
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-3">
+              <p className="text-sm font-semibold uppercase tracking-[0.16em] content-accent">
+                Supplier
+              </p>
+              <span
+                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${badgeStyle}`}
+              >
+                <BadgeIcon className="h-3 w-3" aria-hidden="true" />
+                {SUPPLIER_BADGE_LABEL[kind]}
               </span>
-            </>
-          ) : null}
-        </p>
+            </div>
+            <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
+              {supplier.displayName}
+            </h1>
+            <p className="mt-2 text-muted-foreground">
+              {SUPPLIER_TYPE_LABEL[supplier.supplierType]}
+              {place ? (
+                <>
+                  {" · "}
+                  <span className="inline-flex items-center gap-1">
+                    <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+                    {place}
+                  </span>
+                </>
+              ) : null}
+            </p>
+          </div>
+        </div>
 
-        {!isVerified && (
+        {kind === "pending" && (
           <div
             role="note"
             className="mt-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4"

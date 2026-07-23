@@ -52,40 +52,48 @@ test("ignores the port when detecting the apex host", () => {
   assert.equal(r?.location, "https://www.fertafind.com/terms");
 });
 
-test("permanently redirects /partners straight to the homepage Partners anchor", () => {
+test("permanently redirects /partners to the partner-filtered supplier network in one hop", () => {
   const r = computeRedirect({
     host: "www.fertafind.com",
     pathname: "/partners",
     search: "",
   });
   assert.deepEqual(r, {
-    location: "https://www.fertafind.com/#partners",
+    location: "https://www.fertafind.com/suppliers?relationship=partner",
     status: 301,
   });
 });
 
-test("redirects /partners with a trailing slash to the homepage Partners anchor", () => {
+test("redirects /partners with a trailing slash to the partner-filtered supplier network", () => {
   const r = computeRedirect({
     host: "www.fertafind.com",
     pathname: "/partners/",
     search: "",
   });
-  assert.equal(r?.location, "https://www.fertafind.com/#partners");
+  assert.equal(r?.location, "https://www.fertafind.com/suppliers?relationship=partner");
 });
 
-test("sends apex /partners to the www homepage Partners anchor in a single hop", () => {
+test("sends apex /partners to the www partner-filtered supplier network in a single hop", () => {
   const r = computeRedirect({
     host: "fertafind.com",
     pathname: "/partners",
     search: "?a=1",
   });
-  assert.equal(r?.location, "https://www.fertafind.com/#partners");
+  assert.equal(r?.location, "https://www.fertafind.com/suppliers?relationship=partner");
 });
 
 test("the /partners destination is terminal (single hop, no second redirect)", () => {
-  // The target is the www homepage plus a #partners fragment; the fragment never
-  // reaches the server, so a request to "/" on www is terminal and never loops.
-  assert.equal(computeRedirect({ host: "www.fertafind.com", pathname: "/", search: "" }), null);
+  // The target is /suppliers?relationship=partner on the www host; a request to
+  // /suppliers never redirects (its state is a route concern, not canonicalisation),
+  // so the /partners redirect is a single terminal hop.
+  assert.equal(
+    computeRedirect({
+      host: "www.fertafind.com",
+      pathname: "/suppliers",
+      search: "?relationship=partner",
+    }),
+    null,
+  );
 });
 
 test("does not touch /suppliers (its redirect is owned by the route, not canonicalisation)", () => {

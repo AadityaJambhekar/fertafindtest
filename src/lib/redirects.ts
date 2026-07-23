@@ -2,12 +2,13 @@
 //
 // Two permanent (301) redirects are enforced:
 //   1. Apex host -> www host (canonical host is https://www.fertafind.com).
-//   2. /partners -> /#partners (the partners content lives in a homepage
-//      section; redirect straight to that anchor in a single hop, never via
-//      /suppliers).
+//   2. /partners -> /suppliers?relationship=partner (the partner content now lives
+//      in the unified Supplier Network; redirect straight to the partner-filtered
+//      directory in a single hop).
 //
 // The logic is deliberately narrow so it can never loop: the www host and the
-// homepage target are terminal, and preview/local hosts are left untouched.
+// /suppliers target are terminal (/suppliers never redirects), and preview/local
+// hosts are left untouched.
 
 import { SITE_URL } from "./seo.ts";
 
@@ -25,10 +26,10 @@ export interface RedirectResult {
 }
 
 export function computeRedirect({ host, pathname, search }: RedirectInput): RedirectResult | null {
-  // /partners collapses straight to the homepage Partners section in a single
-  // hop, on any host — never a two-hop chain through /suppliers.
+  // /partners collapses straight to the partner-filtered Supplier Network in a
+  // single hop, on any host — /suppliers itself never redirects, so this is terminal.
   if (pathname === "/partners" || pathname === "/partners/") {
-    return { location: `${SITE_URL}/#partners`, status: 301 };
+    return { location: `${SITE_URL}/suppliers?relationship=partner`, status: 301 };
   }
 
   // Apex (non-www) host -> canonical www host, preserving the path and query.

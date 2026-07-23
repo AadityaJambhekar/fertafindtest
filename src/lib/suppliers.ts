@@ -28,14 +28,20 @@ export type SupplierStatus = "draft" | "public" | "inactive";
 /** How much of a listed company's information we have independently confirmed. */
 export type VerificationStatus = "public-source-verified" | "source-listed-unverified";
 
+/** A company's relationship to FertaFind. "partner" is a declared FertaFind partner; every
+ *  other listed company is a plain directory listing. */
+export type SupplierRelationship = "partner" | "listed";
+
 export interface Supplier {
   id: string;
   slug: string;
   displayName: string;
   legalName: string | null;
+  /** Local logo path under /public/suppliers/ (never a hotlinked or invented remote URL). */
   logo: string | null;
   verified: boolean;
   verificationStatus: VerificationStatus;
+  relationship: SupplierRelationship;
   supplierType: SupplierType;
   country: string;
   state: string | null;
@@ -83,6 +89,36 @@ const FERTIEXPRESS_SOURCE =
 
 export const SUPPLIERS: Supplier[] = [
   {
+    id: "nanofert",
+    slug: "nanofert",
+    displayName: "Nanofert",
+    legalName: null,
+    // Existing Nanofert partner logo, preserved and stored locally under /public/suppliers/.
+    logo: "/suppliers/nanofert.png",
+    // A declared FertaFind partner; product details are confirmed from its official website.
+    verified: true,
+    verificationStatus: "public-source-verified",
+    relationship: "partner",
+    supplierType: "manufacturer",
+    country: "Brazil",
+    state: null,
+    city: null,
+    latitude: null,
+    longitude: null,
+    products: ["Liquid nano-fertilizers"],
+    productGrades: [],
+    serviceRegions: [],
+    website: "https://www.nanofert.com.br/",
+    fertilizerPage: null,
+    publicEmail: null,
+    publicPhone: null,
+    description:
+      "Nanofert provides liquid nano-fertilizer products with documented crop and lifecycle programs. Confirm rates, availability and final pricing before purchase.",
+    source: "Official Nanofert website",
+    lastVerifiedAt: "2026-07-23",
+    status: "public",
+  },
+  {
     id: "fecoagro",
     slug: "fecoagro",
     displayName: "FECOAGRO",
@@ -92,6 +128,7 @@ export const SUPPLIERS: Supplier[] = [
     // official website. This is not a partnership, endorsement, or availability claim.
     verified: true,
     verificationStatus: "public-source-verified",
+    relationship: "listed",
     supplierType: "cooperative",
     country: "Brazil",
     state: "Santa Catarina",
@@ -120,6 +157,7 @@ export const SUPPLIERS: Supplier[] = [
     logo: null,
     verified: false,
     verificationStatus: "source-listed-unverified",
+    relationship: "listed",
     supplierType: "trader",
     country: "Brazil",
     // Nothing below is independently verified, so every identity/contact field stays empty.
@@ -241,11 +279,28 @@ export const VERIFICATION_BADGE: Record<VerificationStatus, string> = {
   "source-listed-unverified": "Information pending verification",
 };
 
+/** The single badge kind shown for a company card: a partner badge wins, otherwise the
+ *  verification level (verified vs pending). */
+export type SupplierBadgeKind = "partner" | "verified" | "pending";
+
+export function supplierBadgeKind(s: Supplier): SupplierBadgeKind {
+  if (s.relationship === "partner") return "partner";
+  return s.verificationStatus === "public-source-verified" ? "verified" : "pending";
+}
+
+export const SUPPLIER_BADGE_LABEL: Record<SupplierBadgeKind, string> = {
+  partner: "FertaFind Partner",
+  verified: "Public information verified",
+  pending: "Information pending verification",
+};
+
 // ---------------------------------------------------------------------------
 // Directory filters (pure functions — unit-tested, driven by the UI).
 // ---------------------------------------------------------------------------
 
 export interface SupplierDirectoryFilters {
+  /** "" = any, "partner" = declared FertaFind partner. */
+  relationship: "" | "partner";
   /** "" = any, "verified" = public-source-verified, "pending" = source-listed-unverified. */
   verification: "" | "verified" | "pending";
   type: "" | SupplierType;
@@ -259,6 +314,7 @@ export function filterSupplierCompanies(
   f: SupplierDirectoryFilters,
 ): Supplier[] {
   return companies.filter((s) => {
+    if (f.relationship === "partner" && s.relationship !== "partner") return false;
     if (f.verification === "verified" && s.verificationStatus !== "public-source-verified")
       return false;
     if (f.verification === "pending" && s.verificationStatus !== "source-listed-unverified")
@@ -274,9 +330,9 @@ export function filterSourcingOrigins(
   origins: SourcingOrigin[],
   f: SupplierDirectoryFilters,
 ): SourcingOrigin[] {
-  // Verification and supplier-type are company-only concepts; when either is set the user is
-  // narrowing to supplier companies, so no sourcing origins apply.
-  if (f.verification !== "" || f.type !== "") return [];
+  // Relationship, verification and supplier-type are company-only concepts; when any is set the
+  // user is narrowing to supplier companies, so no sourcing origins apply.
+  if (f.relationship !== "" || f.verification !== "" || f.type !== "") return [];
   return origins.filter((o) => {
     if (f.product && o.product !== f.product) return false;
     if (f.origin && o.origin !== f.origin) return false;
