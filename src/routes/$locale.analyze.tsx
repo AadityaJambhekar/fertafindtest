@@ -1,5 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useLocale, useDictionary } from "@/components/locale-context";
+import { localeToSegment, DEFAULT_LOCALE, segmentToLocale } from "@/lib/i18n";
+import { localizedHead } from "@/lib/seo-i18n";
 import {
   ArrowLeft,
   ArrowRight,
@@ -9,8 +12,6 @@ import {
   Check,
   FileText,
   Loader2,
-  MapPin,
-  Navigation,
   Plus,
   Scale,
   Sprout,
@@ -20,7 +21,8 @@ import {
   X,
 } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
-import { LocationMapPicker } from "@/components/location-map-picker";
+import { FarmLocationPicker } from "@/components/farm-location-picker";
+import type { FarmLocation } from "@/lib/google-maps-loader";
 import { GoogleRecaptcha, type GoogleRecaptchaHandle } from "@/components/google-recaptcha";
 import { getPartnerStageAvailability } from "@/lib/partner-recommendations";
 import {
@@ -35,30 +37,26 @@ import {
   QUOTE_FILE_ACCEPT,
   QUOTE_FILE_HELP_TEXT,
 } from "@/lib/quote-files";
+import { pageMeta, jsonLdScript, breadcrumbLd } from "@/lib/seo";
 
-export const Route = createFileRoute("/analyze")({
-  head: () => ({
-    meta: [
-      { title: "Analyze fertilizer quotes — FertaFind" },
-      {
-        name: "description",
-        content:
-          "Upload your fertilizer quotes and get an AI-ranked recommendation by ROI, nutrient value and delivery cost.",
-      },
+export const Route = createFileRoute("/$locale/analyze")({
+  head: ({ params }) => ({
+    ...localizedHead(segmentToLocale(params.locale) ?? DEFAULT_LOCALE, "analyze", "/analyze"),
+    scripts: [
+      jsonLdScript(
+        breadcrumbLd([
+          { name: "Home", path: "/" },
+          { name: "Analyze", path: "/analyze" },
+        ]),
+      ),
     ],
-    links: [{ rel: "canonical", href: "https://fertafind.com/analyze/" }],
   }),
   component: AnalyzePage,
 });
 
 type Step = 0 | 1 | 2 | 3;
 
-type MatchedLocation = {
-  display_name: string;
-  lat: string;
-  lon: string;
-  type?: string;
-};
+type MatchedLocation = FarmLocation;
 
 type SoilTestExtraction = {
   soilTestDate: string;
@@ -130,14 +128,13 @@ const CROP_STAGES: Record<string, string[]> = {
 
 function AnalyzePage() {
   const navigate = useNavigate();
+  const { locale: activeLocale } = useLocale();
+  const t = useDictionary();
   const [step, setStep] = useState<Step>(0);
   const [location, setLocation] = useState("");
   const [matchedLocation, setMatchedLocation] = useState<MatchedLocation | null>(null);
   const [locationError, setLocationError] = useState("");
   const [isCheckingLocation, setIsCheckingLocation] = useState(false);
-  const [locationSuggestions, setLocationSuggestions] = useState<MatchedLocation[]>([]);
-  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [showMapPicker, setShowMapPicker] = useState(false);
   const radius = 50;
   const [crops, setCrops] = useState<string[]>([]);
@@ -271,48 +268,6 @@ function AnalyzePage() {
     return () => window.removeEventListener("paste", handlePaste);
   }, [handleFiles, step]);
 
-  useEffect(() => {
-    const query = location.trim();
-    if (step !== 0 || query.length < 3 || matchedLocation) {
-      setLocationSuggestions([]);
-      setIsLoadingSuggestions(false);
-      return;
-    }
-
-    const controller = new AbortController();
-    const timer = window.setTimeout(async () => {
-      setIsLoadingSuggestions(true);
-      try {
-        const response = await fetch(`/api/geocode?q=${encodeURIComponent(query)}&suggestions=1`, {
-          signal: controller.signal,
-        });
-        const data = (await response.json()) as { results?: MatchedLocation[] };
-        if (response.ok && !controller.signal.aborted) {
-          setLocationSuggestions(data.results ?? []);
-          setShowSuggestions(true);
-        }
-      } catch {
-        // A suggestion request being cancelled while the user types is expected.
-      } finally {
-        if (!controller.signal.aborted) setIsLoadingSuggestions(false);
-      }
-    }, 650);
-
-    return () => {
-      window.clearTimeout(timer);
-      controller.abort();
-    };
-  }, [location, matchedLocation, step]);
-
-  const selectLocation = (selectedLocation: MatchedLocation) => {
-    setLocation(selectedLocation.display_name);
-    setMatchedLocation(selectedLocation);
-    setLocationSuggestions([]);
-    setShowSuggestions(false);
-    setShowMapPicker(true);
-    setLocationError("");
-  };
-
   const validateLocation = async () => {
     const normalizedQuery = location.trim();
     if (normalizedQuery.length < 3 || isCheckingLocation) return;
@@ -350,30 +305,6 @@ function AnalyzePage() {
       setIsCheckingLocation(false);
     }
   };
-
-  const handleMapPinDrop = useCallback(async (coordinates: { lat: number; lon: number }) => {
-    setIsCheckingLocation(true);
-    setLocationError("");
-    setShowSuggestions(false);
-    try {
-      const response = await fetch(
-        `/api/reverse-geocode?lat=${encodeURIComponent(String(coordinates.lat))}&lon=${encodeURIComponent(String(coordinates.lon))}`,
-      );
-      const data = (await response.json()) as { result?: MatchedLocation; error?: string };
-      if (!response.ok || !data.result) {
-        setLocationError(data.error ?? "We couldn't identify that map pin. Try another point.");
-        return;
-      }
-
-      setMatchedLocation(data.result);
-      setLocation(data.result.display_name);
-      setLocationSuggestions([]);
-    } catch {
-      setLocationError("We couldn't identify that map pin. Try another point.");
-    } finally {
-      setIsCheckingLocation(false);
-    }
-  }, []);
 
   const readSoilTest = useCallback(async (token: string) => {
     const file = pendingSoilTestFileRef.current;
@@ -452,6 +383,8 @@ function AnalyzePage() {
       form.set("radiusKm", String(radius));
       form.set("crop", crops.join(", "));
       form.set("decisionGoal", decisionGoal);
+      // Ask the model to answer in the reader's language (validated again server-side).
+      form.set("locale", activeLocale);
       form.set("fertilizerFormPreference", fertilizerFormPreference);
       form.set("fertilizerOriginPreference", fertilizerOriginPreference);
       form.set("organicCertification", organicCertification);
@@ -519,7 +452,10 @@ function AnalyzePage() {
         }
 
         localStorage.setItem(analysisStorageKey(data.analysis.id), JSON.stringify(data.analysis));
-        navigate({ to: "/results/$id", params: { id: data.analysis.id } });
+        navigate({
+          to: "/$locale/results/$id",
+          params: { locale: localeToSegment(activeLocale), id: data.analysis.id },
+        });
       } catch (error) {
         setAnalysisError(error instanceof Error ? error.message : "The quote analysis failed.");
         recaptchaRef.current?.reset();
@@ -529,6 +465,7 @@ function AnalyzePage() {
       }
     },
     [
+      activeLocale,
       crops,
       cropStages,
       decisionGoal,
@@ -585,12 +522,12 @@ function AnalyzePage() {
   const beginAnalysis = () => {
     setAnalysisError("");
     if (!hasAgreedToTerms) {
-      setAnalysisError("Agree to the Terms of Service before analyzing your quotes.");
+      setAnalysisError(t.analyze.termsRequiredError);
       return;
     }
     setIsVerifying(true);
     if (!recaptchaRef.current?.execute()) {
-      setAnalysisError("Verification is still loading. Try again in a moment.");
+      setAnalysisError(t.analyze.verificationLoading);
       setIsVerifying(false);
     }
   };
@@ -598,145 +535,30 @@ function AnalyzePage() {
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
-      <section className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-16">
+      <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-16">
         <StepIndicator step={step} />
 
         <div className="mt-7 rounded-3xl border border-border bg-card p-5 shadow-[var(--shadow-soft)] sm:mt-10 sm:p-8 md:p-10">
           {step === 0 && (
-            <StepShell title="Farm location" subtitle="Enter an address or drop a pin.">
-              <label className="block">
-                <span className="text-sm font-medium text-foreground">Address or place</span>
-                <div className="relative mt-2">
-                  <div className="flex items-center gap-2 rounded-2xl border border-input bg-background px-4 py-3 transition-shadow focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30">
-                    <MapPin className="h-5 w-5 text-muted-foreground" />
-                    <input
-                      autoFocus
-                      role="combobox"
-                      aria-autocomplete="list"
-                      aria-expanded={showSuggestions && locationSuggestions.length > 0}
-                      aria-controls="location-suggestions"
-                      value={location}
-                      onFocus={() => {
-                        if (locationSuggestions.length) setShowSuggestions(true);
-                      }}
-                      onChange={(e) => {
-                        setLocation(e.target.value);
-                        setMatchedLocation(null);
-                        setLocationError("");
-                        setShowSuggestions(true);
-                      }}
-                      onKeyDown={(event) => {
-                        if (event.key !== "Enter") return;
-                        event.preventDefault();
-
-                        const firstSuggestion = locationSuggestions[0];
-                        if (firstSuggestion) {
-                          selectLocation(firstSuggestion);
-                          return;
-                        }
-
-                        void validateLocation();
-                      }}
-                      placeholder="e.g. San Francisco, CA"
-                      className="w-full bg-transparent text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
-                    />
-                    {isLoadingSuggestions && (
-                      <Loader2
-                        className="h-4 w-4 animate-spin text-primary"
-                        aria-label="Searching locations"
-                      />
-                    )}
-                  </div>
-                  {showSuggestions && locationSuggestions.length > 0 && (
-                    <div
-                      id="location-suggestions"
-                      role="listbox"
-                      aria-label="Location suggestions"
-                      className="absolute z-20 mt-2 w-full overflow-hidden rounded-2xl border border-border bg-card p-1.5 shadow-[var(--shadow-soft)]"
-                    >
-                      <p className="px-3 pb-1.5 pt-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                        Choose your location
-                      </p>
-                      {locationSuggestions.map((suggestion) => (
-                        <button
-                          key={`${suggestion.lat}-${suggestion.lon}`}
-                          type="button"
-                          role="option"
-                          onMouseDown={(event) => event.preventDefault()}
-                          onClick={() => selectLocation(suggestion)}
-                          className="flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-primary/10 focus:bg-primary/10 focus:outline-none"
-                        >
-                          <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
-                            <MapPin className="h-4 w-4" />
-                          </span>
-                          <span className="min-w-0">
-                            <span className="block truncate text-sm font-medium text-foreground">
-                              {suggestion.display_name.split(",")[0]}
-                            </span>
-                            <span className="mt-0.5 block truncate text-xs text-muted-foreground">
-                              {suggestion.display_name.split(",").slice(1).join(",").trim()}
-                            </span>
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <div className="mt-3 flex items-center justify-between gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowMapPicker((visible) => !visible)}
-                    className="inline-flex items-center gap-2 rounded-lg border border-primary/25 bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
-                  >
-                    <Navigation className="h-3.5 w-3.5" />
-                    {showMapPicker ? "Hide map" : "Drop a pin instead"}
-                  </button>
-                </div>
-                {showMapPicker && (
-                  <div className="mt-3 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-                    <div className="flex items-center justify-between border-b border-border px-4 py-3">
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">Set your farm pin</p>
-                        <p className="text-xs text-muted-foreground">
-                          Click the map or drag the green marker.
-                        </p>
-                      </div>
-                      {isCheckingLocation && (
-                        <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                      )}
-                    </div>
-                    <LocationMapPicker
-                      center={
-                        matchedLocation
-                          ? { lat: Number(matchedLocation.lat), lon: Number(matchedLocation.lon) }
-                          : null
-                      }
-                      onPinDrop={handleMapPinDrop}
-                    />
-                  </div>
-                )}
-                {locationError && (
-                  <p className="mt-2 text-sm text-destructive" role="alert">
-                    {locationError}
-                  </p>
-                )}
-                <p className="mt-2 text-xs text-muted-foreground">
-                  Location search powered by{" "}
-                  <a
-                    href="https://www.openstreetmap.org/copyright"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="underline underline-offset-2 hover:text-foreground"
-                  >
-                    OpenStreetMap
-                  </a>
-                </p>
-              </label>
+            <StepShell title={t.analyze.locationTitle} subtitle={t.analyze.locationSubtitle}>
+              <FarmLocationPicker
+                value={location}
+                onValueChange={setLocation}
+                matched={matchedLocation}
+                onMatched={setMatchedLocation}
+                error={locationError}
+                onError={setLocationError}
+                isChecking={isCheckingLocation}
+                onCheckingChange={setIsCheckingLocation}
+                showMap={showMapPicker}
+                onShowMapChange={setShowMapPicker}
+                onEnterAdvance={() => void validateLocation()}
+              />
             </StepShell>
           )}
 
           {step === 1 && (
-            <StepShell title="Crops and field" subtitle="Choose one crop and enter the field size.">
+            <StepShell title={t.analyze.cropTitle} subtitle={t.analyze.cropSubtitle}>
               {crops.length > 0 && (
                 <div className="mb-3 flex justify-end">
                   <button
@@ -1506,31 +1328,29 @@ function AnalyzePage() {
           )}
 
           {step === 2 && (
-            <StepShell title="Upload quotes" subtitle="Add photos, documents or copied quote text.">
+            <StepShell title={t.analyze.uploadStepTitle} subtitle={t.analyze.uploadStepSubtitle}>
               <section className="mb-6 rounded-2xl border border-primary/25 bg-primary/5 p-5">
-                <h2 className="font-semibold text-foreground">Your goal</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Choose how to rank suitable products.
-                </p>
+                <h2 className="font-semibold text-foreground">{t.analyze.goalTitle}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">{t.analyze.goalSubtitle}</p>
                 <div className="mt-4 grid gap-2 sm:grid-cols-3">
                   {(
                     [
                       {
                         value: "yield",
-                        label: "Improve yield",
-                        description: "Prioritize nutrient and field fit",
+                        label: t.analyze.goalYield,
+                        description: t.analyze.goalYieldHelp,
                         icon: TrendingUp,
                       },
                       {
                         value: "cost",
-                        label: "Reduce costs",
-                        description: "Prioritize landed nutrient cost",
+                        label: t.analyze.goalCost,
+                        description: t.analyze.goalCostHelp,
                         icon: CircleDollarSign,
                       },
                       {
                         value: "balanced",
-                        label: "Balance both",
-                        description: "Balance value and crop fit",
+                        label: t.analyze.goalBalanced,
+                        description: t.analyze.goalBalancedHelp,
                         icon: Scale,
                       },
                     ] as const
@@ -1662,7 +1482,8 @@ function AnalyzePage() {
                 <span className="text-sm leading-6 text-foreground">
                   I agree to the{" "}
                   <Link
-                    to="/terms"
+                    to="/$locale/terms"
+                    params={{ locale: localeToSegment(activeLocale) }}
                     target="_blank"
                     onClick={(event) => event.stopPropagation()}
                     className="font-semibold text-primary underline decoration-primary/35 underline-offset-4 hover:decoration-primary"
@@ -1693,9 +1514,7 @@ function AnalyzePage() {
               <h2 className="mt-6 font-display text-2xl font-semibold text-foreground">
                 Analyzing your quotes…
               </h2>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Extracting nutrient values, comparing suppliers in your area, and calculating ROI.
-              </p>
+              <p className="mt-2 text-sm text-muted-foreground">{t.analyze.analyzingBody}</p>
             </div>
           )}
 
@@ -1708,7 +1527,7 @@ function AnalyzePage() {
                 className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg px-4 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground disabled:opacity-30 sm:w-auto"
               >
                 <ArrowLeft className="h-4 w-4" />
-                Back
+                {t.common.back}
               </button>
               {step < 2 ? (
                 <button
@@ -1720,7 +1539,7 @@ function AnalyzePage() {
                   }}
                   className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-all hover:translate-y-[-1px] disabled:opacity-40 disabled:hover:translate-y-0 sm:w-auto"
                 >
-                  {step === 0 && isCheckingLocation ? "Checking…" : "Continue"}
+                  {step === 0 && isCheckingLocation ? t.analyze.checking : t.common.continue}
                   <ArrowRight className="h-4 w-4" />
                 </button>
               ) : (
@@ -1730,14 +1549,14 @@ function AnalyzePage() {
                   onClick={beginAnalysis}
                   className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-all hover:translate-y-[-1px] disabled:opacity-40 disabled:hover:translate-y-0 sm:w-auto"
                 >
-                  {isVerifying ? "Checking…" : "Analyze"}
+                  {isVerifying ? t.analyze.checking : t.analyze.analyzeCta}
                   <ArrowRight className="h-4 w-4" />
                 </button>
               )}
             </div>
           )}
         </div>
-      </section>
+      </main>
       <SiteFooter />
     </div>
   );
@@ -1792,7 +1611,8 @@ function ConditionInput({
 }
 
 function StepIndicator({ step }: { step: Step }) {
-  const labels = ["Location", "Crop", "Quotes"];
+  const t = useDictionary();
+  const labels = [t.analyze.stepperLocation, t.analyze.stepperCrop, t.analyze.stepperQuotes];
   return (
     <ol className="grid grid-cols-3 gap-2 sm:flex sm:items-center sm:gap-3">
       {labels.map((label, i) => {

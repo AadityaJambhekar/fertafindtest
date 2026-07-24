@@ -1,8 +1,14 @@
+import { localizedHead } from "@/lib/seo-i18n";
+import { DEFAULT_LOCALE, segmentToLocale } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useLocale } from "@/components/locale-context";
 import { useEffect, useState } from "react";
 import {
   ArrowRight,
+  Building2,
   Camera,
+  Clock,
+  Handshake,
   MapPin,
   Sparkles,
   Truck,
@@ -10,9 +16,16 @@ import {
   ShieldCheck,
   Wallet,
   Check,
-  ExternalLink,
 } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
+import { pageMeta, jsonLdScript, organizationLd, websiteLd, faqLd } from "@/lib/seo";
+import {
+  listSupplierCompanies,
+  supplierBadgeKind,
+  SUPPLIER_BADGE_LABEL,
+  type Supplier,
+  type SupplierBadgeKind,
+} from "@/lib/suppliers";
 
 const rotatingPhrases = [
   "worth buying.",
@@ -22,41 +35,21 @@ const rotatingPhrases = [
 ];
 const easterEggPhrase = "Aaditya is the best.";
 
-export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "FertaFind — Best-value fertilizer, backed by AI" },
-      {
-        name: "description",
-        content:
-          "Upload your fertilizer quotes and let AI find the highest-ROI fertilizer for your crop and location — with local suppliers and delivery costs factored in.",
-      },
-      {
-        property: "og:title",
-        content: "FertaFind — Best-value fertilizer, backed by AI",
-      },
-      {
-        property: "og:description",
-        content:
-          "Upload your fertilizer quotes and let AI find the highest-ROI fertilizer for your crop and location — with local suppliers and delivery costs factored in.",
-      },
-    ],
-    links: [{ rel: "canonical", href: "https://fertafind.com/" }],
-    scripts: [
-      {
-        type: "application/ld+json",
-        children: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "Organization",
-          name: "FertaFind",
-          url: "https://fertafind.com/",
-          description:
-            "FertaFind helps growers compare fertilizer quotes, nutrient value, pricing and delivery to identify suitable partner products.",
-          logo: "https://fertafind.com/fertafind-logo-transparent.png",
-        }),
-      },
-    ],
-  }),
+export const Route = createFileRoute("/$locale/")({
+  head: ({ params }) => {
+    const locale = segmentToLocale(params.locale) ?? DEFAULT_LOCALE;
+    const base = localizedHead(locale, "home", "/");
+    return {
+      ...base,
+      // Homepage structured data: Organization + WebSite, plus a FAQPage generated
+      // from the same `faqs` array rendered below so it always mirrors visible content.
+      scripts: [
+        jsonLdScript(organizationLd()),
+        jsonLdScript(websiteLd()),
+        jsonLdScript(faqLd(faqs)),
+      ],
+    };
+  },
   component: HomePage,
 });
 
@@ -64,11 +57,13 @@ function HomePage() {
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
-      <Hero />
-      <HowItWorks />
-      <Benefits />
-      <PartnerSpotlight />
-      <FrequentlyAskedQuestions />
+      <main>
+        <Hero />
+        <HowItWorks />
+        <Benefits />
+        <SupplierNetwork />
+        <FrequentlyAskedQuestions />
+      </main>
       <div className="[&>footer]:mt-0">
         <SiteFooter />
       </div>
@@ -77,6 +72,7 @@ function HomePage() {
 }
 
 function Hero() {
+  const { locale } = useLocale();
   return (
     <section
       className="relative overflow-hidden border-b border-border"
@@ -90,7 +86,7 @@ function Hero() {
               AI-powered fertilizer intelligence
             </span>
             <a
-              href="#partners"
+              href="#suppliers"
               className="inline-flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground"
             >
               Working with Nanofert
@@ -107,7 +103,8 @@ function Hero() {
           </p>
           <div className="mt-8 grid gap-3 min-[420px]:flex min-[420px]:flex-wrap min-[420px]:items-center min-[420px]:justify-center sm:mt-10 sm:gap-4">
             <Link
-              to="/analyze"
+              to="/$locale/analyze"
+              params={{ locale }}
               className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-primary px-7 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-colors hover:bg-primary-soft"
             >
               Analyze for free
@@ -176,6 +173,7 @@ function ProofPoint({ children }: { children: string }) {
 }
 
 function HowItWorks() {
+  const { locale } = useLocale();
   const steps = [
     {
       icon: MapPin,
@@ -201,7 +199,7 @@ function HowItWorks() {
   return (
     <section id="how" className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24 lg:py-28">
       <div className="max-w-2xl">
-        <p className="text-sm font-medium uppercase tracking-wider text-primary-soft">
+        <p className="text-sm font-medium uppercase tracking-wider eyebrow-accent">
           01 / How it works
         </p>
         <h2 className="mt-2 font-display text-3xl font-semibold text-foreground sm:text-4xl md:text-5xl">
@@ -218,7 +216,7 @@ function HowItWorks() {
               <span className="grid h-11 w-11 place-items-center rounded-2xl bg-primary text-primary-foreground">
                 <step.icon className="h-5 w-5" />
               </span>
-              <span className="font-display text-2xl text-muted-foreground/40">0{i + 1}</span>
+              <span className="font-display text-2xl text-muted-foreground/72">0{i + 1}</span>
             </div>
             <h3 className="mt-6 font-display text-xl font-semibold text-foreground">
               {step.title}
@@ -229,7 +227,8 @@ function HowItWorks() {
       </div>
       <div className="mt-12 flex justify-center">
         <Link
-          to="/analyze"
+          to="/$locale/analyze"
+          params={{ locale }}
           className="inline-flex h-12 items-center gap-2 rounded-lg bg-primary px-8 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-all hover:-translate-y-0.5 hover:bg-primary-soft"
         >
           Start for free
@@ -244,8 +243,8 @@ function Benefits() {
   const items = [
     {
       icon: Wallet,
-      title: "Stop overpaying for nutrients",
-      body: "Two quotes can look similar until price, pack size and nutrient concentration are put on the same basis. We show that comparison clearly.",
+      title: "See nutrient cost on one basis",
+      body: "Quotes can look similar until price, pack size and nutrient concentration are put on the same basis. We show that clearly for one quote or several.",
     },
     {
       icon: Truck,
@@ -272,11 +271,11 @@ function Benefits() {
       <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
         <div className="grid gap-12 lg:grid-cols-[1fr_1.4fr] lg:gap-16">
           <div>
-            <p className="text-sm font-medium uppercase tracking-wider text-primary">
+            <p className="text-sm font-medium uppercase tracking-wider eyebrow-accent">
               02 / Why farmers use FertaFind
             </p>
             <h2 className="mt-2 font-display text-3xl font-semibold text-foreground sm:text-4xl md:text-5xl">
-              More yield per dollar. Fewer bad surprises.
+              Clearer comparisons. Fewer bad surprises.
             </h2>
             <p className="mt-4 max-w-md text-muted-foreground">
               Fertilizer is one of the largest cash expenses on the farm. A small decision made
@@ -305,53 +304,91 @@ function Benefits() {
   );
 }
 
-function PartnerSpotlight() {
+function SupplierNetwork() {
+  const { locale } = useLocale();
+  const suppliers = listSupplierCompanies();
   return (
-    <section id="partners" className="scroll-mt-28 border-b border-border bg-card">
-      <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-[1.15fr_.85fr] lg:gap-14">
-        <div>
-          <p className="text-sm font-medium uppercase tracking-wider text-primary">
-            03 / Our partners
+    <section id="suppliers" className="scroll-mt-28 border-b border-border bg-card">
+      <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+        <div className="max-w-2xl">
+          <p className="text-sm font-medium uppercase tracking-wider eyebrow-accent">
+            03 / Our supplier network
           </p>
           <h2 className="mt-3 font-display text-4xl font-semibold text-foreground sm:text-5xl">
-            Fertilizer partners we work with.
+            Our Supplier Network
           </h2>
-          <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
-            FertaFind evaluates verified products from participating suppliers against your crop,
-            lifecycle stage and field information. Our partner network can grow without changing how
-            your analysis works.
+          <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
+            The companies in the FertaFind network — each clearly marked as a FertaFind partner,
+            verified from public sources, or pending independent verification.
           </p>
-          <div className="mt-7 border-l-2 border-primary pl-5">
-            <h3 className="font-display text-2xl font-semibold text-foreground">Nanofert</h3>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-              Our current participating supplier provides liquid nano-fertilizer products with
-              documented crop and lifecycle programs. Rates, availability and final pricing should
-              still be confirmed before purchase.
-            </p>
-          </div>
-          <a
-            href="https://www.nanofert.com.br/"
-            target="_blank"
-            rel="noreferrer"
-            className="mt-7 inline-flex h-12 items-center gap-2 rounded-lg bg-primary px-7 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-all hover:-translate-y-0.5 hover:bg-primary-soft"
-          >
-            Visit Nanofert
-            <ExternalLink className="h-4 w-4" />
-          </a>
         </div>
-        <div className="rounded-[2rem] border border-border bg-background p-6 shadow-[var(--shadow-soft)] sm:p-9">
-          <img
-            src="/nanofert-partner.png"
-            alt="Nanofert logo"
-            className="mx-auto max-h-28 w-full max-w-sm object-contain"
-          />
-          <div className="mt-6 grid gap-3 text-sm text-muted-foreground min-[420px]:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-            <ProofPoint>Crop-stage matching</ProofPoint>
-            <ProofPoint>Verified details only</ProofPoint>
-          </div>
+
+        <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {suppliers.map((s) => (
+            <HomeSupplierCard key={s.id} supplier={s} />
+          ))}
+        </div>
+        <div className="mt-8">
+          <Link
+            to="/$locale/suppliers"
+            params={{ locale }}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold content-accent hover:underline"
+          >
+            View all suppliers and sourcing origins
+            <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
       </div>
     </section>
+  );
+}
+
+const HOME_BADGE_STYLE: Record<SupplierBadgeKind, string> = {
+  partner: "bg-primary/10 text-primary",
+  supplier: "bg-primary/10 text-primary",
+  verified: "bg-primary/10 text-primary",
+  pending: "bg-amber-100 text-amber-800",
+};
+
+function HomeSupplierCard({ supplier }: { supplier: Supplier }) {
+  const { locale } = useLocale();
+  const kind = supplierBadgeKind(supplier);
+  const BadgeIcon = kind === "partner" ? Handshake : kind === "verified" ? ShieldCheck : Clock;
+  const place = [supplier.city, supplier.state, supplier.country].filter(Boolean).join(", ");
+  return (
+    <Link
+      to="/$locale/suppliers/$slug"
+      params={{ locale, slug: supplier.slug }}
+      className="group flex flex-col rounded-2xl border border-border bg-background p-6 transition-all hover:-translate-y-1 hover:border-foreground hover:shadow-[var(--shadow-soft)]"
+    >
+      <div className="flex items-start justify-between gap-3">
+        {supplier.logo ? (
+          <span className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-2xl border border-border bg-white p-1">
+            <img
+              src={supplier.logo}
+              alt={`${supplier.displayName} logo`}
+              className="h-full w-full object-contain"
+            />
+          </span>
+        ) : (
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
+            <Building2 className="h-5 w-5" />
+          </span>
+        )}
+        <span
+          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${HOME_BADGE_STYLE[kind]}`}
+        >
+          <BadgeIcon className="h-3 w-3" aria-hidden="true" />
+          {SUPPLIER_BADGE_LABEL[kind]}
+        </span>
+      </div>
+      <h3 className="mt-4 font-display text-xl font-semibold text-foreground">
+        {supplier.displayName}
+      </h3>
+      <p className="mt-1 text-sm text-muted-foreground">
+        {place || "Location pending verification"}
+      </p>
+    </Link>
   );
 }
 
@@ -383,7 +420,7 @@ function FrequentlyAskedQuestions() {
     <section id="faq" className="scroll-mt-28 border-y border-border bg-card">
       <div className="mx-auto grid max-w-6xl gap-9 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-[.7fr_1.3fr] lg:gap-12">
         <div>
-          <p className="text-sm font-medium uppercase tracking-wider text-primary">04 / FAQ</p>
+          <p className="text-sm font-medium uppercase tracking-wider eyebrow-accent">04 / FAQ</p>
           <h2 className="mt-3 font-display text-3xl font-semibold text-foreground sm:text-4xl md:text-5xl">
             Clear answers before you analyze.
           </h2>

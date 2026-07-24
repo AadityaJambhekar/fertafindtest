@@ -1,4 +1,5 @@
 export const MAX_QUOTE_FILES = 8;
+export const MIN_QUOTE_FILES = 1;
 export const MAX_QUOTE_FILE_BYTES = 10 * 1024 * 1024;
 
 export type QuoteFileKind = "image" | "document";
@@ -81,6 +82,18 @@ export function getQuoteFileDescriptor(file: QuoteFileLike): QuoteFileDescriptor
 
 export function isQuoteFileSupported(file: QuoteFileLike) {
   return Boolean(getQuoteFileDescriptor(file));
+}
+
+/**
+ * The quote-count rule shared by the analyze UI and the /api/analyze-quotes handler.
+ * One quote is enough to run an analysis; no more than MAX_QUOTE_FILES are accepted at
+ * once. Returns "" when the count is acceptable, or a user-facing message when it is not.
+ */
+export function quoteCountError(count: number): string {
+  if (count < MIN_QUOTE_FILES || count > MAX_QUOTE_FILES) {
+    return `Upload between ${MIN_QUOTE_FILES} and ${MAX_QUOTE_FILES} quote files.`;
+  }
+  return "";
 }
 
 export function quoteFileError(file: QuoteFileLike) {

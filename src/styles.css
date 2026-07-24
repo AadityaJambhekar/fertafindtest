@@ -185,18 +185,6 @@
   .reveal-up {
     animation: none;
   }
-
-  .fertafind-map-pin {
-    display: grid;
-    place-items: center;
-    border: 3px solid white;
-    border-radius: 999px;
-    background: var(--primary);
-    box-shadow: 0 5px 14px color-mix(in oklab, var(--primary), transparent 55%);
-    color: white;
-    font-size: 1.35rem;
-    line-height: 1;
-  }
 }
 
 .rotating-phrase {
@@ -233,6 +221,131 @@
   50% {
     opacity: 0;
   }
+}
+
+/* Long-form content pages (guides, comparisons, methodology). */
+/* Accessible green for body text/links on light grounds (brand green fails AA as
+   small text). Scoped to content pages; does not change the homepage / brand token. */
+:root {
+  --content-accent: oklch(0.48 0.14 150);
+}
+.dark {
+  --content-accent: oklch(0.75 0.12 150);
+}
+.content-accent {
+  color: var(--content-accent);
+}
+/* Accessible eyebrow green for the homepage: same brand hue as --primary, just
+   dark enough to meet WCAG AA as small labels. Minimal darkening (0.67 -> 0.52). */
+:root {
+  --eyebrow-accent: oklch(0.52 0.14 142);
+  /* Rotating hero headline: same brand hue, just dark enough for large-text AA
+     (3:1). Minimal darkening (0.67 -> 0.63), keeps the FertaFind green identity. */
+  --headline-accent: oklch(0.63 0.14 142);
+}
+.dark {
+  --eyebrow-accent: oklch(0.72 0.12 145);
+  --headline-accent: oklch(0.72 0.12 145);
+}
+.eyebrow-accent {
+  color: var(--eyebrow-accent);
+}
+.content-prose > * + * {
+  margin-top: 1rem;
+}
+.content-prose h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.55rem;
+  line-height: 1.2;
+  color: var(--foreground);
+  margin-top: 2.5rem;
+}
+.content-prose h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.2rem;
+  color: var(--foreground);
+  margin-top: 1.75rem;
+}
+.content-prose p,
+.content-prose ul,
+.content-prose ol {
+  line-height: 1.75;
+}
+.content-prose ul,
+.content-prose ol {
+  padding-left: 1.25rem;
+}
+.content-prose ul {
+  list-style: disc;
+}
+.content-prose ol {
+  list-style: decimal;
+}
+.content-prose li + li {
+  margin-top: 0.35rem;
+}
+.content-prose strong {
+  color: var(--foreground);
+  font-weight: 650;
+}
+.content-prose a {
+  color: var(--content-accent);
+  font-weight: 500;
+}
+.content-prose a:hover {
+  text-decoration: underline;
+}
+.content-prose .formula {
+  display: block;
+  margin-top: 1rem;
+  border-left: 3px solid var(--primary);
+  border-radius: 0.4rem;
+  background: var(--muted);
+  padding: 0.85rem 1rem;
+  font-family: var(--mono, ui-monospace, "SF Mono", Menlo, monospace);
+  font-size: 0.95rem;
+  color: var(--foreground);
+  overflow-x: auto;
+}
+.content-prose .table-wrap {
+  margin-top: 1rem;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+}
+.content-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+}
+.content-prose th,
+.content-prose td {
+  padding: 0.6rem 0.85rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+/* Opt-in: let long text columns wrap while numeric columns stay compact (nowrap). */
+.content-prose th.wrap,
+.content-prose td.wrap {
+  white-space: normal;
+  min-width: 9rem;
+}
+.content-prose thead th {
+  background: var(--muted);
+  font-weight: 600;
+  color: var(--foreground);
+}
+.content-prose tbody tr:last-child td {
+  border-bottom: 0;
+}
+.content-prose figcaption {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--muted-foreground);
 }
 
 @media (prefers-reduced-motion: reduce) {

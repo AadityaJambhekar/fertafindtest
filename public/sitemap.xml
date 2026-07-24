@@ -1,15 +1,87 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://fertafind.com/</loc>
+    <loc>https://www.fertafind.com/en</loc>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://fertafind.com/analyze/</loc>
+    <loc>https://www.fertafind.com/pt-br</loc>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/en/analyze</loc>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://fertafind.com/terms/</loc>
+    <loc>https://www.fertafind.com/pt-br/analyze</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/en/suppliers</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/pt-br/suppliers</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/en/resources</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/pt-br/resources</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/en/guides/how-to-compare-fertilizer-quotes</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/en/guides/fertilizer-cost-per-acre</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/en/guides/cost-per-pound-of-nitrogen</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/en/guides/how-freight-affects-fertilizer-cost</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/en/compare/dap-vs-map</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/en/compare/urea-vs-uan</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/en/methodology/usda-ams-fertilizer-data</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/en/suppliers/fertiexpress-group</loc>
     <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/pt-br/suppliers/fertiexpress-group</loc>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/en/suppliers/nanofert</loc>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/pt-br/suppliers/nanofert</loc>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/en/terms</loc>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/pt-br/terms</loc>
+    <priority>0.4</priority>
   </url>
 </urlset>
