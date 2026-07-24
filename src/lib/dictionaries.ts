@@ -228,6 +228,38 @@ const en = {
     noQuotes: "You haven't added any quotes yet.",
     noSuppliers: "No suppliers to show.",
   },
+  errorPages: {
+    notFoundTitle: "Page not found",
+    notFoundBody: "The page you're looking for doesn't exist or has been moved.",
+    goHome: "Go home",
+    errorTitle: "This page didn't load",
+    errorBody: "Something went wrong on our end. You can try refreshing or head back home.",
+    tryAgain: "Try again",
+  },
+  locationPicker: {
+    addressLabel: "Address or place",
+    chooseLocation: "Choose your location",
+    setPin: "Set your farm pin",
+    mapHelp: "Click the map or drag the marker.",
+    showMap: "Drop a pin instead",
+    hideMap: "Hide map",
+    mapUnavailable:
+      "Map search is temporarily unavailable — standard address search is still active.",
+    poweredByGoogle: "Location search powered by Google",
+    poweredByPrefix: "Location search powered by",
+  },
+  supplierDetail: {
+    eyebrow: "Supplier",
+    fertilizerProducts: "Fertilizer products",
+    contact: "Contact",
+    pendingTitle: "Information pending verification",
+    pendingBody:
+      "{name}'s information has not been independently verified by FertaFind. It is listed from source material provided to us. Company details, products, contacts and website are not confirmed and are intentionally left blank until verified.",
+    lastVerified: "Details last verified {date}.",
+    haveQuote:
+      "Have a quote from {name}? FertaFind puts it on one clear, cost-based footing alongside your other quotes.",
+    analyzeQuote: "Analyze a quote",
+  },
   terms: {
     eyebrow: "FertaFind terms",
     title: "Terms of use",
@@ -542,6 +574,38 @@ const ptBR: Dictionary = {
     noQuotes: "Você ainda não adicionou nenhuma cotação.",
     noSuppliers: "Nenhum fornecedor para mostrar.",
   },
+  errorPages: {
+    notFoundTitle: "Página não encontrada",
+    notFoundBody: "A página que você procura não existe ou foi movida.",
+    goHome: "Voltar ao início",
+    errorTitle: "Esta página não carregou",
+    errorBody: "Algo deu errado do nosso lado. Você pode atualizar ou voltar ao início.",
+    tryAgain: "Tentar novamente",
+  },
+  locationPicker: {
+    addressLabel: "Endereço ou local",
+    chooseLocation: "Escolha sua localização",
+    setPin: "Marque o ponto da sua fazenda",
+    mapHelp: "Clique no mapa ou arraste o marcador.",
+    showMap: "Marcar no mapa",
+    hideMap: "Ocultar mapa",
+    mapUnavailable:
+      "A busca no mapa está temporariamente indisponível — a busca por endereço continua ativa.",
+    poweredByGoogle: "Busca de localização fornecida por Google",
+    poweredByPrefix: "Busca de localização fornecida por",
+  },
+  supplierDetail: {
+    eyebrow: "Fornecedor",
+    fertilizerProducts: "Produtos fertilizantes",
+    contact: "Contato",
+    pendingTitle: "Informações pendentes de verificação",
+    pendingBody:
+      "As informações de {name} não foram verificadas de forma independente pela FertaFind. Elas são listadas a partir de material fornecido a nós. Detalhes da empresa, produtos, contatos e site não estão confirmados e ficam intencionalmente em branco até serem verificados.",
+    lastVerified: "Detalhes verificados pela última vez em {date}.",
+    haveQuote:
+      "Tem uma cotação da {name}? A FertaFind coloca-a em uma base clara e baseada em custo, ao lado das suas outras cotações.",
+    analyzeQuote: "Analisar uma cotação",
+  },
   terms: {
     eyebrow: "Termos da FertaFind",
     title: "Termos de uso",
@@ -844,6 +908,38 @@ const es419: Dictionary = {
   empty: {
     noQuotes: "Todavía no has agregado ninguna cotización.",
     noSuppliers: "No hay proveedores para mostrar.",
+  },
+  errorPages: {
+    notFoundTitle: "Página no encontrada",
+    notFoundBody: "La página que buscas no existe o fue movida.",
+    goHome: "Volver al inicio",
+    errorTitle: "Esta página no se cargó",
+    errorBody: "Algo salió mal de nuestro lado. Puedes actualizar o volver al inicio.",
+    tryAgain: "Reintentar",
+  },
+  locationPicker: {
+    addressLabel: "Dirección o lugar",
+    chooseLocation: "Elige tu ubicación",
+    setPin: "Marca el punto de tu campo",
+    mapHelp: "Haz clic en el mapa o arrastra el marcador.",
+    showMap: "Marcar en el mapa",
+    hideMap: "Ocultar mapa",
+    mapUnavailable:
+      "La búsqueda en el mapa no está disponible temporalmente; la búsqueda por dirección sigue activa.",
+    poweredByGoogle: "Búsqueda de ubicación proporcionada por Google",
+    poweredByPrefix: "Búsqueda de ubicación proporcionada por",
+  },
+  supplierDetail: {
+    eyebrow: "Proveedor",
+    fertilizerProducts: "Productos fertilizantes",
+    contact: "Contacto",
+    pendingTitle: "Información pendiente de verificación",
+    pendingBody:
+      "La información de {name} no ha sido verificada de forma independiente por FertaFind. Se muestra a partir de material que nos proporcionaron. Los datos de la empresa, los productos, los contactos y el sitio web no están confirmados y se dejan en blanco intencionalmente hasta verificarlos.",
+    lastVerified: "Detalles verificados por última vez el {date}.",
+    haveQuote:
+      "¿Tienes una cotización de {name}? FertaFind la coloca sobre una base clara y basada en costos, junto a tus otras cotizaciones.",
+    analyzeQuote: "Analizar una cotización",
   },
   terms: {
     eyebrow: "Términos de FertaFind",

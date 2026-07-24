@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Loader2, MapPin, Navigation } from "lucide-react";
 import { GoogleMap } from "@/components/google-map";
+import { useDictionary } from "@/components/locale-context";
 import {
   buildFarmLocation,
   useGoogleMaps,
@@ -86,6 +87,7 @@ export function FarmLocationPicker({
   onShowMapChange,
   onEnterAdvance,
 }: FarmLocationPickerProps) {
+  const t = useDictionary();
   const { state: mapsState, api } = useGoogleMaps();
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
@@ -167,9 +169,10 @@ export function FarmLocationPicker({
         commit(data.result);
         return;
       }
-      onError(data.error ?? "We couldn't find that location. Check the spelling and try again.");
+      // Show the localized message, not the server's English string.
+      onError(t.validation.locationNotFound);
     } catch {
-      onError("We couldn't check that location. Please try again.");
+      onError(t.validation.locationFailed);
     }
   };
 
@@ -211,10 +214,10 @@ export function FarmLocationPicker({
         onMatched(data.result);
         onValueChange(data.result.display_name);
       } else {
-        onError(data.error ?? "We couldn't identify that map pin. Try another point.");
+        onError(t.validation.locationFailed);
       }
     } catch {
-      onError("We couldn't identify that map pin. Try another point.");
+      onError(t.validation.locationFailed);
     } finally {
       onCheckingChange(false);
     }
@@ -229,7 +232,7 @@ export function FarmLocationPicker({
 
   return (
     <label className="block">
-      <span className="text-sm font-medium text-foreground">Address or place</span>
+      <span className="text-sm font-medium text-foreground">{t.locationPicker.addressLabel}</span>
       <div className="relative mt-2">
         <div className="flex items-center gap-2 rounded-2xl border border-input bg-background px-4 py-3 transition-shadow focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30">
           <MapPin className="h-5 w-5 text-muted-foreground" />
@@ -256,7 +259,7 @@ export function FarmLocationPicker({
               if (first) void selectSuggestion(first);
               else onEnterAdvance();
             }}
-            placeholder="e.g. San Francisco, CA"
+            placeholder={t.analyze.locationPlaceholder}
             className="w-full bg-transparent text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
           />
           {(isLoadingSuggestions || isChecking) && (
@@ -274,7 +277,7 @@ export function FarmLocationPicker({
             className="absolute z-20 mt-2 w-full overflow-hidden rounded-2xl border border-border bg-card p-1.5 shadow-[var(--shadow-soft)]"
           >
             <p className="px-3 pb-1.5 pt-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-              Choose your location
+              {t.locationPicker.chooseLocation}
             </p>
             {suggestions.map((suggestion, index) => (
               <button
@@ -312,7 +315,7 @@ export function FarmLocationPicker({
           className="inline-flex items-center gap-2 rounded-lg border border-primary/25 bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
         >
           <Navigation className="h-3.5 w-3.5" />
-          {showMap ? "Hide map" : "Drop a pin instead"}
+          {showMap ? t.locationPicker.hideMap : t.locationPicker.showMap}
         </button>
       </div>
 
@@ -320,8 +323,8 @@ export function FarmLocationPicker({
         <div className="mt-3 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <div>
-              <p className="text-sm font-semibold text-foreground">Set your farm pin</p>
-              <p className="text-xs text-muted-foreground">Click the map or drag the marker.</p>
+              <p className="text-sm font-semibold text-foreground">{t.locationPicker.setPin}</p>
+              <p className="text-xs text-muted-foreground">{t.locationPicker.mapHelp}</p>
             </div>
             {isChecking && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
           </div>
@@ -343,16 +346,14 @@ export function FarmLocationPicker({
         </p>
       )}
       {mapsState === "error" && (
-        <p className="mt-2 text-xs text-muted-foreground">
-          Map search is temporarily unavailable — standard address search is still active.
-        </p>
+        <p className="mt-2 text-xs text-muted-foreground">{t.locationPicker.mapUnavailable}</p>
       )}
       <p className="mt-2 text-xs text-muted-foreground">
         {usingGoogleSearch ? (
-          "Location search powered by Google"
+          t.locationPicker.poweredByGoogle
         ) : (
           <>
-            Location search powered by{" "}
+            {t.locationPicker.poweredByPrefix}{" "}
             <a
               href="https://www.openstreetmap.org/copyright"
               target="_blank"

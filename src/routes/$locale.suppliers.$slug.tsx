@@ -14,8 +14,6 @@ import {
 import { SiteFooter, SiteHeader } from "@/components/site-header";
 import {
   SUPPLIER_TYPE_LABEL,
-  SUPPLIER_BADGE_LABEL,
-  SUPPLIER_DISCOVERY_DISCLAIMER,
   supplierBadgeKind,
   getListedSupplierBySlug,
   supplierDetailRouteHead,
@@ -101,13 +99,13 @@ function SupplierDetailPage() {
           <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
             <li>
               <a href={lp("/")} className="transition-colors hover:text-foreground">
-                Home
+                {t.breadcrumb.home}
               </a>
             </li>
             <li className="flex items-center gap-2">
               <span aria-hidden="true">/</span>
               <a href={lp("/suppliers")} className="transition-colors hover:text-foreground">
-                Suppliers
+                {t.breadcrumb.suppliers}
               </a>
             </li>
             <li className="flex items-center gap-2">
@@ -124,13 +122,13 @@ function SupplierDetailPage() {
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-3">
               <p className="text-sm font-semibold uppercase tracking-[0.16em] content-accent">
-                Supplier
+                {t.supplierDetail.eyebrow}
               </p>
               <span
                 className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${badgeStyle}`}
               >
                 <BadgeIcon className="h-3 w-3" aria-hidden="true" />
-                {SUPPLIER_BADGE_LABEL[kind]}
+                {t.badge[kind]}
               </span>
             </div>
             <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
@@ -159,13 +157,10 @@ function SupplierDetailPage() {
             <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" aria-hidden="true" />
             <div>
               <p className="text-sm font-semibold text-amber-900">
-                Information pending verification
+                {t.supplierDetail.pendingTitle}
               </p>
               <p className="mt-1 text-sm leading-6 text-amber-800">
-                {supplier.displayName}&apos;s information has not been independently verified by
-                FertaFind. It is listed from source material provided to us. Company details,
-                products, contacts and website are not confirmed and are intentionally left blank
-                until verified.
+                {t.supplierDetail.pendingBody.replace("{name}", supplier.displayName)}
               </p>
             </div>
           </div>
@@ -192,7 +187,7 @@ function SupplierDetailPage() {
                 rel="noopener noreferrer"
                 className="inline-flex h-11 items-center gap-2 rounded-full border border-border bg-background px-5 text-sm font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary"
               >
-                Fertilizer products
+                {t.supplierDetail.fertilizerProducts}
                 <ExternalLink className="h-4 w-4" aria-hidden="true" />
               </a>
             )}
@@ -204,15 +199,15 @@ function SupplierDetailPage() {
         )}
 
         <div className="mt-8 grid gap-6">
-          <Chips label="Products" items={supplier.products} />
-          <Chips label="Product grades" items={supplier.productGrades} />
-          <Chips label="Service regions" items={supplier.serviceRegions} />
+          <Chips label={t.suppliers.products} items={supplier.products} />
+          <Chips label={t.suppliers.grades} items={supplier.productGrades} />
+          <Chips label={t.suppliers.servesRegions} items={supplier.serviceRegions} />
         </div>
 
         {(supplier.publicEmail || supplier.publicPhone) && (
           <section className="mt-8 rounded-2xl border border-border bg-card p-5">
             <h2 className="text-xs font-semibold uppercase tracking-[0.16em] content-accent">
-              Contact
+              {t.supplierDetail.contact}
             </h2>
             <ul className="mt-3 space-y-2 text-sm">
               {supplier.publicEmail && (
@@ -227,28 +222,25 @@ function SupplierDetailPage() {
 
         {supplier.lastVerifiedAt && (
           <p className="mt-6 text-sm text-muted-foreground">
-            Details last verified {supplier.lastVerifiedAt}.
+            {t.supplierDetail.lastVerified.replace("{date}", supplier.lastVerifiedAt)}
           </p>
         )}
 
         <div className="mt-12 border-t border-border pt-8">
           <p className="text-muted-foreground">
-            Have a quote from {supplier.displayName}? FertaFind puts it on one clear, cost-based
-            footing alongside your other quotes.
+            {t.supplierDetail.haveQuote.replace("{name}", supplier.displayName)}
           </p>
           <Link
             to="/$locale/analyze"
             params={{ locale: localeToSegment(locale) }}
             className="mt-4 inline-flex h-12 items-center gap-2 rounded-full bg-primary px-7 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-colors hover:bg-primary-soft"
           >
-            Analyze a quote
+            {t.supplierDetail.analyzeQuote}
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
 
-        <p className="mt-8 text-xs leading-5 text-muted-foreground">
-          {SUPPLIER_DISCOVERY_DISCLAIMER}
-        </p>
+        <p className="mt-8 text-xs leading-5 text-muted-foreground">{t.suppliers.disclaimer}</p>
       </main>
       <SiteFooter />
     </div>

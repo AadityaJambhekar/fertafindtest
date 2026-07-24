@@ -14,22 +14,28 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { DEFAULT_OG_IMAGE, SITE_NAME } from "@/lib/seo";
 import { bootstrapAnalytics } from "@/lib/analytics";
 import { DEFAULT_LOCALE, stripLocale } from "@/lib/i18n";
+import { getDictionary } from "@/lib/dictionaries";
+
+/** These boundaries render ABOVE the locale provider, so they read the locale from the URL. */
+function useUrlDictionary() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  return getDictionary(stripLocale(pathname).locale ?? DEFAULT_LOCALE);
+}
 
 function NotFoundComponent() {
+  const t = useUrlDictionary();
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
-        </p>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">{t.errorPages.notFoundTitle}</h2>
+        <p className="mt-2 text-sm text-muted-foreground">{t.errorPages.notFoundBody}</p>
         <div className="mt-6">
           <a
             href="/"
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Go home
+            {t.errorPages.goHome}
           </a>
         </div>
       </div>
@@ -40,6 +46,7 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
+  const t = useUrlDictionary();
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
@@ -48,11 +55,9 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
+          {t.errorPages.errorTitle}
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
-        </p>
+        <p className="mt-2 text-sm text-muted-foreground">{t.errorPages.errorBody}</p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => {
@@ -61,13 +66,13 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             }}
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Try again
+            {t.errorPages.tryAgain}
           </button>
           <a
             href="/"
             className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
-            Go home
+            {t.errorPages.goHome}
           </a>
         </div>
       </div>

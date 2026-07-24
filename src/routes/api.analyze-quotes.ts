@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type { PriorFertilizerApplication, QuoteAnalysis } from "@/lib/quote-analysis";
-import { getQuoteFileDescriptor, quoteCountError, quoteFileError } from "@/lib/quote-files";
+import { quoteCountError, quoteFileError } from "@/lib/quote-files";
 import { getFarmWeather } from "@/lib/weather";
-import { parseQuoteAnalysis, parseFailureMessage, type OpenAIResponse } from "@/lib/quote-response";
-import { validateRequestLocale, aiLanguageInstruction } from "@/lib/i18n";
+import { parseQuoteAnalysis, type OpenAIResponse } from "@/lib/quote-response";
+import { validateRequestLocale, aiLanguageInstruction, DEFAULT_LOCALE } from "@/lib/i18n";
+import { analyzeMessages, type AnalyzeMessages } from "@/lib/analyze-messages";
+import { buildQuoteModelInputs } from "@/lib/quote-extraction";
 
 const MAX_REQUEST_BYTES = 82 * 1024 * 1024;
 const ANALYSIS_LIMIT = 3;
@@ -234,30 +236,26 @@ function priorApplicationsField(form: FormData): PriorFertilizerApplication[] {
   }
 }
 
-function analysisErrorMessage(status: number) {
-  if (status === 401) {
-    return "The OpenAI API key was rejected. Check OPENAI_API_KEY and restart the server.";
-  }
-  if (status === 429) {
-    return "OpenAI API credit is unavailable or the usage limit was reached. Add API credit or try again later.";
-  }
-  if (status === 400 || status === 413) {
-    return "OpenAI could not process this upload. Try a clearer JPG, PNG, or PDF quote under 10 MB.";
-  }
-  if (status >= 500) {
-    return "OpenAI is temporarily unavailable. Please try again in a few minutes.";
-  }
-  return "The AI could not analyze those files. Please try again.";
+// Map an upstream status to a SAFE, localized, provider-agnostic message. The raw provider
+// body is never surfaced; only the status decides which curated message the grower sees.
+function analysisErrorMessage(status: number, m: AnalyzeMessages) {
+  if (status === 401) return m.notConfigured; // credentials/config problem — not the grower's fault
+  if (status === 429) return m.aiBusy;
+  if (status === 400 || status === 413) return m.aiBadUpload;
+  if (status >= 500) return m.aiOverloaded;
+  return m.aiFailed;
 }
 
 export const Route = createFileRoute("/api/analyze-quotes")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        // These first two checks run before the form (and its locale) can be read, so they use
+        // the default-locale copy; everything after the locale is parsed is fully localized.
         const contentLength = Number(request.headers.get("content-length") ?? 0);
         if (contentLength > MAX_REQUEST_BYTES) {
           return Response.json(
-            { error: "The upload is too large. Use up to 8 files under 10 MB each." },
+            { error: analyzeMessages(DEFAULT_LOCALE).uploadTooLarge },
             { status: 413 },
           );
         }
@@ -266,7 +264,10 @@ export const Route = createFileRoute("/api/analyze-quotes")({
         try {
           form = await request.formData();
         } catch {
-          return Response.json({ error: "Invalid upload." }, { status: 400 });
+          return Response.json(
+            { error: analyzeMessages(DEFAULT_LOCALE).invalidUpload },
+            { status: 400 },
+          );
         }
 
         // Do not use `instanceof File` here. Multipart files can come from a
@@ -287,6 +288,8 @@ export const Route = createFileRoute("/api/analyze-quotes")({
         const decisionGoal = field(form, "decisionGoal");
         // Never trust the client-supplied locale: unknown values fall back to English.
         const locale = validateRequestLocale(form.get("locale"));
+        // Localized, provider-agnostic messages for every response from here on.
+        const m = analyzeMessages(locale);
         const fertilizerFormPreference = field(form, "fertilizerFormPreference");
         const fertilizerOriginPreference = field(form, "fertilizerOriginPreference");
         const organicCertification = field(form, "organicCertification");
@@ -333,30 +336,20 @@ export const Route = createFileRoute("/api/analyze-quotes")({
         const recaptchaToken = field(form, "recaptchaToken");
 
         if (!recaptchaToken) {
-          return Response.json({ error: "Verification is required." }, { status: 403 });
+          return Response.json({ error: m.verificationRequired }, { status: 403 });
         }
         const recaptcha = await verifyRecaptcha(request, recaptchaToken);
         if (!recaptcha.configured) {
-          return Response.json(
-            { error: "Google reCAPTCHA is not configured yet." },
-            { status: 503 },
-          );
+          return Response.json({ error: m.verificationNotConfigured }, { status: 503 });
         }
         if (!recaptcha.valid) {
-          return Response.json(
-            { error: "Verification failed or expired. Please try again." },
-            { status: 403 },
-          );
+          return Response.json({ error: m.verificationFailed }, { status: 403 });
         }
 
         const apiKey = process.env.OPENAI_API_KEY;
         if (!apiKey) {
           return Response.json(
-            {
-              error:
-                "Quote analysis is not configured yet. Add OPENAI_API_KEY to the server environment.",
-              code: "MISSING_API_KEY",
-            },
+            { error: m.notConfigured, code: "MISSING_API_KEY" },
             { status: 503 },
           );
         }
@@ -373,13 +366,7 @@ export const Route = createFileRoute("/api/analyze-quotes")({
           fieldSize <= 0 ||
           !["rain-fed", "irrigated", "planned"].includes(irrigationStatus)
         ) {
-          return Response.json(
-            {
-              error:
-                "Location, crop, preferences, priority, field size and water source are required.",
-            },
-            { status: 400 },
-          );
+          return Response.json({ error: m.fieldsRequired }, { status: 400 });
         }
         if (plantingDate) {
           const plantingTimestamp = Date.parse(`${plantingDate}T00:00:00Z`);
@@ -390,10 +377,7 @@ export const Route = createFileRoute("/api/analyze-quotes")({
             today.getUTCDate(),
           );
           if (!Number.isFinite(plantingTimestamp) || plantingTimestamp > todayTimestamp) {
-            return Response.json(
-              { error: "Planting date cannot be in the future." },
-              { status: 400 },
-            );
+            return Response.json({ error: m.plantingFuture }, { status: 400 });
           }
         }
         const countError = quoteCountError(files.length);
@@ -407,22 +391,37 @@ export const Route = createFileRoute("/api/analyze-quotes")({
 
         if (!consumeAnalysisAttempt(requestIp(request))) {
           return Response.json(
-            { error: "Too many analyses from this connection. Try again in 10 minutes." },
+            { error: m.rateLimited },
             { status: 429, headers: { "Retry-After": "600" } },
           );
         }
 
-        const fileInputs = await Promise.all(
-          files.map(async (file) => {
-            const descriptor = getQuoteFileDescriptor(file);
-            if (!descriptor) throw new Error(`${file.name} is not a supported quote file.`);
-            const base64 = Buffer.from(await file.arrayBuffer()).toString("base64");
-            const dataUrl = `data:${descriptor.mime};base64,${base64}`;
-            return descriptor.kind === "document"
-              ? { type: "input_file", filename: file.name, file_data: dataUrl }
-              : { type: "input_image", image_url: dataUrl, detail: "high" };
-          }),
+        // Build the model inputs (the upload -> AI request contract). PDFs and images are read
+        // natively by the model; DOCX/XLSX are extracted to text HERE so their real supplier
+        // names, grades, prices and quantities reach the request; unreadable DOCX/XLSX become
+        // localized warnings and are never sent as if they had been parsed. See
+        // buildQuoteModelInputs + quote-model-inputs.test.ts.
+        const uploaded = await Promise.all(
+          files.map(async (file) => ({
+            name: file.name,
+            type: file.type,
+            bytes: Buffer.from(await file.arrayBuffer()),
+          })),
         );
+        const { inputs: fileInputs, warnings: extractionWarnings } = buildQuoteModelInputs(
+          uploaded,
+          { docCorrupt: m.docCorrupt, docEmpty: m.docEmpty, docImageOnly: m.docImageOnly },
+        );
+
+        // If nothing readable survived (e.g. a single image-only DOCX), do not call the model or
+        // pretend a document was parsed — return the safe localized message and the per-file
+        // reasons so the grower knows exactly what to re-upload.
+        if (fileInputs.length === 0) {
+          return Response.json(
+            { error: m.noUsableContent, warnings: extractionWarnings },
+            { status: 422 },
+          );
+        }
 
         let weather = null;
         try {
@@ -501,13 +500,7 @@ ${aiLanguageInstruction(locale)}`;
           // Network/DNS/TLS failure or the 90s timeout aborting the request. Never
           // surface the raw error; invite a retry.
           console.error("OpenAI quote analysis request did not complete");
-          return Response.json(
-            {
-              error: "The analysis service did not respond in time. Please try again.",
-              retryable: true,
-            },
-            { status: 504 },
-          );
+          return Response.json({ error: m.aiTimeout, retryable: true }, { status: 504 });
         }
 
         if (!upstream.ok) {
@@ -522,7 +515,7 @@ ${aiLanguageInstruction(locale)}`;
           }
           console.error("OpenAI quote analysis failed", upstream.status, upstreamMessage);
           return Response.json(
-            { error: analysisErrorMessage(upstream.status), retryable: upstream.status !== 401 },
+            { error: analysisErrorMessage(upstream.status, m), retryable: upstream.status !== 401 },
             { status: 502 },
           );
         }
@@ -533,27 +526,23 @@ ${aiLanguageInstruction(locale)}`;
         } catch {
           // A 2xx response with a non-JSON body (e.g. an HTML proxy/error page).
           console.error("OpenAI quote analysis returned a non-JSON body");
-          return Response.json(
-            { error: "The AI returned an unreadable analysis. Please try again.", retryable: true },
-            { status: 502 },
-          );
+          return Response.json({ error: m.aiUnreadable, retryable: true }, { status: 502 });
         }
 
         const parsed = parseQuoteAnalysis(openAIResult);
         if (!parsed.ok) {
           // Empty / refusal / truncated / malformed / schema-invalid model output.
           console.error("Quote analysis parse failure", parsed.reason);
-          return Response.json(
-            { error: parseFailureMessage(parsed.reason), retryable: true },
-            { status: 502 },
-          );
+          return Response.json({ error: m.aiUnreadable, retryable: true }, { status: 502 });
         }
         const extracted = parsed.data;
         if (!extracted.quotes.length) {
-          extracted.warnings = [
-            "No identifiable fertilizer product or fertilizer grade was found in the uploaded files. Check that the upload shows the product name or analysis clearly.",
-            ...extracted.warnings,
-          ];
+          extracted.warnings = [m.noProductsFound, ...extracted.warnings];
+        }
+        // Surface the per-file document-extraction notes (empty / image-only / corrupt) so a
+        // partially-unreadable upload is reported honestly rather than silently dropped.
+        if (extractionWarnings.length) {
+          extracted.warnings = [...extractionWarnings, ...extracted.warnings];
         }
 
         try {
