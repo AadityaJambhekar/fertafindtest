@@ -64,6 +64,29 @@ const MUST_NOT_CONTAIN: Array<{ file: string; phrases: string[] }> = [
     phrases: ["Information pending verification", "Analyze a quote", "Fertilizer products"],
   },
   { file: "../routes/__root.tsx", phrases: ["Page not found", "Go home", "Try again"] },
+  {
+    file: "../routes/$locale.analyze.tsx",
+    phrases: [
+      "Clear selection",
+      "Product preferences",
+      "Crop stage",
+      "Laboratory soil test",
+      "Water and soil",
+      "Nutrient targets",
+      "Drop, tap, or paste quotes here",
+    ],
+  },
+  {
+    file: "../routes/$locale.results.$id.tsx",
+    phrases: [
+      "Your recommendation",
+      "Recommendation audit",
+      "Quote comparison",
+      "Check before buying",
+      "Farmer price",
+      "Estimated product cost",
+    ],
+  },
 ];
 
 test("localized surfaces no longer contain their old hard-coded English strings", () => {
@@ -76,18 +99,97 @@ test("localized surfaces no longer contain their old hard-coded English strings"
   }
 });
 
+// --- fallback guard: Analyze + Results customer surfaces are actually translated ----------
+//
+// Representative keys across every category the audit named. Each must be genuinely translated
+// (differ from English) in BOTH pt-BR and es-419 — this is what fails when a critical surface
+// falls back to English. Kept as an explicit list (not a broad regex) so it cannot mask a
+// regression; exact technical/unit cognates that legitimately match English are handled by the
+// narrow allowlist in spanish-i18n.test.ts / dictionaries.test.ts.
+const CRITICAL_KEYS: string[] = [
+  // Analyze field labels & sections
+  "analyze.clearSelection",
+  "analyze.fieldSizeLabel",
+  "analyze.prefsTitle",
+  "analyze.cropStageTitle",
+  "analyze.soilTitle",
+  "analyze.waterTitle",
+  "analyze.targetsTitle",
+  "analyze.moreDetails",
+  // Analyze crop name / stage display maps
+  "analyze.cropName.Soybeans",
+  "analyze.cropStage.Flowering",
+  // Analyze validation + upload/parsing
+  "validation.locationNotFound",
+  "validation.locationFailed",
+  "analyze.maxFilesError",
+  "analyze.dropzoneTitle",
+  "analyze.dropzoneHelp",
+  "analyze.soilUploadHelp",
+  // Results headings
+  "results.yourRecommendation",
+  "results.recommendationAudit",
+  "results.quoteComparison",
+  "results.farmDataTitle",
+  // Comparison + price/nutrient/delivery labels
+  "results.nutrientCost",
+  "results.costPerHa",
+  "results.sortScore",
+  "results.topComparison",
+  "results.farmerPrice",
+  "results.estimatedProductCost",
+  // Recommendations
+  "results.partnerRecommendation",
+  "results.noVerifiedStageTitle",
+  "results.factorsUsedSummary",
+  // Warnings
+  "results.checkBeforeBuying",
+  "results.notARecommendation",
+  // Empty + error states
+  "results.noExtracted",
+  "results.loadingTitle",
+  "results.notAvailableTitle",
+  // 404 text
+  "errorPages.notFoundTitle",
+  "errorPages.goHome",
+];
+
+function readPath(dict: unknown, path: string): string {
+  return path
+    .split(".")
+    .reduce<unknown>((acc, k) => (acc as Record<string, unknown>)?.[k], dict) as string;
+}
+
+test("critical Analyze/Results/404 strings are translated in pt-BR and es-419 (no English fallback)", () => {
+  const en = getDictionary("en");
+  for (const locale of ["pt-BR", "es-419"] as const) {
+    const dict = getDictionary(locale);
+    for (const path of CRITICAL_KEYS) {
+      const enValue = readPath(en, path);
+      const localized = readPath(dict, path);
+      assert.ok(typeof localized === "string" && localized.length > 0, `${locale}.${path} missing`);
+      assert.notEqual(localized, enValue, `${locale}.${path} still equals English "${enValue}"`);
+    }
+  }
+});
+
 // --- documented backlog (tracked, not silently ignored) ------------------
 
 /**
- * Surfaces whose deep FORM field labels are still English and are scheduled for a follow-up
- * translation pass. Documented here so the residual is tracked in code. The files must exist.
+ * Customer-facing English strings still pending translation, tracked in code so the residual is
+ * never silently forgotten. These are the SHARED file-validation strings produced by
+ * quote-files.ts (also consumed by the server contract) and the soil-test extraction server
+ * route — localizing them needs a locale-threading refactor scheduled as a follow-up.
  */
 export const KNOWN_RESIDUAL: Array<{ file: string; note: string }> = [
   {
-    file: "../routes/$locale.analyze.tsx",
-    note: "wizard field labels, soil-test + water sections",
+    file: "../lib/quote-files.ts",
+    note: "client file-validation messages (unsupported type / over 10 MB), shared with the server",
   },
-  { file: "../routes/$locale.results.$id.tsx", note: "results panel labels and section headings" },
+  {
+    file: "../routes/api.extract-soil-test.ts",
+    note: "soil-test extraction server responses (secondary, collapsed 'More details' feature)",
+  },
 ];
 
 test("documented i18n backlog files still exist (report stays accurate)", () => {

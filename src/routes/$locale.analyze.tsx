@@ -35,7 +35,6 @@ import {
   MAX_QUOTE_FILES,
   quoteFileError,
   QUOTE_FILE_ACCEPT,
-  QUOTE_FILE_HELP_TEXT,
 } from "@/lib/quote-files";
 import { pageMeta, jsonLdScript, breadcrumbLd } from "@/lib/seo";
 
@@ -210,37 +209,40 @@ function AnalyzePage() {
       crops.every((crop) => Boolean(cropStages[crop]))) ||
     (step === 2 && decisionGoal !== "" && photos.length > 0);
 
-  const handleFiles = useCallback((fileList: File[] | FileList | null) => {
-    if (!fileList) return;
-    const incoming = Array.from(fileList);
-    if (!incoming.length) return;
+  const handleFiles = useCallback(
+    (fileList: File[] | FileList | null) => {
+      if (!fileList) return;
+      const incoming = Array.from(fileList);
+      if (!incoming.length) return;
 
-    const errors = incoming.map(quoteFileError).filter(Boolean);
-    const accepted = incoming.filter((file) => !quoteFileError(file));
+      const errors = incoming.map(quoteFileError).filter(Boolean);
+      const accepted = incoming.filter((file) => !quoteFileError(file));
 
-    setPhotos((prev) => {
-      const existingKeys = new Set(
-        prev.map((file) => `${file.name}:${file.size}:${file.lastModified}`),
-      );
-      const uniqueIncoming = accepted.filter((file) => {
-        const key = `${file.name}:${file.size}:${file.lastModified}`;
-        if (existingKeys.has(key)) return false;
-        existingKeys.add(key);
-        return true;
+      setPhotos((prev) => {
+        const existingKeys = new Set(
+          prev.map((file) => `${file.name}:${file.size}:${file.lastModified}`),
+        );
+        const uniqueIncoming = accepted.filter((file) => {
+          const key = `${file.name}:${file.size}:${file.lastModified}`;
+          if (existingKeys.has(key)) return false;
+          existingKeys.add(key);
+          return true;
+        });
+
+        const slotsLeft = Math.max(MAX_QUOTE_FILES - prev.length, 0);
+        const next = [...prev, ...uniqueIncoming.slice(0, slotsLeft)];
+
+        const messages = [...errors];
+        if (uniqueIncoming.length > slotsLeft) {
+          messages.push(t.analyze.maxFilesError.replace("{max}", String(MAX_QUOTE_FILES)));
+        }
+        setAnalysisError(messages[0] ?? "");
+
+        return next;
       });
-
-      const slotsLeft = Math.max(MAX_QUOTE_FILES - prev.length, 0);
-      const next = [...prev, ...uniqueIncoming.slice(0, slotsLeft)];
-
-      const messages = [...errors];
-      if (uniqueIncoming.length > slotsLeft) {
-        messages.push(`Only ${MAX_QUOTE_FILES} quote files can be analyzed at once.`);
-      }
-      setAnalysisError(messages[0] ?? "");
-
-      return next;
-    });
-  }, []);
+    },
+    [t],
+  );
 
   useEffect(() => {
     if (step !== 2) return;
@@ -289,9 +291,7 @@ function AnalyzePage() {
 
       if (!response.ok || !data.result) {
         setMatchedLocation(null);
-        setLocationError(
-          data.error ?? "We couldn't find that location. Check the spelling and try again.",
-        );
+        setLocationError(t.validation.locationNotFound);
         return;
       }
 
@@ -300,57 +300,58 @@ function AnalyzePage() {
       setStep(1);
     } catch {
       setMatchedLocation(null);
-      setLocationError("We couldn't check that location. Please try again.");
+      setLocationError(t.validation.locationFailed);
     } finally {
       setIsCheckingLocation(false);
     }
   };
 
-  const readSoilTest = useCallback(async (token: string) => {
-    const file = pendingSoilTestFileRef.current;
-    if (!file) return;
+  const readSoilTest = useCallback(
+    async (token: string) => {
+      const file = pendingSoilTestFileRef.current;
+      if (!file) return;
 
-    const form = new FormData();
-    form.set("soilTest", file);
-    form.set("recaptchaToken", token);
-    try {
-      const response = await fetch("/api/extract-soil-test", { method: "POST", body: form });
-      const data = (await response.json()) as { values?: SoilTestExtraction; error?: string };
-      if (!response.ok || !data.values)
-        throw new Error(data.error || "The soil test could not be read.");
+      const form = new FormData();
+      form.set("soilTest", file);
+      form.set("recaptchaToken", token);
+      try {
+        const response = await fetch("/api/extract-soil-test", { method: "POST", body: form });
+        const data = (await response.json()) as { values?: SoilTestExtraction; error?: string };
+        if (!response.ok || !data.values)
+          throw new Error(data.error || "The soil test could not be read.");
 
-      const values = data.values;
-      if (values.soilTestDate) setSoilTestDate(values.soilTestDate);
-      if (values.soilSampleDepthCm) setSoilSampleDepthCm(values.soilSampleDepthCm);
-      if (values.soilTestMethod) setSoilTestMethod(values.soilTestMethod);
-      if (values.soilNitrogen) setSoilNitrogen(values.soilNitrogen);
-      if (values.soilPhosphorus) setSoilPhosphorus(values.soilPhosphorus);
-      if (values.soilPotassium) setSoilPotassium(values.soilPotassium);
-      if (values.soilSulfur) setSoilSulfur(values.soilSulfur);
-      if (values.soilPh) setSoilPh(values.soilPh);
-      if (values.soilOrganicMatter) setSoilOrganicMatter(values.soilOrganicMatter);
-      if (values.soilCec) setSoilCec(values.soilCec);
-      if (values.soilTexture) setSoilTexture(values.soilTexture);
-      if (values.soilMicronutrients) {
-        setSoilMicronutrients((current) => ({ ...current, ...values.soilMicronutrients }));
+        const values = data.values;
+        if (values.soilTestDate) setSoilTestDate(values.soilTestDate);
+        if (values.soilSampleDepthCm) setSoilSampleDepthCm(values.soilSampleDepthCm);
+        if (values.soilTestMethod) setSoilTestMethod(values.soilTestMethod);
+        if (values.soilNitrogen) setSoilNitrogen(values.soilNitrogen);
+        if (values.soilPhosphorus) setSoilPhosphorus(values.soilPhosphorus);
+        if (values.soilPotassium) setSoilPotassium(values.soilPotassium);
+        if (values.soilSulfur) setSoilSulfur(values.soilSulfur);
+        if (values.soilPh) setSoilPh(values.soilPh);
+        if (values.soilOrganicMatter) setSoilOrganicMatter(values.soilOrganicMatter);
+        if (values.soilCec) setSoilCec(values.soilCec);
+        if (values.soilTexture) setSoilTexture(values.soilTexture);
+        if (values.soilMicronutrients) {
+          setSoilMicronutrients((current) => ({ ...current, ...values.soilMicronutrients }));
+        }
+        setSoilTestReadWarnings(values.warnings ?? []);
+      } catch {
+        setSoilTestReadError(t.analyze.soilReadFailed);
+        soilRecaptchaRef.current?.reset();
+      } finally {
+        pendingSoilTestFileRef.current = null;
+        setIsReadingSoilTest(false);
       }
-      setSoilTestReadWarnings(values.warnings ?? []);
-    } catch (error) {
-      setSoilTestReadError(
-        error instanceof Error ? error.message : "The soil test could not be read.",
-      );
-      soilRecaptchaRef.current?.reset();
-    } finally {
-      pendingSoilTestFileRef.current = null;
-      setIsReadingSoilTest(false);
-    }
-  }, []);
+    },
+    [t],
+  );
 
   const handleSoilTestFile = (file: File | null) => {
     if (!file) return;
     const allowed = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
     if (!allowed.includes(file.type) || file.size > 10 * 1024 * 1024) {
-      setSoilTestReadError("Use a JPG, PNG, WebP or PDF soil report under 10 MB.");
+      setSoilTestReadError(t.analyze.soilReadError);
       return;
     }
     setSoilTestFile(file);
@@ -360,7 +361,7 @@ function AnalyzePage() {
     setIsReadingSoilTest(true);
     pendingSoilTestFileRef.current = file;
     if (!soilRecaptchaRef.current?.execute()) {
-      setSoilTestReadError("Verification is still loading. Try the report again in a moment.");
+      setSoilTestReadError(t.analyze.soilVerifyLoading);
       pendingSoilTestFileRef.current = null;
       setIsReadingSoilTest(false);
     }
@@ -569,7 +570,7 @@ function AnalyzePage() {
                     }}
                     className="text-xs font-semibold text-primary hover:underline"
                   >
-                    Clear selection
+                    {t.analyze.clearSelection}
                   </button>
                 </div>
               )}
@@ -597,7 +598,9 @@ function AnalyzePage() {
                       }`}
                     >
                       <span>
-                        <span className="block">{c}</span>
+                        <span className="block">
+                          {t.analyze.cropName[c as keyof typeof t.analyze.cropName] ?? c}
+                        </span>
                       </span>
                       <span
                         className={`grid h-5 w-5 shrink-0 place-items-center rounded-full border transition-colors ${selected ? "border-primary-foreground/40 bg-primary-foreground text-primary" : "border-border text-transparent"}`}
@@ -610,7 +613,9 @@ function AnalyzePage() {
               </div>
               <div className="mt-8 grid gap-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
                 <label className="block">
-                  <span className="text-sm font-medium text-foreground">Field size</span>
+                  <span className="text-sm font-medium text-foreground">
+                    {t.analyze.fieldSizeLabel}
+                  </span>
                   <div className="mt-2 flex items-center gap-2 rounded-2xl border border-input bg-background px-4 py-3 focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30">
                     <Sprout className="h-5 w-5 text-muted-foreground" />
                     <input
@@ -618,13 +623,15 @@ function AnalyzePage() {
                       min={0}
                       value={fieldSize}
                       onChange={(e) => setFieldSize(e.target.value)}
-                      placeholder="e.g. 120"
+                      placeholder={t.analyze.fieldSizePlaceholder}
                       className="w-full bg-transparent text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
                     />
                   </div>
                 </label>
                 <div className="min-w-40">
-                  <span className="block text-sm font-medium text-foreground">Unit</span>
+                  <span className="block text-sm font-medium text-foreground">
+                    {t.analyze.unitLabel}
+                  </span>
                   <div className="mt-2 grid h-[50px] grid-cols-2 gap-1 rounded-2xl border border-input bg-muted/60 p-1">
                     {(["ha", "ac"] as const).map((u) => (
                       <button
@@ -638,26 +645,26 @@ function AnalyzePage() {
                             : "text-muted-foreground hover:bg-background hover:text-foreground"
                         }`}
                       >
-                        {u === "ha" ? "Hectares" : "Acres"}
+                        {u === "ha" ? t.analyze.unitHectares : t.analyze.unitAcres}
                       </button>
                     ))}
                   </div>
                 </div>
               </div>
               <section className="mt-8 rounded-2xl border border-border bg-background p-5">
-                <h2 className="font-semibold text-foreground">Product preferences</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Choose a form and product type.
-                </p>
+                <h2 className="font-semibold text-foreground">{t.analyze.prefsTitle}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">{t.analyze.prefsSubtitle}</p>
                 <div className="mt-5 grid gap-5 lg:grid-cols-2">
                   <fieldset>
-                    <legend className="text-sm font-semibold text-foreground">Product form</legend>
+                    <legend className="text-sm font-semibold text-foreground">
+                      {t.analyze.formLegend}
+                    </legend>
                     <div className="mt-2 grid grid-cols-3 gap-2">
                       {(
                         [
-                          ["liquid", "Liquid"],
-                          ["dry", "Dry / granular"],
-                          ["either", "No preference"],
+                          ["liquid", t.analyze.formLiquid],
+                          ["dry", t.analyze.formDry],
+                          ["either", t.analyze.noPreference],
                         ] as const
                       ).map(([value, label]) => (
                         <button
@@ -673,13 +680,15 @@ function AnalyzePage() {
                     </div>
                   </fieldset>
                   <fieldset>
-                    <legend className="text-sm font-semibold text-foreground">Product type</legend>
+                    <legend className="text-sm font-semibold text-foreground">
+                      {t.analyze.typeLegend}
+                    </legend>
                     <div className="mt-2 grid grid-cols-3 gap-2">
                       {(
                         [
-                          ["organic", "Organic"],
-                          ["synthetic", "Synthetic"],
-                          ["either", "No preference"],
+                          ["organic", t.analyze.typeOrganic],
+                          ["synthetic", t.analyze.typeSynthetic],
+                          ["either", t.analyze.noPreference],
                         ] as const
                       ).map(([value, label]) => (
                         <button
@@ -699,13 +708,13 @@ function AnalyzePage() {
                     {fertilizerOriginPreference === "organic" && (
                       <div className="mt-4 rounded-xl border border-primary/25 bg-primary/5 p-4">
                         <p className="text-sm font-semibold text-foreground">
-                          Are you certified organic? <span className="text-destructive">*</span>
+                          {t.analyze.organicQuestion} <span className="text-destructive">*</span>
                         </p>
                         <div className="mt-3 grid gap-2 sm:grid-cols-2">
                           {(
                             [
-                              ["certified", "Yes, certified"],
-                              ["not_certified", "No, I prefer organic inputs"],
+                              ["certified", t.analyze.organicCertified],
+                              ["not_certified", t.analyze.organicNotCertified],
                             ] as const
                           ).map(([value, label]) => (
                             <button
@@ -720,7 +729,7 @@ function AnalyzePage() {
                           ))}
                         </div>
                         <p className="mt-2 text-xs text-muted-foreground">
-                          Certified farms will only receive products with verified OMRI approval.
+                          {t.analyze.organicNote}
                         </p>
                       </div>
                     )}
@@ -734,9 +743,9 @@ function AnalyzePage() {
                       <Sprout className="h-4 w-4" />
                     </span>
                     <div>
-                      <h2 className="font-semibold text-foreground">Crop stage</h2>
+                      <h2 className="font-semibold text-foreground">{t.analyze.cropStageTitle}</h2>
                       <p className="mt-0.5 text-sm text-muted-foreground">
-                        Select each crop's current stage.
+                        {t.analyze.cropStageSubtitle}
                       </p>
                     </div>
                   </div>
@@ -748,7 +757,12 @@ function AnalyzePage() {
                         : null;
                       return (
                         <label key={crop} className="block">
-                          <span className="text-sm font-medium text-foreground">{crop} stage</span>
+                          <span className="text-sm font-medium text-foreground">
+                            {t.analyze.stageOf.replace(
+                              "{crop}",
+                              t.analyze.cropName[crop as keyof typeof t.analyze.cropName] ?? crop,
+                            )}
+                          </span>
                           <select
                             value={selectedStage}
                             onChange={(event) =>
@@ -759,23 +773,23 @@ function AnalyzePage() {
                             }
                             className="mt-2 w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
                           >
-                            <option value="">Select a stage</option>
+                            <option value="">{t.analyze.selectStage}</option>
                             {CROP_STAGES[crop].map((stageOption) => (
                               <option key={stageOption} value={stageOption}>
-                                {stageOption}
+                                {t.analyze.cropStage[
+                                  stageOption as keyof typeof t.analyze.cropStage
+                                ] ?? stageOption}
                               </option>
                             ))}
                           </select>
                           {stageAvailability === "unavailable" && (
                             <span className="mt-2 block text-xs leading-5 text-amber-700">
-                              No verified partner fertilizer is currently documented for this crop
-                              stage. Your uploaded quotes can still be compared.
+                              {t.analyze.stageUnavailable}
                             </span>
                           )}
                           {stageAvailability === "needs-verification" && (
                             <span className="mt-2 block text-xs leading-5 text-muted-foreground">
-                              Partner products exist for this crop, but this stage still requires
-                              supplier confirmation.
+                              {t.analyze.stageNeedsVerification}
                             </span>
                           )}
                         </label>
@@ -790,7 +804,7 @@ function AnalyzePage() {
                   onClick={() => setShowOptionalDetails((visible) => !visible)}
                   className="order-3 flex w-full items-center justify-between gap-3 rounded-xl border border-border bg-background px-5 py-3.5 text-left transition-colors hover:border-primary/50"
                 >
-                  <span className="font-semibold text-foreground">More details (optional)</span>
+                  <span className="font-semibold text-foreground">{t.analyze.moreDetails}</span>
                   <ChevronDown
                     className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform ${showOptionalDetails ? "rotate-180" : ""}`}
                   />
@@ -802,13 +816,13 @@ function AnalyzePage() {
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
                       <div className="flex items-center gap-2">
-                        <h2 className="font-semibold text-foreground">Laboratory soil test</h2>
+                        <h2 className="font-semibold text-foreground">{t.analyze.soilTitle}</h2>
                         <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-primary">
-                          Optional · recommended
+                          {t.analyze.optionalRecommended}
                         </span>
                       </div>
                       <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-                        Enter recent lab results or upload the report.
+                        {t.analyze.soilSubtitle}
                       </p>
                     </div>
                     <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-semibold">
@@ -818,7 +832,7 @@ function AnalyzePage() {
                         onChange={(event) => setSoilTestAvailable(event.target.checked)}
                         className="h-4 w-4 accent-primary"
                       />
-                      I have a soil test
+                      {t.analyze.haveSoilTest}
                     </label>
                   </div>
                   {soilTestAvailable ? (
@@ -827,10 +841,10 @@ function AnalyzePage() {
                         <div className="flex flex-wrap items-center justify-between gap-4">
                           <div>
                             <p className="text-sm font-semibold text-foreground">
-                              Upload your lab report to fill this form
+                              {t.analyze.soilUploadTitle}
                             </p>
                             <p className="mt-1 text-xs text-muted-foreground">
-                              JPG, PNG, WebP or PDF · 10 MB max. Review every extracted value below.
+                              {t.analyze.soilUploadHelp}
                             </p>
                           </div>
                           <label
@@ -841,7 +855,7 @@ function AnalyzePage() {
                             ) : (
                               <Upload className="h-4 w-4" />
                             )}
-                            {isReadingSoilTest ? "Reading report…" : "Choose soil test"}
+                            {isReadingSoilTest ? t.analyze.soilReading : t.analyze.soilChoose}
                             <input
                               type="file"
                               className="sr-only"
@@ -857,7 +871,7 @@ function AnalyzePage() {
                         {soilTestFile && !isReadingSoilTest && !soilTestReadError ? (
                           <p className="mt-3 inline-flex items-center gap-2 text-xs font-medium text-primary">
                             <Check className="h-3.5 w-3.5" />
-                            {soilTestFile.name} read. Check and edit the values below.
+                            {t.analyze.soilReadDone.replace("{file}", soilTestFile.name)}
                           </p>
                         ) : null}
                         {soilTestReadError ? (
@@ -884,7 +898,9 @@ function AnalyzePage() {
                       </div>
                       <div className="grid gap-4 sm:grid-cols-3">
                         <label className="block">
-                          <span className="text-sm font-medium text-foreground">Test date</span>
+                          <span className="text-sm font-medium text-foreground">
+                            {t.analyze.testDate}
+                          </span>
                           <input
                             type="date"
                             value={soilTestDate}
@@ -893,83 +909,85 @@ function AnalyzePage() {
                           />
                         </label>
                         <ConditionInput
-                          label="Sample depth (cm)"
+                          label={t.analyze.sampleDepth}
                           value={soilSampleDepthCm}
                           onChange={setSoilSampleDepthCm}
-                          placeholder="e.g. 0–15"
+                          placeholder={t.analyze.sampleDepthPlaceholder}
                         />
                         <ConditionInput
-                          label="Lab / extraction method"
+                          label={t.analyze.labMethod}
                           value={soilTestMethod}
                           onChange={setSoilTestMethod}
-                          placeholder="e.g. Olsen P, Mehlich-3"
+                          placeholder={t.analyze.labMethodPlaceholder}
                         />
                       </div>
                       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         <ConditionInput
-                          label="Nitrate-N"
+                          label={t.analyze.soilNitrate}
                           value={soilNitrogen}
                           onChange={setSoilNitrogen}
-                          placeholder="value + unit"
+                          placeholder={t.analyze.valueUnitPlaceholder}
                         />
                         <ConditionInput
-                          label="Available P"
+                          label={t.analyze.soilAvailableP}
                           value={soilPhosphorus}
                           onChange={setSoilPhosphorus}
-                          placeholder="value + unit"
+                          placeholder={t.analyze.valueUnitPlaceholder}
                         />
                         <ConditionInput
-                          label="Exchangeable K"
+                          label={t.analyze.soilExchangeableK}
                           value={soilPotassium}
                           onChange={setSoilPotassium}
-                          placeholder="value + unit"
+                          placeholder={t.analyze.valueUnitPlaceholder}
                         />
                         <ConditionInput
-                          label="Sulfate-S"
+                          label={t.analyze.soilSulfate}
                           value={soilSulfur}
                           onChange={setSoilSulfur}
-                          placeholder="value + unit"
+                          placeholder={t.analyze.valueUnitPlaceholder}
                         />
                         <ConditionInput
-                          label="Soil pH"
+                          label={t.analyze.soilPh}
                           value={soilPh}
                           onChange={setSoilPh}
-                          placeholder="e.g. 6.4"
+                          placeholder={t.analyze.phPlaceholder}
                         />
                       </div>
                       <div className="grid gap-4 sm:grid-cols-3">
                         <ConditionInput
-                          label="Organic matter (%)"
+                          label={t.analyze.soilOrganicMatter}
                           value={soilOrganicMatter}
                           onChange={setSoilOrganicMatter}
-                          placeholder="e.g. 3.2"
+                          placeholder={t.analyze.omPlaceholder}
                         />
                         <ConditionInput
-                          label="CEC"
+                          label={t.analyze.soilCec}
                           value={soilCec}
                           onChange={setSoilCec}
-                          placeholder="e.g. 14 cmol(+)/kg"
+                          placeholder={t.analyze.cecPlaceholder}
                         />
                         <ConditionInput
-                          label="Soil texture"
+                          label={t.analyze.soilTexture}
                           value={soilTexture}
                           onChange={setSoilTexture}
-                          placeholder="e.g. sandy loam"
+                          placeholder={t.analyze.texturePlaceholder}
                         />
                       </div>
                       <div className="rounded-2xl border border-border bg-background p-4">
                         <h4 className="font-semibold text-foreground">
-                          Micronutrients{" "}
-                          <span className="font-normal text-muted-foreground">(optional)</span>
+                          {t.analyze.micronutrients}{" "}
+                          <span className="font-normal text-muted-foreground">
+                            {t.analyze.optional}
+                          </span>
                         </h4>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          Enter laboratory results only. Leave any unavailable value blank.
+                          {t.analyze.micronutrientsHelp}
                         </p>
                         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                           {MICRONUTRIENT_FIELDS.map((field) => (
                             <ConditionInput
                               key={field.key}
-                              label={`${field.label} (${field.unit})`}
+                              label={`${t.analyze.zincLabel} (${field.unit})`}
                               value={soilMicronutrients[field.key] ?? ""}
                               onChange={(value) =>
                                 setSoilMicronutrients((current) => ({
@@ -977,7 +995,7 @@ function AnalyzePage() {
                                   [field.key]: value,
                                 }))
                               }
-                              placeholder={field.placeholder}
+                              placeholder={t.analyze.zincPlaceholder}
                               type="number"
                             />
                           ))}
@@ -986,8 +1004,7 @@ function AnalyzePage() {
                     </div>
                   ) : (
                     <p className="mt-4 rounded-xl bg-background px-4 py-3 text-sm text-muted-foreground">
-                      You can continue without a soil test. The result will clearly flag that
-                      nutrient fit is less certain.
+                      {t.analyze.soilSkipNote}
                     </p>
                   )}
                 </section>
@@ -995,15 +1012,13 @@ function AnalyzePage() {
                 <section
                   className={`${showOptionalDetails ? "" : "hidden"} order-5 rounded-2xl border border-border bg-muted/35 p-5`}
                 >
-                  <h2 className="font-semibold text-foreground">Fertilizer already applied</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Tell us about any applications this season.
-                  </p>
+                  <h2 className="font-semibold text-foreground">{t.analyze.priorTitle}</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">{t.analyze.priorSubtitle}</p>
                   <div className="mt-4 grid gap-2 sm:grid-cols-2">
                     {(
                       [
-                        ["no", "No prior applications"],
-                        ["yes", "Yes, fertilizer was applied"],
+                        ["no", t.analyze.priorNo],
+                        ["yes", t.analyze.priorYes],
                       ] as const
                     ).map(([value, label]) => (
                       <button
@@ -1042,12 +1057,15 @@ function AnalyzePage() {
                         >
                           <div className="flex items-center justify-between gap-3">
                             <h3 className="text-sm font-semibold text-foreground">
-                              Application {index + 1}
+                              {t.analyze.applicationN.replace("{n}", String(index + 1))}
                             </h3>
                             {priorFertilizerApplications.length > 1 && (
                               <button
                                 type="button"
-                                aria-label={`Remove application ${index + 1}`}
+                                aria-label={t.analyze.removeApplication.replace(
+                                  "{n}",
+                                  String(index + 1),
+                                )}
                                 onClick={() =>
                                   setPriorFertilizerApplications((current) =>
                                     current.filter((item) => item.id !== application.id),
@@ -1062,7 +1080,7 @@ function AnalyzePage() {
                           <div className="mt-3 grid gap-4 md:grid-cols-2">
                             <label className="block">
                               <span className="text-sm font-medium text-foreground">
-                                Application date
+                                {t.analyze.applicationDate}
                               </span>
                               <input
                                 type="date"
@@ -1080,7 +1098,7 @@ function AnalyzePage() {
                               />
                             </label>
                             <ConditionInput
-                              label="Product / analysis applied"
+                              label={t.analyze.productApplied}
                               value={application.productAnalysis}
                               onChange={(value) =>
                                 setPriorFertilizerApplications((current) =>
@@ -1091,10 +1109,10 @@ function AnalyzePage() {
                                   ),
                                 )
                               }
-                              placeholder="e.g. Urea 46-0-0"
+                              placeholder={t.analyze.productAppliedPlaceholder}
                             />
                             <ConditionInput
-                              label="Quantity applied"
+                              label={t.analyze.quantityApplied}
                               value={application.quantity}
                               onChange={(value) =>
                                 setPriorFertilizerApplications((current) =>
@@ -1105,11 +1123,13 @@ function AnalyzePage() {
                                   ),
                                 )
                               }
-                              placeholder="e.g. 80"
+                              placeholder={t.analyze.quantityPlaceholder}
                               type="number"
                             />
                             <label className="block">
-                              <span className="text-sm font-medium text-foreground">Unit</span>
+                              <span className="text-sm font-medium text-foreground">
+                                {t.analyze.unitLabel}
+                              </span>
                               <select
                                 value={application.unit}
                                 onChange={(event) =>
@@ -1153,23 +1173,21 @@ function AnalyzePage() {
                         className="inline-flex items-center gap-2 rounded-lg border border-primary/30 bg-background px-4 py-2 text-sm font-semibold text-primary transition hover:bg-primary/5"
                       >
                         <Plus className="h-4 w-4" />
-                        Add another application
+                        {t.analyze.addApplication}
                       </button>
                     </div>
                   )}
                 </section>
 
                 <section className="order-2 rounded-2xl border border-border bg-muted/35 p-5">
-                  <h2 className="font-semibold text-foreground">Water and soil</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Tell us how this field gets water.
-                  </p>
+                  <h2 className="font-semibold text-foreground">{t.analyze.waterTitle}</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">{t.analyze.waterSubtitle}</p>
                   <div className="mt-4 grid gap-2 sm:grid-cols-3">
                     {(
                       [
-                        ["rain-fed", "Rain-fed only"],
-                        ["irrigated", "I irrigate"],
-                        ["planned", "I plan to irrigate"],
+                        ["rain-fed", t.analyze.irrigRainfed],
+                        ["irrigated", t.analyze.irrigIrrigate],
+                        ["planned", t.analyze.irrigPlanned],
                       ] as const
                     ).map(([value, label]) => (
                       <button
@@ -1186,20 +1204,20 @@ function AnalyzePage() {
                   {irrigationStatus && irrigationStatus !== "rain-fed" && (
                     <div className="mt-5 grid gap-4 border-t border-border pt-5 sm:grid-cols-2 lg:grid-cols-3">
                       <ConditionInput
-                        label="Irrigation method"
+                        label={t.analyze.irrigMethod}
                         value={irrigationMethod}
                         onChange={setIrrigationMethod}
-                        placeholder="e.g. drip, sprinkler, flood"
+                        placeholder={t.analyze.irrigMethodPlaceholder}
                       />
                       <ConditionInput
-                        label="Watering frequency"
+                        label={t.analyze.wateringFreq}
                         value={wateringFrequency}
                         onChange={setWateringFrequency}
-                        placeholder="e.g. every 3 days"
+                        placeholder={t.analyze.freqPlaceholder}
                       />
                       <label className="block">
                         <span className="text-sm font-medium text-foreground">
-                          Next watering date
+                          {t.analyze.nextWatering}
                         </span>
                         <input
                           type="date"
@@ -1216,24 +1234,24 @@ function AnalyzePage() {
                   className={`${showOptionalDetails ? "" : "hidden"} order-6 rounded-2xl border border-border bg-muted/35 p-5`}
                 >
                   <h3 className="font-semibold text-foreground">
-                    Field measurements{" "}
-                    <span className="font-normal text-muted-foreground">(optional)</span>
+                    {t.analyze.measurementsTitle}{" "}
+                    <span className="font-normal text-muted-foreground">{t.analyze.optional}</span>
                   </h3>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Add recent readings if you have them.
+                    {t.analyze.measurementsSubtitle}
                   </p>
                   <div className="mt-4 grid gap-4 sm:grid-cols-2">
                     <ConditionInput
-                      label="Soil moisture"
+                      label={t.analyze.soilMoisture}
                       value={measuredSoilMoisture}
                       onChange={setMeasuredSoilMoisture}
-                      placeholder="e.g. 24% VWC or dry"
+                      placeholder={t.analyze.moisturePlaceholder}
                     />
                     <ConditionInput
-                      label="Soil temperature"
+                      label={t.analyze.soilTemp}
                       value={measuredSoilTemperature}
                       onChange={setMeasuredSoilTemperature}
-                      placeholder="e.g. 18°C at 10 cm"
+                      placeholder={t.analyze.tempPlaceholder}
                     />
                   </div>
                 </section>
@@ -1242,26 +1260,22 @@ function AnalyzePage() {
                   className={`${showOptionalDetails ? "" : "hidden"} order-7 rounded-2xl border border-border bg-muted/35 p-5`}
                 >
                   <h3 className="font-semibold text-foreground">
-                    Nutrient targets{" "}
-                    <span className="font-normal text-muted-foreground">(optional)</span>
+                    {t.analyze.targetsTitle}{" "}
+                    <span className="font-normal text-muted-foreground">{t.analyze.optional}</span>
                   </h3>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Add targets from your agronomist or nutrient plan.
-                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">{t.analyze.targetsSubtitle}</p>
                   <fieldset className="mt-4">
                     <legend className="text-sm font-medium text-foreground">
-                      Nutrients to prioritize
+                      {t.analyze.prioritizeNutrients}
                     </legend>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Select any known nutrient needs.
-                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">{t.analyze.prioritizeHelp}</p>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {(
                         [
-                          ["N", "Nitrogen"],
-                          ["P", "Phosphorus"],
-                          ["K", "Potassium"],
-                          ["Zn", "Zinc"],
+                          ["N", t.analyze.nutrientN],
+                          ["P", t.analyze.nutrientP],
+                          ["K", t.analyze.nutrientK],
+                          ["Zn", t.analyze.nutrientZn],
                         ] as const
                       ).map(([value, label]) => {
                         const selected = priorityNutrients.includes(value);
@@ -1287,38 +1301,38 @@ function AnalyzePage() {
                   </fieldset>
                   <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <ConditionInput
-                      label="Target N (kg/ha)"
+                      label={t.analyze.targetN}
                       value={targetNitrogenKgHa}
                       onChange={setTargetNitrogenKgHa}
-                      placeholder="e.g. 110"
+                      placeholder={t.analyze.targetNPlaceholder}
                     />
                     <ConditionInput
-                      label="Target P (kg/ha)"
+                      label={t.analyze.targetP}
                       value={targetPhosphorusKgHa}
                       onChange={setTargetPhosphorusKgHa}
-                      placeholder="e.g. 35"
+                      placeholder={t.analyze.targetPPlaceholder}
                     />
                     <ConditionInput
-                      label="Target K (kg/ha)"
+                      label={t.analyze.targetK}
                       value={targetPotassiumKgHa}
                       onChange={setTargetPotassiumKgHa}
-                      placeholder="e.g. 50"
+                      placeholder={t.analyze.targetKPlaceholder}
                     />
                     <ConditionInput
-                      label="Target S (kg/ha)"
+                      label={t.analyze.targetS}
                       value={targetSulfurKgHa}
                       onChange={setTargetSulfurKgHa}
-                      placeholder="e.g. 20"
+                      placeholder={t.analyze.targetSPlaceholder}
                     />
                   </div>
                   <label className="mt-5 block">
                     <span className="text-sm font-medium text-foreground">
-                      Anything else to consider
+                      {t.analyze.notesLabel}
                     </span>
                     <input
                       value={growerNotes}
                       onChange={(event) => setGrowerNotes(event.target.value)}
-                      placeholder="e.g. drainage issue, recent manure application"
+                      placeholder={t.analyze.notesPlaceholder}
                       className="mt-2 w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
                     />
                   </label>
@@ -1431,12 +1445,12 @@ function AnalyzePage() {
                     <Upload className="h-6 w-6" />
                   </div>
                   <p className="mt-4 font-display text-lg font-semibold text-foreground">
-                    Drop, tap, or paste quotes here
+                    {t.analyze.dropzoneTitle}
                   </p>
                   <p className="mt-1 text-sm text-muted-foreground" aria-live="polite">
                     {photos.length > 0
-                      ? `${photos.length} ${photos.length === 1 ? "file" : "files"} ready to analyze${photos.length < MAX_QUOTE_FILES ? ` · add up to ${MAX_QUOTE_FILES - photos.length} more` : ""}`
-                      : QUOTE_FILE_HELP_TEXT}
+                      ? `${(photos.length === 1 ? t.analyze.filesReadyOne : t.analyze.filesReadyMany).replace("{n}", String(photos.length))}${photos.length < MAX_QUOTE_FILES ? t.analyze.filesAddMore.replace("{m}", String(MAX_QUOTE_FILES - photos.length)) : ""}`
+                      : t.analyze.dropzoneHelp}
                   </p>
                 </div>
               </div>
@@ -1480,7 +1494,7 @@ function AnalyzePage() {
                   className="mt-0.5 h-5 w-5 shrink-0 accent-primary"
                 />
                 <span className="text-sm leading-6 text-foreground">
-                  I agree to the{" "}
+                  {t.analyze.agreeIntro}{" "}
                   <Link
                     to="/$locale/terms"
                     params={{ locale: localeToSegment(activeLocale) }}
@@ -1488,7 +1502,7 @@ function AnalyzePage() {
                     onClick={(event) => event.stopPropagation()}
                     className="font-semibold text-primary underline decoration-primary/35 underline-offset-4 hover:decoration-primary"
                   >
-                    Terms of Service
+                    {t.analyze.termsLink}
                   </Link>
                   .
                 </span>
@@ -1512,7 +1526,7 @@ function AnalyzePage() {
                 <Sprout className="h-7 w-7" />
               </div>
               <h2 className="mt-6 font-display text-2xl font-semibold text-foreground">
-                Analyzing your quotes…
+                {t.analyze.analyzingTitle}
               </h2>
               <p className="mt-2 text-sm text-muted-foreground">{t.analyze.analyzingBody}</p>
             </div>

@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useLocale, useLocalePath } from "@/components/locale-context";
-import { localeToSegment } from "@/lib/i18n";
+import { useLocale, useLocalePath, useDictionary } from "@/components/locale-context";
+import { localeToSegment, segmentToLocale, DEFAULT_LOCALE } from "@/lib/i18n";
+import { getDictionary, type Dictionary } from "@/lib/dictionaries";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -24,9 +25,9 @@ import { analysisStorageKey, type QuoteAnalysis } from "@/lib/quote-analysis";
 import { rankQuotes, showsComparisonRanking } from "@/lib/quote-comparison";
 
 export const Route = createFileRoute("/$locale/results/$id")({
-  head: () => ({
+  head: ({ params }) => ({
     meta: [
-      { title: "Your fertilizer recommendation — FertaFind" },
+      { title: getDictionary(segmentToLocale(params.locale) ?? DEFAULT_LOCALE).results.metaTitle },
       // Customer-specific page: keep it out of every index. A matching X-Robots-Tag
       // header is also delivered server-side (see src/server.ts).
       { name: "robots", content: "noindex, nofollow" },
@@ -35,8 +36,15 @@ export const Route = createFileRoute("/$locale/results/$id")({
   component: ResultsPage,
 });
 
-function money(value: number | null | undefined, currency: string, digits = 0) {
-  if (value === null || value === undefined || !Number.isFinite(value)) return "Not stated";
+type ResultsDict = Dictionary["results"];
+
+function money(
+  value: number | null | undefined,
+  currency: string,
+  digits = 0,
+  notStated = "Not stated",
+) {
+  if (value === null || value === undefined || !Number.isFinite(value)) return notStated;
   try {
     return new Intl.NumberFormat(undefined, {
       style: "currency",
@@ -49,31 +57,33 @@ function money(value: number | null | undefined, currency: string, digits = 0) {
   }
 }
 
-function decisionGoalLabel(goal: QuoteAnalysis["decisionGoal"] | undefined) {
-  if (goal === "yield") return "Improve yield";
-  if (goal === "cost") return "Reduce costs";
-  return "Balance yield and cost";
+function decisionGoalLabel(goal: QuoteAnalysis["decisionGoal"] | undefined, r: ResultsDict) {
+  if (goal === "yield") return r.goalYield;
+  if (goal === "cost") return r.goalCost;
+  return r.goalBalanced;
 }
 
-function preferenceLabel(preferences: QuoteAnalysis["preferences"] | undefined) {
+function preferenceLabel(preferences: QuoteAnalysis["preferences"] | undefined, r: ResultsDict) {
   if (!preferences) return null;
   const form =
     preferences.fertilizerForm === "liquid"
-      ? "Liquid"
+      ? r.formLiquid
       : preferences.fertilizerForm === "dry"
-        ? "Dry / granular"
-        : "Any form";
+        ? r.formDry
+        : r.formAny;
   const origin =
     preferences.fertilizerOrigin === "organic"
-      ? "Organic"
+      ? r.typeOrganic
       : preferences.fertilizerOrigin === "synthetic"
-        ? "Synthetic"
-        : "Any type";
+        ? r.typeSynthetic
+        : r.typeAny;
   return `${form} · ${origin}`;
 }
 
 function ResultsPage() {
   const { locale } = useLocale();
+  const t = useDictionary();
+  const r = t.results;
   const lp = useLocalePath();
   const { id } = Route.useParams();
   const [analysis, setAnalysis] = useState<QuoteAnalysis | null | undefined>();
@@ -104,14 +114,9 @@ function ResultsPage() {
     });
   }, [ranked, sortBy]);
 
-  if (analysis === undefined) return <StatusPage title="Loading your recommendation…" />;
+  if (analysis === undefined) return <StatusPage title={r.loadingTitle} />;
   if (!analysis) {
-    return (
-      <StatusPage
-        title="This recommendation isn't available in this browser."
-        detail="Run a new analysis to recreate it."
-      />
-    );
+    return <StatusPage title={r.notAvailableTitle} detail={r.notAvailableDetail} />;
   }
 
   const best = ranked[0] ?? null;
@@ -132,25 +137,25 @@ function ResultsPage() {
           className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
-          Analyze another quote
+          {r.analyzeAnother}
         </Link>
 
         <header className="mt-8 max-w-3xl">
           <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
             <Sparkles className="h-3.5 w-3.5" />
-            Analysis complete
+            {r.analysisComplete}
           </span>
           <h1 className="mt-4 font-display text-4xl font-semibold tracking-[-0.04em] text-foreground md:text-6xl">
-            Your recommendation
+            {r.yourRecommendation}
           </h1>
           <p className="mt-3 text-base text-muted-foreground">
             {analysis.crop} · {analysis.fieldSize} {analysis.unit} · {analysis.location.displayName}
             <span className="mt-1 block text-sm">
-              Priority: {decisionGoalLabel(analysis.decisionGoal)}
+              {r.priority}: {decisionGoalLabel(analysis.decisionGoal, r)}
             </span>
-            {preferenceLabel(analysis.preferences) ? (
+            {preferenceLabel(analysis.preferences, r) ? (
               <span className="mt-1 block text-sm">
-                Preference: {preferenceLabel(analysis.preferences)}
+                {r.preference}: {preferenceLabel(analysis.preferences, r)}
               </span>
             ) : null}
           </p>
@@ -163,8 +168,8 @@ function ResultsPage() {
               <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-primary">
                 <Award className="h-3.5 w-3.5" />
                 {partnerRecommendations.length === 1
-                  ? "Partner recommendation"
-                  : `${partnerRecommendations.length} crop recommendations`}
+                  ? r.partnerRecommendation
+                  : r.cropRecommendations.replace("{n}", String(partnerRecommendations.length))}
               </span>
               <div className="h-14 w-28 overflow-hidden rounded-xl border border-border bg-white">
                 <img
@@ -188,7 +193,7 @@ function ResultsPage() {
               href={`${lp("/")}#partners`}
               className="mt-6 inline-flex text-sm font-semibold text-primary underline-offset-4 hover:underline"
             >
-              View partner details
+              {r.viewPartnerDetails}
             </a>
           </div>
         </section>
@@ -198,7 +203,7 @@ function ResultsPage() {
             <div className="flex gap-3">
               <FileWarning className="mt-0.5 h-5 w-5 shrink-0 text-foreground" />
               <div>
-                <h2 className="font-semibold text-foreground">Check before buying</h2>
+                <h2 className="font-semibold text-foreground">{r.checkBeforeBuying}</h2>
                 <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm leading-6 text-muted-foreground">
                   {analysis.warnings.map((warning) => (
                     <li key={warning}>{warning}</li>
@@ -212,27 +217,24 @@ function ResultsPage() {
         {agronomy?.factorChecks && (
           <section className="mt-8 rounded-3xl border border-border bg-card p-6 shadow-[var(--shadow-soft)] sm:p-8">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
-              Recommendation audit
+              {r.recommendationAudit}
             </p>
             <h2 className="mt-2 font-display text-2xl font-semibold text-foreground">
-              What changed the result
+              {r.whatChanged}
             </h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-              Each input below must be used, flagged as incomplete, or shown as missing. Nothing
-              here proves a universal prescription.
-            </p>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{r.auditIntro}</p>
             <div className="mt-5 grid gap-3 md:grid-cols-2">
               {(
                 [
-                  ["Location", agronomy.factorChecks.location],
-                  ["Field size", agronomy.factorChecks.fieldSize],
-                  ["Decision priority", agronomy.factorChecks.decisionGoal],
-                  ["Crop lifecycle", agronomy.factorChecks.cropStage],
-                  ["Laboratory soil", agronomy.factorChecks.soil],
-                  ["Weather", agronomy.factorChecks.weather],
-                  ["Watering", agronomy.factorChecks.irrigation],
-                  ["Nutrient targets", agronomy.factorChecks.nutrientTargets],
-                  ["Product preferences", agronomy.factorChecks.productPreferences],
+                  [r.factorLocation, agronomy.factorChecks.location],
+                  [r.factorFieldSize, agronomy.factorChecks.fieldSize],
+                  [r.factorDecision, agronomy.factorChecks.decisionGoal],
+                  [r.factorCrop, agronomy.factorChecks.cropStage],
+                  [r.factorSoil, agronomy.factorChecks.soil],
+                  [r.factorWeather, agronomy.factorChecks.weather],
+                  [r.factorWatering, agronomy.factorChecks.irrigation],
+                  [r.factorTargets, agronomy.factorChecks.nutrientTargets],
+                  [r.factorPrefs, agronomy.factorChecks.productPreferences],
                 ] as const
               ).map(([label, check]) => (
                 <FactorCheck
@@ -248,12 +250,12 @@ function ResultsPage() {
 
         <details className="group mt-8 rounded-3xl border border-border bg-card shadow-[var(--shadow-soft)]">
           <summary className="cursor-pointer list-none px-6 py-5 font-display text-lg font-semibold text-foreground sm:px-8">
-            Farm data used in this recommendation
+            {r.farmDataTitle}
             <span className="float-right text-sm font-normal text-muted-foreground group-open:hidden">
-              View details
+              {r.viewDetails}
             </span>
             <span className="float-right hidden text-sm font-normal text-muted-foreground group-open:inline">
-              Hide details
+              {r.hideDetails}
             </span>
           </summary>
           <div className="border-t border-border px-6 py-6 sm:px-8">
@@ -261,32 +263,32 @@ function ResultsPage() {
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
                 <WeatherStat
                   icon={<Thermometer className="h-4 w-4" />}
-                  label="Air"
+                  label={r.weatherAir}
                   value={weather.temperatureC == null ? "—" : `${weather.temperatureC}°C`}
                 />
                 <WeatherStat
                   icon={<Droplets className="h-4 w-4" />}
-                  label="Humidity"
+                  label={r.weatherHumidity}
                   value={weather.humidityPercent == null ? "—" : `${weather.humidityPercent}%`}
                 />
                 <WeatherStat
                   icon={<CloudSun className="h-4 w-4" />}
-                  label="3-day rain"
+                  label={r.weather3dayRain}
                   value={weather.next3DaysRainMm == null ? "—" : `${weather.next3DaysRainMm} mm`}
                 />
                 <WeatherStat
                   icon={<Wind className="h-4 w-4" />}
-                  label="Wind"
+                  label={r.weatherWind}
                   value={weather.windSpeedKph == null ? "—" : `${weather.windSpeedKph} km/h`}
                 />
                 <WeatherStat
                   icon={<Thermometer className="h-4 w-4" />}
-                  label="Surface soil"
+                  label={r.weatherSurfaceSoil}
                   value={weather.soilTemperatureC == null ? "—" : `${weather.soilTemperatureC}°C`}
                 />
                 <WeatherStat
                   icon={<Droplets className="h-4 w-4" />}
-                  label="3-day ET₀"
+                  label={r.weather3dayEt0}
                   value={
                     weather.next3DaysEt0Mm == null ? "—" : `${weather.next3DaysEt0Mm.toFixed(1)} mm`
                   }
@@ -296,41 +298,29 @@ function ResultsPage() {
             {agronomy && (
               <div className="mt-5 grid gap-3 md:grid-cols-2">
                 <GuidanceCard
-                  label="Weather and timing"
+                  label={r.guidanceWeather}
                   text={`${agronomy.weatherSummary} ${agronomy.timingGuidance}`}
                 />
                 <GuidanceCard
-                  label="Soil information"
-                  text={`${agronomy.soilTestSummary || "No laboratory soil test was supplied."} ${agronomy.soilGuidance}`}
+                  label={r.guidanceSoil}
+                  text={`${agronomy.soilTestSummary || r.noSoilTest} ${agronomy.soilGuidance}`}
                 />
                 <GuidanceCard
-                  label="Watering"
-                  text={agronomy.irrigationGuidance || "No irrigation guidance was returned."}
+                  label={r.guidanceWatering}
+                  text={agronomy.irrigationGuidance || r.noIrrigation}
                 />
-                <GuidanceCard label="Caution" text={agronomy.caution} />
+                <GuidanceCard label={r.guidanceCaution} text={agronomy.caution} />
               </div>
             )}
             <div className="mt-5 rounded-2xl border border-border bg-muted/35 p-4">
               <p className="text-xs font-semibold uppercase tracking-wider text-foreground">
-                Data sources and confidence
+                {r.dataSourcesTitle}
               </p>
               <ul className="mt-2 list-disc space-y-1 pl-5 text-xs leading-5 text-muted-foreground">
-                <li>
-                  Quote product, nutrient and price values were extracted by AI from the uploaded
-                  files and must be checked against the original quote.
-                </li>
-                <li>
-                  Soil and irrigation values are farmer-entered or laboratory-supplied; FertaFind
-                  does not independently verify them.
-                </li>
-                <li>
-                  Weather and surface-soil estimates come from Open-Meteo for the selected
-                  coordinates and may differ from field measurements.
-                </li>
-                <li>
-                  Partner rates and trial results are supplier-reported. A crop match is not proof
-                  that a product is the best option for a specific field.
-                </li>
+                <li>{r.dataSource1}</li>
+                <li>{r.dataSource2}</li>
+                <li>{r.dataSource3}</li>
+                <li>{r.dataSource4}</li>
               </ul>
             </div>
           </div>
@@ -340,24 +330,22 @@ function ResultsPage() {
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
-                Quote comparison
+                {r.quoteComparison}
               </p>
               <h2 className="mt-2 font-display text-3xl font-semibold text-foreground">
-                {analysis.quotes.length === 1
-                  ? "The uploaded fertilizer"
-                  : "Other extracted options"}
+                {analysis.quotes.length === 1 ? r.theUploadedFertilizer : r.otherExtractedOptions}
               </h2>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
                 {analysis.quotes.length === 1
-                  ? "Only one product was extracted, so this is a fit assessment rather than a comparison against another quote."
+                  ? r.comparisonSingle
                   : hasPartnerRecommendation
-                    ? "These are products extracted from your uploads. The FertaFind partner recommendation remains above."
-                    : "These uploaded products are compared separately from partner recommendations. You can also sort by landed nutrient cost."}
+                    ? r.comparisonWithPartner
+                    : r.comparisonNoPartner}
               </p>
             </div>
             {analysis.quotes.length > 1 && (
               <label className="grid gap-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Sort
+                {r.sort}
                 <select
                   value={sortBy}
                   onChange={(event) =>
@@ -365,8 +353,8 @@ function ResultsPage() {
                   }
                   className="min-w-52 rounded-xl border border-border bg-card px-3 py-2.5 text-sm font-medium normal-case tracking-normal text-foreground outline-none focus:border-primary focus:ring-4 focus:ring-primary/10"
                 >
-                  <option value="recommended">Quote score first</option>
-                  <option value="lowest-cost">Lowest nutrient cost</option>
+                  <option value="recommended">{r.sortScore}</option>
+                  <option value="lowest-cost">{r.sortLowestCost}</option>
                 </select>
               </label>
             )}
@@ -385,59 +373,55 @@ function ResultsPage() {
                   <div className="min-w-0 flex-1 basis-full sm:min-w-[220px] sm:basis-auto">
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="font-display text-xl font-semibold text-foreground">
-                        {q.product || "Unnamed fertilizer product"}
+                        {q.product || r.unnamedProduct}
                       </h3>
                       {showsComparisonRanking(analysis.quotes.length) && q.id === best?.q.id && (
                         <span className="inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary-foreground">
                           <Check className="h-3 w-3" />
-                          Top uploaded comparison
+                          {r.topComparison}
                         </span>
                       )}
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      {q.supplier || "Supplier not stated"} · NPK {q.npk.join("-")} ·{" "}
-                      {q.bagKg ? `${q.bagKg} kg unit` : "unit size not stated"}
+                      {q.supplier || r.supplierNotStated} · NPK {q.npk.join("-")} ·{" "}
+                      {q.bagKg ? r.unitKg.replace("{kg}", String(q.bagKg)) : r.unitSizeNotStated}
                     </p>
                     <p className="mt-2 text-xs leading-5 text-muted-foreground">
-                      {q.fitReason || q.notes || `Extracted from ${q.sourceFile}`}
+                      {q.fitReason || q.notes || r.extractedFrom.replace("{file}", q.sourceFile)}
                     </p>
                     <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                      <span className="font-semibold text-foreground">Lifecycle check:</span>{" "}
-                      {q.stageReason ||
-                        "The quote did not provide enough timing detail to verify this stage."}
+                      <span className="font-semibold text-foreground">{r.lifecycleCheck}:</span>{" "}
+                      {q.stageReason || r.noTimingDetail}
                     </p>
                   </div>
                   <div className="grid w-full grid-cols-3 gap-2 text-left sm:w-auto sm:min-w-[250px] sm:gap-4 sm:text-right">
                     <MiniStat
-                      label="Nutrient cost"
-                      value={s ? money(s.costPerKgNutrient, q.currency, 2) : "—"}
+                      label={r.nutrientCost}
+                      value={s ? money(s.costPerKgNutrient, q.currency, 2, r.notStated) : "—"}
                     />
                     <MiniStat
-                      label={s?.costPerHectare == null ? "Quoted / unit" : "Cost / ha"}
+                      label={s?.costPerHectare == null ? r.quotedPerUnit : r.costPerHa}
                       value={
                         s?.costPerHectare == null
-                          ? money(q.pricePerBag, q.currency)
-                          : money(s.costPerHectare, q.currency)
+                          ? money(q.pricePerBag, q.currency, 0, r.notStated)
+                          : money(s.costPerHectare, q.currency, 0, r.notStated)
                       }
                     />
-                    <MiniStat label="Score" value={`${Math.round(decisionScore)}/100`} />
+                    <MiniStat label={r.score} value={`${Math.round(decisionScore)}/100`} />
                   </div>
                 </div>
               </article>
             ))}
             {displayedQuotes.length === 0 && (
               <div className="rounded-2xl border border-border bg-card p-6 text-sm leading-6 text-muted-foreground">
-                No fertilizer product was extracted from the uploaded files. Try a clearer quote
-                image or PDF. This does not change the separate partner-product result above.
+                {r.noExtracted}
               </div>
             )}
           </div>
         </section>
 
         <p className="mt-9 text-center text-xs leading-5 text-muted-foreground">
-          AI extraction and recommendations can be wrong. Confirm the product, rate, nutrient
-          analysis, price and freight with the supplier and a qualified local agronomist before
-          applying or purchasing.
+          {r.bottomDisclaimer}
         </p>
       </main>
       <SiteFooter />
@@ -447,6 +431,7 @@ function ResultsPage() {
 
 function StatusPage({ title, detail }: { title: string; detail?: string }) {
   const { locale } = useLocale();
+  const t = useDictionary();
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
@@ -458,7 +443,7 @@ function StatusPage({ title, detail }: { title: string; detail?: string }) {
           params={{ locale: localeToSegment(locale) }}
           className="mt-8 inline-flex rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground"
         >
-          Start an analysis
+          {t.results.startAnalysis}
         </Link>
       </main>
       <SiteFooter />
@@ -471,6 +456,7 @@ function PartnerRecommendationCard({
 }: {
   recommendation: CropPartnerRecommendation;
 }) {
+  const r = useDictionary().results;
   const unsupported = recommendation.status === "unsupported";
   const noVerifiedStageMatch = !unsupported && recommendation.selectedProducts.length === 0;
   return (
@@ -482,21 +468,21 @@ function PartnerRecommendationCard({
           </p>
           <h2 className="mt-2 max-w-3xl font-display text-3xl font-semibold leading-tight text-foreground">
             {unsupported
-              ? "No participating partner match"
+              ? r.noParticipatingMatch
               : recommendation.selectedProducts.length
                 ? recommendation.selectedProducts.map((product) => product.product.name).join(" + ")
-                : "No stage-compatible partner product"}
+                : r.noStageCompatible}
           </h2>
           {!unsupported && (
             <p className="mt-1 text-sm font-medium text-muted-foreground">
-              Supplier: {recommendation.supplier}
+              {r.supplierLabel}: {recommendation.supplier}
             </p>
           )}
         </div>
         <span
           className={`rounded-full px-3 py-1.5 text-xs font-semibold ${unsupported ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"}`}
         >
-          {unsupported ? "Quote comparison only" : recommendation.label}
+          {unsupported ? r.quoteComparisonOnly : recommendation.label}
         </span>
       </div>
       <p className="mt-4 max-w-3xl text-sm leading-6 text-muted-foreground">
@@ -505,12 +491,8 @@ function PartnerRecommendationCard({
 
       {noVerifiedStageMatch && (
         <div className="mt-5 rounded-2xl border border-amber-300/70 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
-          <p className="font-semibold">No verified fertilizer for this stage</p>
-          <p className="mt-1">
-            FertaFind checked every participating partner product documented for this crop. None has
-            verified timing for the selected lifecycle stage, so no partner product is being
-            presented as a recommendation.
-          </p>
+          <p className="font-semibold">{r.noVerifiedStageTitle}</p>
+          <p className="mt-1">{r.noVerifiedStageBody}</p>
         </div>
       )}
 
@@ -525,7 +507,7 @@ function PartnerRecommendationCard({
       {recommendation.factorsUsed.length > 0 && (
         <details className="mt-5 rounded-2xl border border-border bg-card p-4">
           <summary className="cursor-pointer text-sm font-semibold text-foreground">
-            Factors used and transparent score details
+            {r.factorsUsedSummary}
           </summary>
           <ul className="mt-3 grid gap-2 text-sm leading-6 text-muted-foreground md:grid-cols-2">
             {recommendation.factorsUsed.map((factor) => (
@@ -542,7 +524,7 @@ function PartnerRecommendationCard({
 
       {recommendation.missingInformation.length > 0 && (
         <p className="mt-4 text-xs leading-5 text-muted-foreground">
-          <span className="font-semibold text-foreground">Missing information: </span>
+          <span className="font-semibold text-foreground">{r.missingInformation}: </span>
           {recommendation.missingInformation.join("; ")}.
         </p>
       )}
@@ -551,8 +533,8 @@ function PartnerRecommendationCard({
         <details className="mt-4 border-t border-border pt-4">
           <summary className="cursor-pointer text-sm font-semibold text-foreground">
             {noVerifiedStageMatch
-              ? `Products requiring stage confirmation (${recommendation.alternatives.length})`
-              : `Other documented partner alternatives (${recommendation.alternatives.length})`}
+              ? r.productsRequiringStage.replace("{n}", String(recommendation.alternatives.length))
+              : r.otherAlternatives.replace("{n}", String(recommendation.alternatives.length))}
           </summary>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             {recommendation.alternatives.map((alternative) => (
@@ -562,13 +544,13 @@ function PartnerRecommendationCard({
               >
                 <p className="text-sm font-semibold text-foreground">{alternative.product.name}</p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  {alternative.use.timing} · {alternative.use.rate || "Confirm rate with supplier"}
+                  {alternative.use.timing} · {alternative.use.rate || r.confirmRate}
                   {" · "}
                   {alternative.score}/100
                 </p>
                 {noVerifiedStageMatch && (
                   <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-amber-700">
-                    Not a recommendation · confirm stage with supplier
+                    {r.notARecommendation}
                   </p>
                 )}
               </div>
@@ -580,7 +562,7 @@ function PartnerRecommendationCard({
       {recommendation.excluded.length > 0 && (
         <details className="mt-4 border-t border-border pt-4">
           <summary className="cursor-pointer text-sm font-semibold text-foreground">
-            Products excluded by lifecycle ({recommendation.excluded.length})
+            {r.excludedByLifecycle.replace("{n}", String(recommendation.excluded.length))}
           </summary>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-xs leading-5 text-muted-foreground">
             {recommendation.excluded.map((item) => (
@@ -596,6 +578,7 @@ function PartnerRecommendationCard({
 }
 
 function PartnerProductCard({ product }: { product: EvaluatedPartnerProduct }) {
+  const r = useDictionary().results;
   return (
     <div className="rounded-2xl border border-border bg-card p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -604,63 +587,63 @@ function PartnerProductCard({ product }: { product: EvaluatedPartnerProduct }) {
             {product.product.name}
           </h3>
           <p className="mt-1 text-xs text-muted-foreground">
-            {product.product.supplier} · {product.product.form} · Suitability score {product.score}
-            /100
+            {product.product.supplier} · {product.product.form} ·{" "}
+            {r.suitabilityScore.replace("{score}", String(product.score))}
           </p>
         </div>
         <span className="rounded-full bg-secondary/20 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-foreground">
-          {product.suitability === "compatible" ? "Compatible" : "Needs verification"}
+          {product.suitability === "compatible" ? r.compatible : r.needsVerification}
         </span>
       </div>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <div className="rounded-xl bg-muted/55 p-3">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Guaranteed analysis
+            {r.guaranteedAnalysis}
           </p>
           <p className="mt-1 text-sm font-semibold text-foreground">
-            {product.product.guaranteedAnalysis || "Confirm composition with supplier"}
+            {product.product.guaranteedAnalysis || r.confirmComposition}
           </p>
         </div>
         <div className="rounded-xl bg-muted/55 p-3">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Product focus
+            {r.productFocus}
           </p>
           <p className="mt-1 text-sm font-semibold text-foreground">
-            {product.product.lifecycleFocus || "Confirm lifecycle focus with supplier"}
+            {product.product.lifecycleFocus || r.confirmFocus}
           </p>
         </div>
         <div className="rounded-xl bg-muted/55 p-3">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Verified rate
+            {r.verifiedRate}
           </p>
           <p className="mt-1 text-sm font-semibold text-foreground">
-            {product.use.rate || "Confirm rate with supplier"}
+            {product.use.rate || r.confirmRate}
           </p>
         </div>
         <div className="rounded-xl bg-muted/55 p-3">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Verified timing
+            {r.verifiedTiming}
           </p>
           <p className="mt-1 text-sm font-semibold text-foreground">{product.use.timing}</p>
         </div>
         <div className="rounded-xl bg-muted/55 p-3">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Farmer price
+            {r.farmerPrice}
           </p>
           <p className="mt-1 text-sm font-semibold text-foreground">
             {product.product.price && product.product.currency
-              ? `${money(product.product.price, product.product.currency, 2)} / L`
-              : "Confirm price with supplier"}
+              ? `${money(product.product.price, product.product.currency, 2, r.notStated)} / L`
+              : r.confirmPrice}
           </p>
         </div>
         <div className="rounded-xl bg-muted/55 p-3">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Estimated product cost
+            {r.estimatedProductCost}
           </p>
           <p className="mt-1 text-sm font-semibold text-foreground">
             {product.estimatedPrice
-              ? `${money(product.estimatedPrice.amount, product.estimatedPrice.currency, 2)} / ha`
-              : "Needs a clear L/ha rate"}
+              ? `${money(product.estimatedPrice.amount, product.estimatedPrice.currency, 2, r.notStated)} / ha`
+              : r.needsRate}
           </p>
         </div>
       </div>
@@ -674,7 +657,7 @@ function PartnerProductCard({ product }: { product: EvaluatedPartnerProduct }) {
       </ul>
       <details className="mt-4 border-t border-border pt-3">
         <summary className="cursor-pointer text-xs font-semibold text-foreground">
-          How the {product.score}/100 score was calculated
+          {r.scoreCalc.replace("{score}", String(product.score))}
         </summary>
         <ul className="mt-2 space-y-1 text-xs leading-5 text-muted-foreground">
           {product.scoreComponents.map((component) => (
@@ -689,12 +672,12 @@ function PartnerProductCard({ product }: { product: EvaluatedPartnerProduct }) {
         </ul>
       </details>
       <p className="mt-3 text-xs leading-5 text-muted-foreground">
-        <span className="font-semibold text-foreground">Evidence: </span>
+        <span className="font-semibold text-foreground">{r.evidence}: </span>
         {product.use.source}
       </p>
       {product.product.priceSource ? (
         <p className="mt-1 text-xs leading-5 text-muted-foreground">
-          <span className="font-semibold text-foreground">Price source: </span>
+          <span className="font-semibold text-foreground">{r.priceSource}: </span>
           {product.product.priceSource}
         </p>
       ) : null}
@@ -743,7 +726,9 @@ function FactorCheck({
   status: "used" | "missing" | "caution";
   effect: string;
 }) {
-  const statusLabel = status === "used" ? "Used" : status === "missing" ? "Missing" : "Check";
+  const r = useDictionary().results;
+  const statusLabel =
+    status === "used" ? r.statusUsed : status === "missing" ? r.statusMissing : r.statusCheck;
   return (
     <div className="rounded-2xl border border-border bg-background p-4">
       <div className="flex items-center justify-between gap-3">

@@ -115,8 +115,11 @@ test("no critical Spanish section falls back to English", () => {
   assert.deepEqual(offenders, [], "these Spanish strings are still English");
 });
 
-/** Values that may legitimately match English: brand names and shared tokens. */
-const ALLOWED_IDENTICAL = /^(FertaFind|Nanofert|FertiExpress Group|NPK|IA|Producto|Total)$/;
+/** Values that may legitimately match English: brand names, exact cross-language cognates
+ *  ("Compatible"), area units ("Acres") and chemical element labels ("Zinc", "Zinc (Zn)") that
+ *  are written identically in Latin American Spanish. Kept deliberately narrow. */
+const ALLOWED_IDENTICAL =
+  /^(FertaFind|Nanofert|FertiExpress Group|NPK|IA|Producto|Total|Compatible|Acres|Zinc|Zinc \(Zn\))$/;
 
 test("every Spanish goal option is translated", () => {
   const es = getDictionary(ES);
