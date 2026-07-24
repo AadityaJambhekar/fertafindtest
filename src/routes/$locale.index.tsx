@@ -1,5 +1,5 @@
 import { localizedHead } from "@/lib/seo-i18n";
-import { DEFAULT_LOCALE, segmentToLocale } from "@/lib/i18n";
+import { DEFAULT_LOCALE, localeToSegment, segmentToLocale } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useDictionary, useLocale } from "@/components/locale-context";
 import { getDictionary } from "@/lib/dictionaries";
@@ -101,7 +101,7 @@ function Hero() {
           <div className="mt-8 grid gap-3 min-[420px]:flex min-[420px]:flex-wrap min-[420px]:items-center min-[420px]:justify-center sm:mt-10 sm:gap-4">
             <Link
               to="/$locale/analyze"
-              params={{ locale }}
+              params={{ locale: localeToSegment(locale) }}
               className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-primary px-7 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-colors hover:bg-primary-soft"
             >
               {t.home.heroPrimaryCta}
@@ -208,7 +208,7 @@ function HowItWorks() {
       <div className="mt-12 flex justify-center">
         <Link
           to="/$locale/analyze"
-          params={{ locale }}
+          params={{ locale: localeToSegment(locale) }}
           className="inline-flex h-12 items-center gap-2 rounded-lg bg-primary px-8 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-all hover:-translate-y-0.5 hover:bg-primary-soft"
         >
           {t.home.howCta}
@@ -289,7 +289,7 @@ function SupplierNetwork() {
         <div className="mt-8">
           <Link
             to="/$locale/suppliers"
-            params={{ locale }}
+            params={{ locale: localeToSegment(locale) }}
             className="inline-flex items-center gap-1.5 text-sm font-semibold content-accent hover:underline"
           >
             {t.home.networkViewAll}
@@ -318,7 +318,7 @@ function HomeSupplierCard({ supplier }: { supplier: Supplier }) {
   return (
     <Link
       to="/$locale/suppliers/$slug"
-      params={{ locale, slug: supplier.slug }}
+      params={{ locale: localeToSegment(locale), slug: supplier.slug }}
       className="group flex flex-col rounded-2xl border border-border bg-background p-6 transition-all hover:-translate-y-1 hover:border-foreground hover:shadow-[var(--shadow-soft)]"
     >
       <div className="flex items-start justify-between gap-3">

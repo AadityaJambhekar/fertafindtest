@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, segmentToLocale } from "@/lib/i18n";
+import { DEFAULT_LOCALE, localeToSegment, segmentToLocale } from "@/lib/i18n";
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useDictionary, useLocale, useLocalePath } from "@/components/locale-context";
 import {
@@ -238,7 +238,7 @@ function SupplierDetailPage() {
           </p>
           <Link
             to="/$locale/analyze"
-            params={{ locale }}
+            params={{ locale: localeToSegment(locale) }}
             className="mt-4 inline-flex h-12 items-center gap-2 rounded-full bg-primary px-7 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-colors hover:bg-primary-soft"
           >
             Analyze a quote

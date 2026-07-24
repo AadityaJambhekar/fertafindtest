@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, segmentToLocale } from "@/lib/i18n";
+import { DEFAULT_LOCALE, localeToSegment, segmentToLocale } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useLocale } from "@/components/locale-context";
 import { ArrowRight } from "lucide-react";
@@ -91,7 +91,7 @@ function ResourcesPage() {
           </p>
           <Link
             to="/$locale/analyze"
-            params={{ locale }}
+            params={{ locale: localeToSegment(locale) }}
             className="mt-5 inline-flex h-12 items-center gap-2 rounded-full bg-primary px-7 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-colors hover:bg-primary-soft"
           >
             Analyze your quotes

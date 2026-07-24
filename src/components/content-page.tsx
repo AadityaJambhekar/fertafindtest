@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { DEFAULT_LOCALE } from "@/lib/i18n";
+import { DEFAULT_LOCALE, localeToSegment } from "@/lib/i18n";
 import { useDictionary, useLocale, useLocalePath } from "@/components/locale-context";
 import type { ReactNode } from "react";
 import { ArrowRight, ExternalLink } from "lucide-react";
@@ -108,7 +108,7 @@ export function ContentPageLayout({
             See our{" "}
             <Link
               to="/$locale/terms"
-              params={{ locale }}
+              params={{ locale: localeToSegment(locale) }}
               className="font-medium content-accent hover:underline"
             >
               Terms
@@ -167,7 +167,7 @@ export function ContentPageLayout({
           </p>
           <Link
             to="/$locale/analyze"
-            params={{ locale }}
+            params={{ locale: localeToSegment(locale) }}
             className="mt-4 inline-flex h-12 items-center gap-2 rounded-full bg-primary px-7 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-colors hover:bg-primary-soft"
           >
             Analyze your quotes

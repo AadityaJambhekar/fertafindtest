@@ -20,6 +20,9 @@ source-material/
 *.log
 .DS_Store
 
+# Local browser-automation / QA artifacts (Playwright MCP snapshots, screenshots, uploads)
+.playwright-mcp/
+
 # --- Additional ignore patterns recovered from the project archive ---
 # Framework/build caches (TanStack Start / Nitro / Vinxi)
 .output

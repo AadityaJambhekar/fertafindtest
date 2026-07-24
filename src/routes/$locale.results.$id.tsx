@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useLocale, useLocalePath } from "@/components/locale-context";
+import { localeToSegment } from "@/lib/i18n";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -127,7 +128,7 @@ function ResultsPage() {
       <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-12 md:py-16">
         <Link
           to="/$locale/analyze"
-          params={{ locale }}
+          params={{ locale: localeToSegment(locale) }}
           className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -454,7 +455,7 @@ function StatusPage({ title, detail }: { title: string; detail?: string }) {
         {detail && <p className="mt-3 text-muted-foreground">{detail}</p>}
         <Link
           to="/$locale/analyze"
-          params={{ locale }}
+          params={{ locale: localeToSegment(locale) }}
           className="mt-8 inline-flex rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground"
         >
           Start an analysis
