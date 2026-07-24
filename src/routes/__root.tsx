@@ -12,6 +12,8 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { DEFAULT_OG_IMAGE, SITE_NAME } from "@/lib/seo";
 import { bootstrapAnalytics } from "@/lib/analytics";
+import { LocaleProvider } from "@/components/locale-provider";
+import { DEFAULT_LOCALE } from "@/lib/i18n";
 
 function NotFoundComponent() {
   return (
@@ -139,12 +141,13 @@ export const Route = createRootRoute({
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    // lang is the default for SSR; LocaleProvider updates it after the preference resolves.
+    <html lang={DEFAULT_LOCALE}>
       <head>
         <HeadContent />
       </head>
       <body>
-        {children}
+        <LocaleProvider>{children}</LocaleProvider>
         <Scripts />
       </body>
     </html>

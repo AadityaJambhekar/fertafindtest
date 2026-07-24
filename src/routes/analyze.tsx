@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useLocale } from "@/components/locale-context";
 import {
   ArrowLeft,
   ArrowRight,
@@ -125,6 +126,7 @@ const CROP_STAGES: Record<string, string[]> = {
 
 function AnalyzePage() {
   const navigate = useNavigate();
+  const { locale: activeLocale } = useLocale();
   const [step, setStep] = useState<Step>(0);
   const [location, setLocation] = useState("");
   const [matchedLocation, setMatchedLocation] = useState<MatchedLocation | null>(null);
@@ -378,6 +380,8 @@ function AnalyzePage() {
       form.set("radiusKm", String(radius));
       form.set("crop", crops.join(", "));
       form.set("decisionGoal", decisionGoal);
+      // Ask the model to answer in the reader's language (validated again server-side).
+      form.set("locale", activeLocale);
       form.set("fertilizerFormPreference", fertilizerFormPreference);
       form.set("fertilizerOriginPreference", fertilizerOriginPreference);
       form.set("organicCertification", organicCertification);
@@ -455,6 +459,7 @@ function AnalyzePage() {
       }
     },
     [
+      activeLocale,
       crops,
       cropStages,
       decisionGoal,

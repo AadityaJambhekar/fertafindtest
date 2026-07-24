@@ -3,6 +3,7 @@ import type { PriorFertilizerApplication, QuoteAnalysis } from "@/lib/quote-anal
 import { getQuoteFileDescriptor, quoteCountError, quoteFileError } from "@/lib/quote-files";
 import { getFarmWeather } from "@/lib/weather";
 import { parseQuoteAnalysis, parseFailureMessage, type OpenAIResponse } from "@/lib/quote-response";
+import { validateRequestLocale, aiLanguageInstruction } from "@/lib/i18n";
 
 const MAX_REQUEST_BYTES = 82 * 1024 * 1024;
 const ANALYSIS_LIMIT = 3;
@@ -284,6 +285,8 @@ export const Route = createFileRoute("/api/analyze-quotes")({
         const locationName = field(form, "location");
         const crop = field(form, "crop");
         const decisionGoal = field(form, "decisionGoal");
+        // Never trust the client-supplied locale: unknown values fall back to English.
+        const locale = validateRequestLocale(form.get("locale"));
         const fertilizerFormPreference = field(form, "fertilizerFormPreference");
         const fertilizerOriginPreference = field(form, "fertilizerOriginPreference");
         const organicCertification = field(form, "organicCertification");
@@ -462,7 +465,9 @@ For each product, actually evaluate agronomicFit using the supplied crop stage, 
 
 Complete all nine factorChecks. Each effect must state how that factor changed the recommendation or why it could not be used: location, fieldSize, decisionGoal, cropStage, laboratory soil, weather, irrigation, nutrientTargets and productPreferences. Location must explain its use for weather and delivery context, not invent local agronomy. Field size must explain its use for whole-field quantity/cost context and must not change agronomic suitability. The decision goal may change ranking weights only after safety and suitability. Use status "used" only when usable data affected the assessment, "missing" when the data was absent, and "caution" when data exists but is incomplete, unverified, or conflicts with the product. Do not merely repeat the input.
 
-Do not treat modeled surface conditions as a substitute for a field measurement or laboratory test. If soil-test units, extraction method, sample depth, timing, irrigation detail, application rate, or crop requirement are missing, say so and use "not_enough_information" or "caution" rather than guessing. Irrigation guidance must consider whether watering is sufficient to incorporate the quoted product and the risk of loss from heavy rain, saturated soil, heat, wind or poorly timed application. SoilTestSummary must state which supplied soil-test fields were used, or clearly say no lab test was provided. fitReason must be concise, plain-language, and start with exactly one of these verdicts: "Recommended because", "Use caution because", or "Not enough information because". Use "Recommended because" only when agronomicFit is "suitable" and the quote contains enough product and rate information to support it. Never claim a guaranteed yield. Identify sourceFile using one of the supplied filenames. confidence is 0 to 1. Add warnings for unreadable pages or information that prevents a fair comparison.`;
+Do not treat modeled surface conditions as a substitute for a field measurement or laboratory test. If soil-test units, extraction method, sample depth, timing, irrigation detail, application rate, or crop requirement are missing, say so and use "not_enough_information" or "caution" rather than guessing. Irrigation guidance must consider whether watering is sufficient to incorporate the quoted product and the risk of loss from heavy rain, saturated soil, heat, wind or poorly timed application. SoilTestSummary must state which supplied soil-test fields were used, or clearly say no lab test was provided. fitReason must be concise, plain-language, and start with exactly one of these verdicts: "Recommended because", "Use caution because", or "Not enough information because". Use "Recommended because" only when agronomicFit is "suitable" and the quote contains enough product and rate information to support it. Never claim a guaranteed yield. Identify sourceFile using one of the supplied filenames. confidence is 0 to 1. Add warnings for unreadable pages or information that prevents a fair comparison.
+
+${aiLanguageInstruction(locale)}`;
 
         let upstream: Response;
         try {
