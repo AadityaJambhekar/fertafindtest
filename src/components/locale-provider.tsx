@@ -1,46 +1,48 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { LocaleContext } from "@/components/locale-context";
-import {
-  DEFAULT_LOCALE,
-  readSavedLocale,
-  resolveLocale,
-  saveLocale,
-  type Locale,
-} from "@/lib/i18n";
+import { localePath, saveLocale, stripLocale, type Locale } from "@/lib/i18n";
 
 function browserStorage() {
   return typeof window === "undefined" ? null : window.localStorage;
 }
 
 /**
- * Holds the active locale.
+ * Supplies the active locale, which is owned by the URL (`/en/...`, `/pt-br/...`).
  *
- * The first render is always DEFAULT_LOCALE so the server and client markup match; the
- * saved/browser preference is applied in an effect straight after hydration. Browser
- * language only seeds the initial value — it never triggers a redirect.
+ * Switching language navigates to the same page under the other locale segment, carrying the
+ * query string with it. The Analyze route component is NOT keyed on the locale, so React keeps
+ * the same component instance mounted across the switch and every piece of wizard state —
+ * step, location, placeId, coordinates, crop, growth stage, organic certification, uploaded
+ * quotes and the selected goal — survives untouched.
  */
-export function LocaleProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>(DEFAULT_LOCALE);
+export function LocaleProvider({
+  urlLocale,
+  children,
+}: {
+  urlLocale: Locale;
+  children: React.ReactNode;
+}) {
+  const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const searchStr = useRouterState({ select: (s) => s.location.searchStr });
 
   useEffect(() => {
-    const resolved = resolveLocale({
-      saved: readSavedLocale(browserStorage()),
-      acceptLanguage: typeof navigator === "undefined" ? null : navigator.languages?.join(","),
-    });
-    setLocaleState(resolved);
-  }, []);
+    if (typeof document !== "undefined") document.documentElement.lang = urlLocale;
+  }, [urlLocale]);
 
-  useEffect(() => {
-    if (typeof document !== "undefined") document.documentElement.lang = locale;
-  }, [locale]);
+  const setLocale = useCallback(
+    (next: Locale) => {
+      if (next === urlLocale) return;
+      // Remember the explicit choice so unprefixed URLs land here next time.
+      saveLocale(browserStorage(), next);
+      const { path } = stripLocale(pathname);
+      navigate({ href: `${localePath(next, path)}${searchStr ?? ""}`, replace: true });
+    },
+    [urlLocale, pathname, searchStr, navigate],
+  );
 
-  const setLocale = useCallback((next: Locale) => {
-    // An explicit choice is persisted and wins over browser detection from now on.
-    saveLocale(browserStorage(), next);
-    setLocaleState(next);
-  }, []);
-
-  const value = useMemo(() => ({ locale, setLocale }), [locale, setLocale]);
+  const value = useMemo(() => ({ locale: urlLocale, setLocale }), [urlLocale, setLocale]);
 
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;
 }

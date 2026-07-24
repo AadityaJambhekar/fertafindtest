@@ -116,6 +116,16 @@ export function localePath(locale: Locale, path: string): string {
   return `/${segment}${bare}`;
 }
 
+/**
+ * Whether an unmatched path should be redirected to a locale-prefixed URL.
+ *
+ * FALSE when the path already begins with a supported locale: re-prefixing it would produce
+ * the identical URL and loop forever. Those are genuine 404s and must render as such.
+ */
+export function shouldRedirectUnprefixed(pathname: string): boolean {
+  return stripLocale(pathname).locale === null;
+}
+
 /** The value for <html lang>. */
 export function localeHtmlLang(locale: Locale): string {
   return locale;

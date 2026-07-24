@@ -1,17 +1,19 @@
 import assert from "node:assert/strict";
+import { SUPPORTED_LOCALES, localePath } from "./i18n.ts";
 import test from "node:test";
 import { PAGES, canonicalUrl } from "./seo.ts";
 import {
   CONTENT_PAGES,
   RESOURCES,
-  contentPageMeta,
-  contentLd,
-  contentRouteHead,
-  resourcesRouteHead,
-  buildSitemapXml,
   allIndexablePaths,
-  getContentPage,
+  buildSitemapXml,
+  contentLd,
+  contentPageMeta,
+  contentRouteHead,
   formatDate,
+  getContentPage,
+  isEnglishOnlyPath,
+  resourcesRouteHead,
 } from "./content.ts";
 
 const BANNED_CLAIMS = [
@@ -166,19 +168,35 @@ test("sitemap includes every indexable path, excludes /results, has no duplicate
   }
   assert.equal(new Set(paths).size, paths.length, "no duplicate paths");
   assert.ok(!paths.some((p) => p.startsWith("/results")), "results pages are excluded");
+  // Translated pages are published once per locale; English-only editorial only in English.
   const xml = buildSitemapXml();
   for (const p of paths) {
-    assert.ok(
-      xml.includes(`<loc>${canonicalUrl(p)}</loc>`),
-      `${p} appears in the generated sitemap`,
-    );
+    const locales = isEnglishOnlyPath(p) ? (["en"] as const) : SUPPORTED_LOCALES;
+    for (const locale of locales) {
+      assert.ok(
+        xml.includes(`<loc>${canonicalUrl(localePath(locale, p))}</loc>`),
+        `${localePath(locale, p)} appears in the generated sitemap`,
+      );
+    }
+    if (isEnglishOnlyPath(p)) {
+      assert.ok(
+        !xml.includes(`<loc>${canonicalUrl(localePath("pt-BR", p))}</loc>`),
+        `${p} must not be advertised as Portuguese`,
+      );
+    }
   }
 });
 
 test("resources hub head has a canonical and CollectionPage + BreadcrumbList data", () => {
   const head = resourcesRouteHead();
   const canonical = head.links.find((l) => l.rel === "canonical");
-  assert.equal(canonical?.href, canonicalUrl("/resources"));
+  // Canonical is locale-specific now; the default locale is English.
+  assert.equal(canonical?.href, canonicalUrl(localePath("en", "/resources")));
+  const alternates = head.links.filter((l) => l.rel === "alternate");
+  assert.ok(
+    alternates.some((l) => l.hrefLang === "x-default"),
+    "resources advertises x-default",
+  );
   const types = head.scripts.map(
     (s) => (JSON.parse(s.children) as Record<string, unknown>)["@type"],
   );

@@ -1,10 +1,12 @@
+import { DEFAULT_LOCALE, segmentToLocale } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useLocale } from "@/components/locale-context";
 import { ArrowRight } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
 import { CONTENT_PAGES, RESOURCES, resourcesRouteHead, type ContentSection } from "@/lib/content";
 
-export const Route = createFileRoute("/resources")({
-  head: () => resourcesRouteHead(),
+export const Route = createFileRoute("/$locale/resources")({
+  head: ({ params }) => resourcesRouteHead(segmentToLocale(params.locale) ?? DEFAULT_LOCALE),
   component: ResourcesPage,
 });
 
@@ -32,6 +34,7 @@ const GROUPS: Array<{
 ];
 
 function ResourcesPage() {
+  const { locale } = useLocale();
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
@@ -87,7 +90,8 @@ function ResourcesPage() {
             — so your quotes land on one clear, cost-based footing.
           </p>
           <Link
-            to="/analyze"
+            to="/$locale/analyze"
+            params={{ locale }}
             className="mt-5 inline-flex h-12 items-center gap-2 rounded-full bg-primary px-7 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-colors hover:bg-primary-soft"
           >
             Analyze your quotes

@@ -10,21 +10,21 @@ const read = (rel: string) => readFileSync(join(ROOT, rel), "utf8");
 // Files that make up the public marketing surface. Claims here must stay truthful.
 const MARKETING_FILES = [
   "src/routes/__root.tsx",
-  "src/routes/index.tsx",
-  "src/routes/about.tsx",
-  "src/routes/analyze.tsx",
-  "src/routes/suppliers.index.tsx",
-  "src/routes/suppliers.$slug.tsx",
+  "src/routes/$locale.index.tsx",
+  "src/routes/$locale.about.tsx",
+  "src/routes/$locale.analyze.tsx",
+  "src/routes/$locale.suppliers.index.tsx",
+  "src/routes/$locale.suppliers.$slug.tsx",
   "src/lib/suppliers.ts",
-  "src/routes/terms.tsx",
-  "src/routes/resources.tsx",
-  "src/routes/guides.how-to-compare-fertilizer-quotes.tsx",
-  "src/routes/guides.fertilizer-cost-per-acre.tsx",
-  "src/routes/guides.cost-per-pound-of-nitrogen.tsx",
-  "src/routes/guides.how-freight-affects-fertilizer-cost.tsx",
-  "src/routes/compare.dap-vs-map.tsx",
-  "src/routes/compare.urea-vs-uan.tsx",
-  "src/routes/methodology.usda-ams-fertilizer-data.tsx",
+  "src/routes/$locale.terms.tsx",
+  "src/routes/$locale.resources.tsx",
+  "src/routes/$locale.guides.how-to-compare-fertilizer-quotes.tsx",
+  "src/routes/$locale.guides.fertilizer-cost-per-acre.tsx",
+  "src/routes/$locale.guides.cost-per-pound-of-nitrogen.tsx",
+  "src/routes/$locale.guides.how-freight-affects-fertilizer-cost.tsx",
+  "src/routes/$locale.compare.dap-vs-map.tsx",
+  "src/routes/$locale.compare.urea-vs-uan.tsx",
+  "src/routes/$locale.methodology.usda-ams-fertilizer-data.tsx",
   "src/components/site-header.tsx",
   "src/components/content-page.tsx",
   "src/lib/content.ts",
@@ -92,7 +92,7 @@ test("no unsupported marketing claim remains in the public surface", () => {
 });
 
 test("the customer-specific results page carries a server-friendly noindex, nofollow", () => {
-  const results = read("src/routes/results.$id.tsx");
+  const results = read("src/routes/$locale.results.$id.tsx");
   assert.match(results, /noindex,\s*nofollow/);
 });
 

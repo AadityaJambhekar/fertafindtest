@@ -4,7 +4,7 @@ import { getContentPage, contentRouteHead } from "@/lib/content";
 
 const PAGE = getContentPage("/guides/how-to-compare-fertilizer-quotes")!;
 
-export const Route = createFileRoute("/guides/how-to-compare-fertilizer-quotes")({
+export const Route = createFileRoute("/$locale/guides/how-to-compare-fertilizer-quotes")({
   head: () => contentRouteHead(PAGE),
   component: Page,
 });

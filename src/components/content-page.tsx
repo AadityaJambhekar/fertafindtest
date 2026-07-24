@@ -1,4 +1,6 @@
 import { Link } from "@tanstack/react-router";
+import { DEFAULT_LOCALE } from "@/lib/i18n";
+import { useDictionary, useLocale, useLocalePath } from "@/components/locale-context";
 import type { ReactNode } from "react";
 import { ArrowRight, ExternalLink } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
@@ -34,10 +36,23 @@ export function ContentPageLayout({
   /** Page-specific closing line above the call to action. */
   cta?: ReactNode;
 }) {
+  const { locale } = useLocale();
+  const t = useDictionary();
+  const lp = useLocalePath();
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
       <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-16">
+        {/* These long-form articles have not been translated. Say so plainly rather than
+            presenting an English body as though it were a Portuguese page. */}
+        {locale !== DEFAULT_LOCALE && (
+          <p
+            lang={DEFAULT_LOCALE}
+            className="mb-6 rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm leading-6 text-muted-foreground"
+          >
+            {t.notice.untranslatedArticle}
+          </p>
+        )}
         <nav aria-label="Breadcrumb">
           <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
             {page.breadcrumb.map((c, i) => {
@@ -50,7 +65,7 @@ export function ContentPageLayout({
                       {c.name}
                     </span>
                   ) : (
-                    <a href={c.path} className="transition-colors hover:text-foreground">
+                    <a href={lp(c.path)} className="transition-colors hover:text-foreground">
                       {c.name}
                     </a>
                   )}
@@ -91,7 +106,11 @@ export function ContentPageLayout({
             application rates or products for your field. Rates and nutrient decisions depend on a
             soil test, your crop and growth stage, and local guidance from a qualified agronomist.
             See our{" "}
-            <Link to="/terms" className="font-medium content-accent hover:underline">
+            <Link
+              to="/$locale/terms"
+              params={{ locale }}
+              className="font-medium content-accent hover:underline"
+            >
               Terms
             </Link>
             .
@@ -147,7 +166,8 @@ export function ContentPageLayout({
             )}
           </p>
           <Link
-            to="/analyze"
+            to="/$locale/analyze"
+            params={{ locale }}
             className="mt-4 inline-flex h-12 items-center gap-2 rounded-full bg-primary px-7 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-colors hover:bg-primary-soft"
           >
             Analyze your quotes

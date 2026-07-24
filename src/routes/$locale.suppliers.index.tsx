@@ -1,8 +1,9 @@
+import { DEFAULT_LOCALE, segmentToLocale } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { ArrowRight, Building2, Clock, Handshake, MapPin, ShieldCheck } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
-import { useDictionary } from "@/components/locale-context";
+import { useDictionary, useLocale, useLocalePath } from "@/components/locale-context";
 import {
   SUPPLIERS_DIRECTORY,
   SUPPLIER_TYPE_LABEL,
@@ -21,10 +22,10 @@ import {
 
 type SuppliersSearch = { relationship?: "partner" };
 
-export const Route = createFileRoute("/suppliers/")({
+export const Route = createFileRoute("/$locale/suppliers/")({
   validateSearch: (search: Record<string, unknown>): SuppliersSearch =>
     search.relationship === "partner" ? { relationship: "partner" } : {},
-  head: () => suppliersRouteHead(),
+  head: ({ params }) => suppliersRouteHead(segmentToLocale(params.locale) ?? DEFAULT_LOCALE),
   component: SuppliersPage,
 });
 
@@ -37,6 +38,8 @@ const EMPTY_FILTERS: SupplierDirectoryFilters = {
 };
 
 function SuppliersPage() {
+  const lp = useLocalePath();
+  const { locale } = useLocale();
   const t = useDictionary();
   const { relationship } = Route.useSearch();
   const companies = listSupplierCompanies();
@@ -65,7 +68,7 @@ function SuppliersPage() {
         <nav aria-label="Breadcrumb">
           <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
             <li>
-              <a href="/" className="transition-colors hover:text-foreground">
+              <a href={lp("/")} className="transition-colors hover:text-foreground">
                 {t.breadcrumb.home}
               </a>
             </li>
@@ -192,7 +195,8 @@ function SuppliersPage() {
           </h2>
           <p className="mt-2 max-w-2xl text-muted-foreground">{t.suppliers.ctaBody}</p>
           <Link
-            to="/analyze"
+            to="/$locale/analyze"
+            params={{ locale }}
             className="mt-5 inline-flex h-12 items-center gap-2 rounded-full bg-primary px-7 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-colors hover:bg-primary-soft"
           >
             {t.home.heroCta}

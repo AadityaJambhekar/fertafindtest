@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useLocale, useLocalePath } from "@/components/locale-context";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -21,7 +22,7 @@ import {
 import { analysisStorageKey, type QuoteAnalysis } from "@/lib/quote-analysis";
 import { rankQuotes, showsComparisonRanking } from "@/lib/quote-comparison";
 
-export const Route = createFileRoute("/results/$id")({
+export const Route = createFileRoute("/$locale/results/$id")({
   head: () => ({
     meta: [
       { title: "Your fertilizer recommendation — FertaFind" },
@@ -71,6 +72,8 @@ function preferenceLabel(preferences: QuoteAnalysis["preferences"] | undefined) 
 }
 
 function ResultsPage() {
+  const { locale } = useLocale();
+  const lp = useLocalePath();
   const { id } = Route.useParams();
   const [analysis, setAnalysis] = useState<QuoteAnalysis | null | undefined>();
   const [sortBy, setSortBy] = useState<"recommended" | "lowest-cost">("recommended");
@@ -123,7 +126,8 @@ function ResultsPage() {
       <SiteHeader />
       <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-12 md:py-16">
         <Link
-          to="/analyze"
+          to="/$locale/analyze"
+          params={{ locale }}
           className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -180,7 +184,7 @@ function ResultsPage() {
               ))}
             </div>
             <a
-              href="/#partners"
+              href={`${lp("/")}#partners`}
               className="mt-6 inline-flex text-sm font-semibold text-primary underline-offset-4 hover:underline"
             >
               View partner details
@@ -441,6 +445,7 @@ function ResultsPage() {
 }
 
 function StatusPage({ title, detail }: { title: string; detail?: string }) {
+  const { locale } = useLocale();
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
@@ -448,7 +453,8 @@ function StatusPage({ title, detail }: { title: string; detail?: string }) {
         <h1 className="font-display text-3xl font-semibold text-foreground">{title}</h1>
         {detail && <p className="mt-3 text-muted-foreground">{detail}</p>}
         <Link
-          to="/analyze"
+          to="/$locale/analyze"
+          params={{ locale }}
           className="mt-8 inline-flex rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground"
         >
           Start an analysis

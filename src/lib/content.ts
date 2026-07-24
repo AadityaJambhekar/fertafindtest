@@ -20,6 +20,8 @@ import {
   type LinkEntry,
 } from "./seo.ts";
 import { publicSupplierSlugs, supplierPath } from "./suppliers.ts";
+import { DEFAULT_LOCALE, SUPPORTED_LOCALES, localePath, type Locale } from "./i18n.ts";
+import { localizedHead } from "./seo-i18n.ts";
 
 /** A verifiable, external source shown beside the claims it supports. */
 export interface Source {
@@ -342,8 +344,17 @@ export function contentLd(page: ContentPage) {
 
 /** Complete route `head()` for a content page: metadata + Article/WebPage + BreadcrumbList. */
 export function contentRouteHead(page: ContentPage) {
+  const base = contentPageMeta(page);
+  const englishUrl = `${SITE_URL}${localePath(DEFAULT_LOCALE, page.slug)}`;
   return {
-    ...contentPageMeta(page),
+    ...base,
+    // English-only body: canonical always points at the English URL and NO pt-BR alternate is
+    // advertised, so a Portuguese visitor is never served an English page labelled Portuguese.
+    links: [
+      ...(base.links ?? []).filter((l) => l.rel !== "canonical"),
+      { rel: "canonical", href: englishUrl },
+      { rel: "alternate", href: englishUrl, hrefLang: "x-default" },
+    ],
     scripts: [jsonLdScript(contentLd(page)), jsonLdScript(breadcrumbLd(page.breadcrumb))],
   };
 }
@@ -379,20 +390,9 @@ export function resourcesCollectionLd() {
   };
 }
 
-export function resourcesRouteHead() {
-  const url = canonicalUrl(RESOURCES.path);
+export function resourcesRouteHead(locale: Locale = DEFAULT_LOCALE) {
   return {
-    meta: [
-      { title: RESOURCES.title },
-      { name: "description", content: RESOURCES.description },
-      { property: "og:title", content: RESOURCES.ogTitle },
-      { property: "og:description", content: RESOURCES.ogDescription },
-      { property: "og:url", content: url },
-      { property: "og:type", content: "website" },
-      { name: "twitter:title", content: RESOURCES.ogTitle },
-      { name: "twitter:description", content: RESOURCES.ogDescription },
-    ],
-    links: [{ rel: "canonical", href: url }],
+    ...localizedHead(locale, "resources", RESOURCES.path),
     scripts: [
       jsonLdScript(resourcesCollectionLd()),
       jsonLdScript(
@@ -411,23 +411,54 @@ export function resourcesRouteHead() {
 // registry is the single source of truth and future pages cannot drift.
 // ---------------------------------------------------------------------------
 
-/** Ordered indexable paths with sitemap priorities. Excludes /results (noindex). */
-export function sitemapEntries(): Array<{ path: string; priority: string }> {
+/**
+ * The bare (locale-less) indexable paths. Excludes /results, which is noindex.
+ *
+ * `englishOnly` marks long-form editorial whose body has NOT been translated. Those pages
+ * are published in English only: no pt-BR sitemap entry and no pt-BR hreflang alternate, so
+ * we never advertise a Portuguese page that is really English.
+ */
+function basePaths(): Array<{ path: string; priority: string; englishOnly?: boolean }> {
   return [
     { path: PAGES.home.path, priority: "1.0" },
     { path: PAGES.analyze.path, priority: "0.8" },
     { path: "/suppliers", priority: "0.7" },
     { path: "/resources", priority: "0.7" },
-    ...CONTENT_PAGES.map((p) => ({ path: p.slug, priority: "0.6" })),
-    // Public supplier detail pages only (currently none until suppliers are verified).
+    ...CONTENT_PAGES.map((p) => ({ path: p.slug, priority: "0.6", englishOnly: true })),
     ...publicSupplierSlugs().map((slug) => ({ path: supplierPath(slug), priority: "0.5" })),
     { path: PAGES.terms.path, priority: "0.4" },
   ];
 }
 
-/** Every indexable, in-sitemap path (canonical form is derived via canonicalUrl). */
+/** True when a path's body is English-only and must not be advertised in other locales. */
+export function isEnglishOnlyPath(path: string): boolean {
+  return basePaths().some((e) => e.path === path && e.englishOnly === true);
+}
+
+/** Paths published in every locale. */
+export function localizedPaths(): string[] {
+  return basePaths()
+    .filter((e) => !e.englishOnly)
+    .map((e) => e.path);
+}
+
+/**
+ * Ordered indexable paths with sitemap priorities — every page once PER LOCALE, so each
+ * language has its own indexable URL and the hreflang cluster is complete.
+ */
+export function sitemapEntries(): Array<{ path: string; priority: string }> {
+  return basePaths().flatMap((entry) => {
+    const locales = entry.englishOnly ? [DEFAULT_LOCALE] : SUPPORTED_LOCALES;
+    return locales.map((locale) => ({
+      path: localePath(locale, entry.path),
+      priority: entry.priority,
+    }));
+  });
+}
+
+/** Every indexable bare path (one per page, locale-independent). */
 export function allIndexablePaths(): string[] {
-  return sitemapEntries().map((e) => e.path);
+  return basePaths().map((e) => e.path);
 }
 
 /** Deterministic sitemap XML built from the registry. */

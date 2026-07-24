@@ -4,7 +4,7 @@ import { getContentPage, contentRouteHead } from "@/lib/content";
 
 const PAGE = getContentPage("/methodology/usda-ams-fertilizer-data")!;
 
-export const Route = createFileRoute("/methodology/usda-ams-fertilizer-data")({
+export const Route = createFileRoute("/$locale/methodology/usda-ams-fertilizer-data")({
   head: () => contentRouteHead(PAGE),
   component: Page,
 });

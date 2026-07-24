@@ -1,4 +1,7 @@
+import { localizedHead } from "@/lib/seo-i18n";
+import { DEFAULT_LOCALE, segmentToLocale } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useLocale } from "@/components/locale-context";
 import { useEffect, useState } from "react";
 import {
   ArrowRight,
@@ -32,9 +35,10 @@ const rotatingPhrases = [
 ];
 const easterEggPhrase = "Aaditya is the best.";
 
-export const Route = createFileRoute("/")({
-  head: () => {
-    const base = pageMeta("home");
+export const Route = createFileRoute("/$locale/")({
+  head: ({ params }) => {
+    const locale = segmentToLocale(params.locale) ?? DEFAULT_LOCALE;
+    const base = localizedHead(locale, "home", "/");
     return {
       ...base,
       // Homepage structured data: Organization + WebSite, plus a FAQPage generated
@@ -68,6 +72,7 @@ function HomePage() {
 }
 
 function Hero() {
+  const { locale } = useLocale();
   return (
     <section
       className="relative overflow-hidden border-b border-border"
@@ -98,7 +103,8 @@ function Hero() {
           </p>
           <div className="mt-8 grid gap-3 min-[420px]:flex min-[420px]:flex-wrap min-[420px]:items-center min-[420px]:justify-center sm:mt-10 sm:gap-4">
             <Link
-              to="/analyze"
+              to="/$locale/analyze"
+              params={{ locale }}
               className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-primary px-7 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-colors hover:bg-primary-soft"
             >
               Analyze for free
@@ -167,6 +173,7 @@ function ProofPoint({ children }: { children: string }) {
 }
 
 function HowItWorks() {
+  const { locale } = useLocale();
   const steps = [
     {
       icon: MapPin,
@@ -220,7 +227,8 @@ function HowItWorks() {
       </div>
       <div className="mt-12 flex justify-center">
         <Link
-          to="/analyze"
+          to="/$locale/analyze"
+          params={{ locale }}
           className="inline-flex h-12 items-center gap-2 rounded-lg bg-primary px-8 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-all hover:-translate-y-0.5 hover:bg-primary-soft"
         >
           Start for free
@@ -297,6 +305,7 @@ function Benefits() {
 }
 
 function SupplierNetwork() {
+  const { locale } = useLocale();
   const suppliers = listSupplierCompanies();
   return (
     <section id="suppliers" className="scroll-mt-28 border-b border-border bg-card">
@@ -321,7 +330,8 @@ function SupplierNetwork() {
         </div>
         <div className="mt-8">
           <Link
-            to="/suppliers"
+            to="/$locale/suppliers"
+            params={{ locale }}
             className="inline-flex items-center gap-1.5 text-sm font-semibold content-accent hover:underline"
           >
             View all suppliers and sourcing origins
@@ -341,13 +351,14 @@ const HOME_BADGE_STYLE: Record<SupplierBadgeKind, string> = {
 };
 
 function HomeSupplierCard({ supplier }: { supplier: Supplier }) {
+  const { locale } = useLocale();
   const kind = supplierBadgeKind(supplier);
   const BadgeIcon = kind === "partner" ? Handshake : kind === "verified" ? ShieldCheck : Clock;
   const place = [supplier.city, supplier.state, supplier.country].filter(Boolean).join(", ");
   return (
     <Link
-      to="/suppliers/$slug"
-      params={{ slug: supplier.slug }}
+      to="/$locale/suppliers/$slug"
+      params={{ locale, slug: supplier.slug }}
       className="group flex flex-col rounded-2xl border border-border bg-background p-6 transition-all hover:-translate-y-1 hover:border-foreground hover:shadow-[var(--shadow-soft)]"
     >
       <div className="flex items-start justify-between gap-3">

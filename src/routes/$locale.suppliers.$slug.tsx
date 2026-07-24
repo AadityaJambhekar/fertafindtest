@@ -1,4 +1,6 @@
+import { DEFAULT_LOCALE, segmentToLocale } from "@/lib/i18n";
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { useLocale, useLocalePath } from "@/components/locale-context";
 import {
   AlertTriangle,
   ArrowRight,
@@ -20,15 +22,21 @@ import {
   type Supplier,
 } from "@/lib/suppliers";
 
-export const Route = createFileRoute("/suppliers/$slug")({
+export const Route = createFileRoute("/$locale/suppliers/$slug")({
   // Any LISTED company (partner / verified / source-listed-unverified) resolves. Draft /
   // inactive / unknown slugs are redirected to the network — they can never render a page.
   loader: ({ params }) => {
     const supplier = getListedSupplierBySlug(params.slug);
-    if (!supplier) throw redirect({ to: "/suppliers" });
+    if (!supplier) throw redirect({ to: "/$locale/suppliers", params: { locale: params.locale } });
     return { supplier };
   },
-  head: (ctx) => (ctx.loaderData ? supplierDetailRouteHead(ctx.loaderData.supplier) : {}),
+  head: (ctx) =>
+    ctx.loaderData
+      ? supplierDetailRouteHead(
+          ctx.loaderData.supplier,
+          segmentToLocale(ctx.params.locale) ?? DEFAULT_LOCALE,
+        )
+      : {},
   component: SupplierDetailPage,
 });
 
@@ -71,6 +79,8 @@ function SupplierLogo({ supplier }: { supplier: Supplier }) {
 }
 
 function SupplierDetailPage() {
+  const { locale } = useLocale();
+  const lp = useLocalePath();
   const { supplier } = Route.useLoaderData();
   const place = [supplier.city, supplier.state, supplier.country].filter(Boolean).join(", ");
   const kind = supplierBadgeKind(supplier);
@@ -85,13 +95,13 @@ function SupplierDetailPage() {
         <nav aria-label="Breadcrumb">
           <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
             <li>
-              <a href="/" className="transition-colors hover:text-foreground">
+              <a href={lp("/")} className="transition-colors hover:text-foreground">
                 Home
               </a>
             </li>
             <li className="flex items-center gap-2">
               <span aria-hidden="true">/</span>
-              <a href="/suppliers" className="transition-colors hover:text-foreground">
+              <a href={lp("/suppliers")} className="transition-colors hover:text-foreground">
                 Suppliers
               </a>
             </li>
@@ -222,7 +232,8 @@ function SupplierDetailPage() {
             footing alongside your other quotes.
           </p>
           <Link
-            to="/analyze"
+            to="/$locale/analyze"
+            params={{ locale }}
             className="mt-4 inline-flex h-12 items-center gap-2 rounded-full bg-primary px-7 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-colors hover:bg-primary-soft"
           >
             Analyze a quote

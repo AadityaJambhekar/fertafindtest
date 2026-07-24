@@ -1,6 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocale, useDictionary } from "@/components/locale-context";
+import { localeToSegment, DEFAULT_LOCALE, segmentToLocale } from "@/lib/i18n";
+import { localizedHead } from "@/lib/seo-i18n";
 import {
   ArrowLeft,
   ArrowRight,
@@ -37,9 +39,9 @@ import {
 } from "@/lib/quote-files";
 import { pageMeta, jsonLdScript, breadcrumbLd } from "@/lib/seo";
 
-export const Route = createFileRoute("/analyze")({
-  head: () => ({
-    ...pageMeta("analyze"),
+export const Route = createFileRoute("/$locale/analyze")({
+  head: ({ params }) => ({
+    ...localizedHead(segmentToLocale(params.locale) ?? DEFAULT_LOCALE, "analyze", "/analyze"),
     scripts: [
       jsonLdScript(
         breadcrumbLd([
@@ -450,7 +452,10 @@ function AnalyzePage() {
         }
 
         localStorage.setItem(analysisStorageKey(data.analysis.id), JSON.stringify(data.analysis));
-        navigate({ to: "/results/$id", params: { id: data.analysis.id } });
+        navigate({
+          to: "/$locale/results/$id",
+          params: { locale: localeToSegment(activeLocale), id: data.analysis.id },
+        });
       } catch (error) {
         setAnalysisError(error instanceof Error ? error.message : "The quote analysis failed.");
         recaptchaRef.current?.reset();
@@ -517,12 +522,12 @@ function AnalyzePage() {
   const beginAnalysis = () => {
     setAnalysisError("");
     if (!hasAgreedToTerms) {
-      setAnalysisError("Agree to the Terms of Service before analyzing your quotes.");
+      setAnalysisError(t.analyze.termsRequiredError);
       return;
     }
     setIsVerifying(true);
     if (!recaptchaRef.current?.execute()) {
-      setAnalysisError("Verification is still loading. Try again in a moment.");
+      setAnalysisError(t.analyze.verificationLoading);
       setIsVerifying(false);
     }
   };
@@ -535,7 +540,7 @@ function AnalyzePage() {
 
         <div className="mt-7 rounded-3xl border border-border bg-card p-5 shadow-[var(--shadow-soft)] sm:mt-10 sm:p-8 md:p-10">
           {step === 0 && (
-            <StepShell title="Farm location" subtitle="Enter an address or drop a pin.">
+            <StepShell title={t.analyze.locationTitle} subtitle={t.analyze.locationSubtitle}>
               <FarmLocationPicker
                 value={location}
                 onValueChange={setLocation}
@@ -553,7 +558,7 @@ function AnalyzePage() {
           )}
 
           {step === 1 && (
-            <StepShell title="Crops and field" subtitle="Choose one crop and enter the field size.">
+            <StepShell title={t.analyze.cropTitle} subtitle={t.analyze.cropSubtitle}>
               {crops.length > 0 && (
                 <div className="mb-3 flex justify-end">
                   <button
@@ -1323,7 +1328,7 @@ function AnalyzePage() {
           )}
 
           {step === 2 && (
-            <StepShell title="Upload quotes" subtitle="Add photos, documents or copied quote text.">
+            <StepShell title={t.analyze.uploadStepTitle} subtitle={t.analyze.uploadStepSubtitle}>
               <section className="mb-6 rounded-2xl border border-primary/25 bg-primary/5 p-5">
                 <h2 className="font-semibold text-foreground">{t.analyze.goalTitle}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">{t.analyze.goalSubtitle}</p>
@@ -1477,7 +1482,8 @@ function AnalyzePage() {
                 <span className="text-sm leading-6 text-foreground">
                   I agree to the{" "}
                   <Link
-                    to="/terms"
+                    to="/$locale/terms"
+                    params={{ locale: localeToSegment(activeLocale) }}
                     target="_blank"
                     onClick={(event) => event.stopPropagation()}
                     className="font-semibold text-primary underline decoration-primary/35 underline-offset-4 hover:decoration-primary"
@@ -1508,10 +1514,7 @@ function AnalyzePage() {
               <h2 className="mt-6 font-display text-2xl font-semibold text-foreground">
                 Analyzing your quotes…
               </h2>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Extracting nutrient values, comparing suppliers in your area, and calculating landed
-                cost.
-              </p>
+              <p className="mt-2 text-sm text-muted-foreground">{t.analyze.analyzingBody}</p>
             </div>
           )}
 
@@ -1524,7 +1527,7 @@ function AnalyzePage() {
                 className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg px-4 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground disabled:opacity-30 sm:w-auto"
               >
                 <ArrowLeft className="h-4 w-4" />
-                Back
+                {t.common.back}
               </button>
               {step < 2 ? (
                 <button
@@ -1536,7 +1539,7 @@ function AnalyzePage() {
                   }}
                   className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-all hover:translate-y-[-1px] disabled:opacity-40 disabled:hover:translate-y-0 sm:w-auto"
                 >
-                  {step === 0 && isCheckingLocation ? "Checking…" : "Continue"}
+                  {step === 0 && isCheckingLocation ? t.analyze.checking : t.common.continue}
                   <ArrowRight className="h-4 w-4" />
                 </button>
               ) : (
@@ -1546,7 +1549,7 @@ function AnalyzePage() {
                   onClick={beginAnalysis}
                   className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-all hover:translate-y-[-1px] disabled:opacity-40 disabled:hover:translate-y-0 sm:w-auto"
                 >
-                  {isVerifying ? "Checking…" : "Analyze"}
+                  {isVerifying ? t.analyze.checking : t.analyze.analyzeCta}
                   <ArrowRight className="h-4 w-4" />
                 </button>
               )}
@@ -1608,7 +1611,8 @@ function ConditionInput({
 }
 
 function StepIndicator({ step }: { step: Step }) {
-  const labels = ["Location", "Crop", "Quotes"];
+  const t = useDictionary();
+  const labels = [t.analyze.stepperLocation, t.analyze.stepperCrop, t.analyze.stepperQuotes];
   return (
     <ol className="grid grid-cols-3 gap-2 sm:flex sm:items-center sm:gap-3">
       {labels.map((label, i) => {

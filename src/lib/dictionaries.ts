@@ -75,6 +75,23 @@ const en = {
     uploadCta: "Choose files",
     analyzing: "Analyzing your quotes…",
     agreeToTerms: "I agree to the Terms",
+    stepperLocation: "Location",
+    stepperCrop: "Crop",
+    stepperQuotes: "Quotes",
+    locationTitle: "Farm location",
+    locationSubtitle: "Enter an address or drop a pin.",
+    cropTitle: "Crops and field",
+    cropSubtitle: "Choose one crop and enter the field size.",
+    uploadStepTitle: "Upload quotes",
+    uploadStepSubtitle: "Add photos, documents or copied quote text.",
+    checking: "Checking…",
+    analyzeCta: "Analyze",
+    analyzingTitle: "Analyzing your quotes",
+    analyzingBody:
+      "Extracting nutrient values, comparing suppliers in your area, and calculating landed cost.",
+    termsRequiredError: "Agree to the Terms of Service before analyzing your quotes.",
+    verificationLoading: "Verification is still loading. Try again in a moment.",
+    analysisFailed: "The quote analysis failed.",
   },
   results: {
     title: "Your quote comparison",
@@ -133,6 +150,38 @@ const en = {
   empty: {
     noQuotes: "You haven't added any quotes yet.",
     noSuppliers: "No suppliers to show.",
+  },
+  terms: {
+    eyebrow: "FertaFind terms",
+    title: "Terms of use",
+    lastUpdated: "Last updated July 18, 2026",
+    courtesyNotice:
+      "This is the controlling English version of these Terms. Translations are provided for convenience only.",
+    partnerTitle: "Partner-only marketplace",
+    partnerBody:
+      "FertaFind compares and recommends fertilizer products offered by participating FertaFind suppliers and partners. It does not search or rank every supplier or fertilizer product available in the wider market.",
+    recommendationsTitle: "How recommendations work",
+    recommendationsBody:
+      "We use the information you provide—including quotes, crops, location, field details, and available soil or weather context—to rank eligible partner products by factors such as nutrient fit, stated price, delivery information, and estimated value. Commercial relationships with suppliers or partners may benefit FertaFind.",
+    decisionTitle: "Decision support only",
+    decisionBody:
+      "Results are informational and are not agronomic, financial, legal, or safety advice. A recommendation does not guarantee price, stock, delivery, crop performance, suitability, savings, or return. Confirm the product label, final quote, availability, application plan, and local requirements with the supplier and a qualified adviser.",
+    uploadsTitle: "Uploaded information",
+    uploadsBody:
+      "You must provide accurate farm information and have permission to upload each file. Do not upload information you are not authorised to share. Supplier listings, prices, service areas, and product data must be truthful and current. By selecting the acceptance box before analysis, you agree to the version of these Terms shown at that time.",
+    soilTitle: "Soil, weather, and irrigation information",
+    soilBody:
+      "A laboratory soil test is optional but recommended. Weather, humidity, modeled surface soil temperature, soil moisture, irrigation information, and other environmental data may be estimated from third-party sources and may not match conditions within a particular field. FertaFind does not perform a physical soil test. Users are responsible for confirming recommendations with current field observations, product labels, applicable rules, and a qualified agronomist.",
+    purchasesTitle: "Purchases, delivery, and fulfilment",
+    purchasesBody1:
+      "Unless an order confirmation expressly identifies FertaFind as the seller, fertilizer is sold and fulfilled by the participating supplier shown for the order. The supplier or its carrier controls stock confirmation, dispatch, delivery scheduling, unloading, title and risk transfer, returns, and any delivery-specific charges under the final order terms. After purchase, FertaFind is not responsible for an independent supplier's or carrier's delay, failed delivery, loss, damage, incorrect handling, or other act or omission, except to the extent caused by FertaFind or where applicable law does not allow that responsibility to be excluded.",
+    purchasesBody2:
+      "Customers must review the supplier's final price, delivery window, access requirements, cancellation terms, and refund terms before ordering, and should contact the supplier first about fulfilment problems. Nothing in these Terms limits any statutory cancellation, refund, consumer-protection, product-liability, or other right that cannot lawfully be waived. If FertaFind makes a specific delivery promise or applicable law assigns FertaFind responsibility, that promise or law will control.",
+    availabilityTitle: "Service availability",
+    availabilityBody:
+      "Analyses may be incomplete or unavailable because of unclear files, missing information, third-party services, partner coverage, or technical limits. We may review, change, suspend, or remove listings, recommendations, or features where reasonably necessary.",
+    changesTitle: "Changes and contact",
+    changesBody: "We may update these terms as the service develops. Questions can be sent to",
   },
   notice: {
     untranslatedArticle: "This article is currently available in English only.",
@@ -243,6 +292,23 @@ const ptBR: Dictionary = {
     uploadCta: "Escolher arquivos",
     analyzing: "Analisando suas cotações…",
     agreeToTerms: "Concordo com os Termos",
+    stepperLocation: "Localização",
+    stepperCrop: "Cultura",
+    stepperQuotes: "Cotações",
+    locationTitle: "Localização da propriedade",
+    locationSubtitle: "Digite um endereço ou marque um ponto no mapa.",
+    cropTitle: "Culturas e talhão",
+    cropSubtitle: "Escolha uma cultura e informe a área do talhão.",
+    uploadStepTitle: "Envie as cotações",
+    uploadStepSubtitle: "Adicione fotos, documentos ou o texto copiado da cotação.",
+    checking: "Verificando…",
+    analyzeCta: "Analisar",
+    analyzingTitle: "Analisando suas cotações",
+    analyzingBody:
+      "Extraindo os teores de nutrientes, comparando fornecedores da sua região e calculando o custo posto na fazenda.",
+    termsRequiredError: "Aceite os Termos de Serviço antes de analisar suas cotações.",
+    verificationLoading: "A verificação ainda está carregando. Tente novamente em instantes.",
+    analysisFailed: "A análise das cotações falhou.",
   },
   results: {
     title: "Sua comparação de cotações",
@@ -301,6 +367,39 @@ const ptBR: Dictionary = {
   empty: {
     noQuotes: "Você ainda não adicionou nenhuma cotação.",
     noSuppliers: "Nenhum fornecedor para mostrar.",
+  },
+  terms: {
+    eyebrow: "Termos da FertaFind",
+    title: "Termos de uso",
+    lastUpdated: "Última atualização em 18 de julho de 2026",
+    courtesyNotice:
+      "This Portuguese translation is provided for convenience. The English version remains the controlling version and should be reviewed by qualified legal counsel.",
+    partnerTitle: "Marketplace exclusivo de parceiros",
+    partnerBody:
+      "A FertaFind compara e recomenda produtos fertilizantes oferecidos por fornecedores e parceiros participantes da FertaFind. Ela não pesquisa nem classifica todos os fornecedores ou produtos fertilizantes disponíveis no mercado em geral.",
+    recommendationsTitle: "Como funcionam as recomendações",
+    recommendationsBody:
+      "Usamos as informações que você fornece — incluindo cotações, culturas, localização, detalhes do talhão e o contexto disponível de solo ou clima — para classificar os produtos de parceiros elegíveis por fatores como adequação de nutrientes, preço informado, informações de entrega e valor estimado. Relações comerciais com fornecedores ou parceiros podem beneficiar a FertaFind.",
+    decisionTitle: "Apenas apoio à decisão",
+    decisionBody:
+      "Os resultados são informativos e não constituem aconselhamento agronômico, financeiro, jurídico ou de segurança. Uma recomendação não garante preço, estoque, entrega, desempenho da cultura, adequação, economia ou retorno. Confirme o rótulo do produto, a cotação final, a disponibilidade, o plano de aplicação e as exigências locais com o fornecedor e um profissional qualificado.",
+    uploadsTitle: "Informações enviadas",
+    uploadsBody:
+      "Você deve fornecer informações corretas sobre a propriedade e ter permissão para enviar cada arquivo. Não envie informações que você não esteja autorizado a compartilhar. Anúncios de fornecedores, preços, áreas de atendimento e dados de produtos devem ser verdadeiros e atuais. Ao marcar a caixa de aceite antes da análise, você concorda com a versão destes Termos exibida naquele momento.",
+    soilTitle: "Informações de solo, clima e irrigação",
+    soilBody:
+      "A análise laboratorial de solo é opcional, mas recomendada. Clima, umidade, temperatura superficial modelada do solo, umidade do solo, informações de irrigação e outros dados ambientais podem ser estimados a partir de fontes de terceiros e podem não corresponder às condições de um talhão específico. A FertaFind não realiza análise física de solo. Os usuários são responsáveis por confirmar as recomendações com observações atuais de campo, rótulos de produtos, normas aplicáveis e um agrônomo qualificado.",
+    purchasesTitle: "Compras, entrega e cumprimento do pedido",
+    purchasesBody1:
+      "A menos que a confirmação do pedido identifique expressamente a FertaFind como vendedora, o fertilizante é vendido e entregue pelo fornecedor participante indicado no pedido. O fornecedor ou sua transportadora controla a confirmação de estoque, a expedição, a programação da entrega, a descarga, a transferência de titularidade e risco, as devoluções e quaisquer encargos específicos de entrega, conforme os termos finais do pedido. Após a compra, a FertaFind não é responsável por atraso, falha na entrega, perda, dano, manuseio incorreto ou outro ato ou omissão de fornecedor ou transportadora independente, exceto na medida em que tenha sido causado pela FertaFind ou quando a lei aplicável não permitir a exclusão dessa responsabilidade.",
+    purchasesBody2:
+      "Os clientes devem revisar o preço final do fornecedor, a janela de entrega, as exigências de acesso, os termos de cancelamento e os termos de reembolso antes de fazer o pedido, e devem contatar primeiro o fornecedor em caso de problemas no cumprimento. Nada nestes Termos limita qualquer direito legal de cancelamento, reembolso, proteção ao consumidor, responsabilidade pelo produto ou outro direito que não possa ser legalmente renunciado. Se a FertaFind fizer uma promessa específica de entrega ou se a lei aplicável atribuir responsabilidade à FertaFind, essa promessa ou lei prevalecerá.",
+    availabilityTitle: "Disponibilidade do serviço",
+    availabilityBody:
+      "As análises podem ficar incompletas ou indisponíveis devido a arquivos pouco legíveis, informações ausentes, serviços de terceiros, cobertura de parceiros ou limites técnicos. Podemos revisar, alterar, suspender ou remover anúncios, recomendações ou funcionalidades quando razoavelmente necessário.",
+    changesTitle: "Alterações e contato",
+    changesBody:
+      "Podemos atualizar estes termos conforme o serviço evolui. Dúvidas podem ser enviadas para",
   },
   notice: {
     untranslatedArticle: "Este artigo está disponível apenas em inglês no momento.",

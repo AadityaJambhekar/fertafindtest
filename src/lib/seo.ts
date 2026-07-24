@@ -27,7 +27,7 @@ export function canonicalUrl(path: string): string {
 // /about is a redirect into a homepage section (/#how) and is intentionally excluded
 // from the SEO registry. /suppliers is a real, indexable directory page (Package 3);
 // supplier detail metadata lives in src/lib/suppliers.ts.
-export type PageKey = "home" | "analyze" | "terms" | "suppliers";
+export type PageKey = "home" | "analyze" | "terms" | "suppliers" | "resources";
 
 export interface PageSeo {
   path: string;
@@ -64,6 +64,14 @@ export const PAGES: Record<PageKey, PageSeo> = {
     ogDescription:
       "The terms covering FertaFind's partner recommendations, analysis, and supplier purchases.",
   },
+  resources: {
+    path: "/resources",
+    title: "Fertilizer buying resources — FertaFind",
+    description:
+      "Guides and comparisons that explain how to read a fertilizer quote, compare grades on cost per unit of nutrient, and account for freight.",
+    ogTitle: "Fertilizer buying resources",
+    ogDescription: "Guides on comparing fertilizer quotes, cost per unit of nutrient, and freight.",
+  },
   suppliers: {
     path: "/suppliers",
     title: "Fertilizer supplier directory — FertaFind",
@@ -82,6 +90,8 @@ export interface LinkEntry {
   rel: string;
   href: string;
   type?: string;
+  /** Set on rel="alternate" links to declare the target language. */
+  hrefLang?: string;
 }
 
 /**

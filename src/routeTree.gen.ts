@@ -9,113 +9,45 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TermsRouteImport } from './routes/terms'
-import { Route as SuppliersRouteImport } from './routes/suppliers'
-import { Route as ResourcesRouteImport } from './routes/resources'
-import { Route as AnalyzeRouteImport } from './routes/analyze'
-import { Route as AboutRouteImport } from './routes/about'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as SuppliersIndexRouteImport } from './routes/suppliers.index'
-import { Route as SuppliersSlugRouteImport } from './routes/suppliers.$slug'
-import { Route as ResultsIdRouteImport } from './routes/results.$id'
-import { Route as MethodologyUsdaAmsFertilizerDataRouteImport } from './routes/methodology.usda-ams-fertilizer-data'
-import { Route as GuidesHowToCompareFertilizerQuotesRouteImport } from './routes/guides.how-to-compare-fertilizer-quotes'
-import { Route as GuidesHowFreightAffectsFertilizerCostRouteImport } from './routes/guides.how-freight-affects-fertilizer-cost'
-import { Route as GuidesFertilizerCostPerAcreRouteImport } from './routes/guides.fertilizer-cost-per-acre'
-import { Route as GuidesCostPerPoundOfNitrogenRouteImport } from './routes/guides.cost-per-pound-of-nitrogen'
-import { Route as CompareUreaVsUanRouteImport } from './routes/compare.urea-vs-uan'
-import { Route as CompareDapVsMapRouteImport } from './routes/compare.dap-vs-map'
+import { Route as LocaleRouteImport } from './routes/$locale'
+import { Route as SplatRouteImport } from './routes/$'
+import { Route as LocaleIndexRouteImport } from './routes/$locale.index'
 import { Route as ApiWeatherRouteImport } from './routes/api.weather'
 import { Route as ApiReverseGeocodeRouteImport } from './routes/api.reverse-geocode'
 import { Route as ApiNearbySuppliersRouteImport } from './routes/api.nearby-suppliers'
 import { Route as ApiGeocodeRouteImport } from './routes/api.geocode'
 import { Route as ApiExtractSoilTestRouteImport } from './routes/api.extract-soil-test'
 import { Route as ApiAnalyzeQuotesRouteImport } from './routes/api.analyze-quotes'
+import { Route as LocaleTermsRouteImport } from './routes/$locale.terms'
+import { Route as LocaleSuppliersRouteImport } from './routes/$locale.suppliers'
+import { Route as LocaleResourcesRouteImport } from './routes/$locale.resources'
+import { Route as LocaleAnalyzeRouteImport } from './routes/$locale.analyze'
+import { Route as LocaleAboutRouteImport } from './routes/$locale.about'
+import { Route as LocaleSuppliersIndexRouteImport } from './routes/$locale.suppliers.index'
+import { Route as LocaleSuppliersSlugRouteImport } from './routes/$locale.suppliers.$slug'
+import { Route as LocaleResultsIdRouteImport } from './routes/$locale.results.$id'
+import { Route as LocaleMethodologyUsdaAmsFertilizerDataRouteImport } from './routes/$locale.methodology.usda-ams-fertilizer-data'
+import { Route as LocaleGuidesHowToCompareFertilizerQuotesRouteImport } from './routes/$locale.guides.how-to-compare-fertilizer-quotes'
+import { Route as LocaleGuidesHowFreightAffectsFertilizerCostRouteImport } from './routes/$locale.guides.how-freight-affects-fertilizer-cost'
+import { Route as LocaleGuidesFertilizerCostPerAcreRouteImport } from './routes/$locale.guides.fertilizer-cost-per-acre'
+import { Route as LocaleGuidesCostPerPoundOfNitrogenRouteImport } from './routes/$locale.guides.cost-per-pound-of-nitrogen'
+import { Route as LocaleCompareUreaVsUanRouteImport } from './routes/$locale.compare.urea-vs-uan'
+import { Route as LocaleCompareDapVsMapRouteImport } from './routes/$locale.compare.dap-vs-map'
 
-const TermsRoute = TermsRouteImport.update({
-  id: '/terms',
-  path: '/terms',
+const LocaleRoute = LocaleRouteImport.update({
+  id: '/$locale',
+  path: '/$locale',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SuppliersRoute = SuppliersRouteImport.update({
-  id: '/suppliers',
-  path: '/suppliers',
+const SplatRoute = SplatRouteImport.update({
+  id: '/$',
+  path: '/$',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ResourcesRoute = ResourcesRouteImport.update({
-  id: '/resources',
-  path: '/resources',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AnalyzeRoute = AnalyzeRouteImport.update({
-  id: '/analyze',
-  path: '/analyze',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AboutRoute = AboutRouteImport.update({
-  id: '/about',
-  path: '/about',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IndexRoute = IndexRouteImport.update({
+const LocaleIndexRoute = LocaleIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SuppliersIndexRoute = SuppliersIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => SuppliersRoute,
-} as any)
-const SuppliersSlugRoute = SuppliersSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => SuppliersRoute,
-} as any)
-const ResultsIdRoute = ResultsIdRouteImport.update({
-  id: '/results/$id',
-  path: '/results/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MethodologyUsdaAmsFertilizerDataRoute =
-  MethodologyUsdaAmsFertilizerDataRouteImport.update({
-    id: '/methodology/usda-ams-fertilizer-data',
-    path: '/methodology/usda-ams-fertilizer-data',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const GuidesHowToCompareFertilizerQuotesRoute =
-  GuidesHowToCompareFertilizerQuotesRouteImport.update({
-    id: '/guides/how-to-compare-fertilizer-quotes',
-    path: '/guides/how-to-compare-fertilizer-quotes',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const GuidesHowFreightAffectsFertilizerCostRoute =
-  GuidesHowFreightAffectsFertilizerCostRouteImport.update({
-    id: '/guides/how-freight-affects-fertilizer-cost',
-    path: '/guides/how-freight-affects-fertilizer-cost',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const GuidesFertilizerCostPerAcreRoute =
-  GuidesFertilizerCostPerAcreRouteImport.update({
-    id: '/guides/fertilizer-cost-per-acre',
-    path: '/guides/fertilizer-cost-per-acre',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const GuidesCostPerPoundOfNitrogenRoute =
-  GuidesCostPerPoundOfNitrogenRouteImport.update({
-    id: '/guides/cost-per-pound-of-nitrogen',
-    path: '/guides/cost-per-pound-of-nitrogen',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const CompareUreaVsUanRoute = CompareUreaVsUanRouteImport.update({
-  id: '/compare/urea-vs-uan',
-  path: '/compare/urea-vs-uan',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CompareDapVsMapRoute = CompareDapVsMapRouteImport.update({
-  id: '/compare/dap-vs-map',
-  path: '/compare/dap-vs-map',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => LocaleRoute,
 } as any)
 const ApiWeatherRoute = ApiWeatherRouteImport.update({
   id: '/api/weather',
@@ -147,289 +79,276 @@ const ApiAnalyzeQuotesRoute = ApiAnalyzeQuotesRouteImport.update({
   path: '/api/analyze-quotes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LocaleTermsRoute = LocaleTermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => LocaleRoute,
+} as any)
+const LocaleSuppliersRoute = LocaleSuppliersRouteImport.update({
+  id: '/suppliers',
+  path: '/suppliers',
+  getParentRoute: () => LocaleRoute,
+} as any)
+const LocaleResourcesRoute = LocaleResourcesRouteImport.update({
+  id: '/resources',
+  path: '/resources',
+  getParentRoute: () => LocaleRoute,
+} as any)
+const LocaleAnalyzeRoute = LocaleAnalyzeRouteImport.update({
+  id: '/analyze',
+  path: '/analyze',
+  getParentRoute: () => LocaleRoute,
+} as any)
+const LocaleAboutRoute = LocaleAboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => LocaleRoute,
+} as any)
+const LocaleSuppliersIndexRoute = LocaleSuppliersIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => LocaleSuppliersRoute,
+} as any)
+const LocaleSuppliersSlugRoute = LocaleSuppliersSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => LocaleSuppliersRoute,
+} as any)
+const LocaleResultsIdRoute = LocaleResultsIdRouteImport.update({
+  id: '/results/$id',
+  path: '/results/$id',
+  getParentRoute: () => LocaleRoute,
+} as any)
+const LocaleMethodologyUsdaAmsFertilizerDataRoute =
+  LocaleMethodologyUsdaAmsFertilizerDataRouteImport.update({
+    id: '/methodology/usda-ams-fertilizer-data',
+    path: '/methodology/usda-ams-fertilizer-data',
+    getParentRoute: () => LocaleRoute,
+  } as any)
+const LocaleGuidesHowToCompareFertilizerQuotesRoute =
+  LocaleGuidesHowToCompareFertilizerQuotesRouteImport.update({
+    id: '/guides/how-to-compare-fertilizer-quotes',
+    path: '/guides/how-to-compare-fertilizer-quotes',
+    getParentRoute: () => LocaleRoute,
+  } as any)
+const LocaleGuidesHowFreightAffectsFertilizerCostRoute =
+  LocaleGuidesHowFreightAffectsFertilizerCostRouteImport.update({
+    id: '/guides/how-freight-affects-fertilizer-cost',
+    path: '/guides/how-freight-affects-fertilizer-cost',
+    getParentRoute: () => LocaleRoute,
+  } as any)
+const LocaleGuidesFertilizerCostPerAcreRoute =
+  LocaleGuidesFertilizerCostPerAcreRouteImport.update({
+    id: '/guides/fertilizer-cost-per-acre',
+    path: '/guides/fertilizer-cost-per-acre',
+    getParentRoute: () => LocaleRoute,
+  } as any)
+const LocaleGuidesCostPerPoundOfNitrogenRoute =
+  LocaleGuidesCostPerPoundOfNitrogenRouteImport.update({
+    id: '/guides/cost-per-pound-of-nitrogen',
+    path: '/guides/cost-per-pound-of-nitrogen',
+    getParentRoute: () => LocaleRoute,
+  } as any)
+const LocaleCompareUreaVsUanRoute = LocaleCompareUreaVsUanRouteImport.update({
+  id: '/compare/urea-vs-uan',
+  path: '/compare/urea-vs-uan',
+  getParentRoute: () => LocaleRoute,
+} as any)
+const LocaleCompareDapVsMapRoute = LocaleCompareDapVsMapRouteImport.update({
+  id: '/compare/dap-vs-map',
+  path: '/compare/dap-vs-map',
+  getParentRoute: () => LocaleRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/analyze': typeof AnalyzeRoute
-  '/resources': typeof ResourcesRoute
-  '/suppliers': typeof SuppliersRouteWithChildren
-  '/terms': typeof TermsRoute
+  '/$': typeof SplatRoute
+  '/$locale': typeof LocaleRouteWithChildren
+  '/$locale/about': typeof LocaleAboutRoute
+  '/$locale/analyze': typeof LocaleAnalyzeRoute
+  '/$locale/resources': typeof LocaleResourcesRoute
+  '/$locale/suppliers': typeof LocaleSuppliersRouteWithChildren
+  '/$locale/terms': typeof LocaleTermsRoute
   '/api/analyze-quotes': typeof ApiAnalyzeQuotesRoute
   '/api/extract-soil-test': typeof ApiExtractSoilTestRoute
   '/api/geocode': typeof ApiGeocodeRoute
   '/api/nearby-suppliers': typeof ApiNearbySuppliersRoute
   '/api/reverse-geocode': typeof ApiReverseGeocodeRoute
   '/api/weather': typeof ApiWeatherRoute
-  '/compare/dap-vs-map': typeof CompareDapVsMapRoute
-  '/compare/urea-vs-uan': typeof CompareUreaVsUanRoute
-  '/guides/cost-per-pound-of-nitrogen': typeof GuidesCostPerPoundOfNitrogenRoute
-  '/guides/fertilizer-cost-per-acre': typeof GuidesFertilizerCostPerAcreRoute
-  '/guides/how-freight-affects-fertilizer-cost': typeof GuidesHowFreightAffectsFertilizerCostRoute
-  '/guides/how-to-compare-fertilizer-quotes': typeof GuidesHowToCompareFertilizerQuotesRoute
-  '/methodology/usda-ams-fertilizer-data': typeof MethodologyUsdaAmsFertilizerDataRoute
-  '/results/$id': typeof ResultsIdRoute
-  '/suppliers/$slug': typeof SuppliersSlugRoute
-  '/suppliers/': typeof SuppliersIndexRoute
+  '/$locale/': typeof LocaleIndexRoute
+  '/$locale/compare/dap-vs-map': typeof LocaleCompareDapVsMapRoute
+  '/$locale/compare/urea-vs-uan': typeof LocaleCompareUreaVsUanRoute
+  '/$locale/guides/cost-per-pound-of-nitrogen': typeof LocaleGuidesCostPerPoundOfNitrogenRoute
+  '/$locale/guides/fertilizer-cost-per-acre': typeof LocaleGuidesFertilizerCostPerAcreRoute
+  '/$locale/guides/how-freight-affects-fertilizer-cost': typeof LocaleGuidesHowFreightAffectsFertilizerCostRoute
+  '/$locale/guides/how-to-compare-fertilizer-quotes': typeof LocaleGuidesHowToCompareFertilizerQuotesRoute
+  '/$locale/methodology/usda-ams-fertilizer-data': typeof LocaleMethodologyUsdaAmsFertilizerDataRoute
+  '/$locale/results/$id': typeof LocaleResultsIdRoute
+  '/$locale/suppliers/$slug': typeof LocaleSuppliersSlugRoute
+  '/$locale/suppliers/': typeof LocaleSuppliersIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/analyze': typeof AnalyzeRoute
-  '/resources': typeof ResourcesRoute
-  '/terms': typeof TermsRoute
+  '/$': typeof SplatRoute
+  '/$locale/about': typeof LocaleAboutRoute
+  '/$locale/analyze': typeof LocaleAnalyzeRoute
+  '/$locale/resources': typeof LocaleResourcesRoute
+  '/$locale/terms': typeof LocaleTermsRoute
   '/api/analyze-quotes': typeof ApiAnalyzeQuotesRoute
   '/api/extract-soil-test': typeof ApiExtractSoilTestRoute
   '/api/geocode': typeof ApiGeocodeRoute
   '/api/nearby-suppliers': typeof ApiNearbySuppliersRoute
   '/api/reverse-geocode': typeof ApiReverseGeocodeRoute
   '/api/weather': typeof ApiWeatherRoute
-  '/compare/dap-vs-map': typeof CompareDapVsMapRoute
-  '/compare/urea-vs-uan': typeof CompareUreaVsUanRoute
-  '/guides/cost-per-pound-of-nitrogen': typeof GuidesCostPerPoundOfNitrogenRoute
-  '/guides/fertilizer-cost-per-acre': typeof GuidesFertilizerCostPerAcreRoute
-  '/guides/how-freight-affects-fertilizer-cost': typeof GuidesHowFreightAffectsFertilizerCostRoute
-  '/guides/how-to-compare-fertilizer-quotes': typeof GuidesHowToCompareFertilizerQuotesRoute
-  '/methodology/usda-ams-fertilizer-data': typeof MethodologyUsdaAmsFertilizerDataRoute
-  '/results/$id': typeof ResultsIdRoute
-  '/suppliers/$slug': typeof SuppliersSlugRoute
-  '/suppliers': typeof SuppliersIndexRoute
+  '/$locale': typeof LocaleIndexRoute
+  '/$locale/compare/dap-vs-map': typeof LocaleCompareDapVsMapRoute
+  '/$locale/compare/urea-vs-uan': typeof LocaleCompareUreaVsUanRoute
+  '/$locale/guides/cost-per-pound-of-nitrogen': typeof LocaleGuidesCostPerPoundOfNitrogenRoute
+  '/$locale/guides/fertilizer-cost-per-acre': typeof LocaleGuidesFertilizerCostPerAcreRoute
+  '/$locale/guides/how-freight-affects-fertilizer-cost': typeof LocaleGuidesHowFreightAffectsFertilizerCostRoute
+  '/$locale/guides/how-to-compare-fertilizer-quotes': typeof LocaleGuidesHowToCompareFertilizerQuotesRoute
+  '/$locale/methodology/usda-ams-fertilizer-data': typeof LocaleMethodologyUsdaAmsFertilizerDataRoute
+  '/$locale/results/$id': typeof LocaleResultsIdRoute
+  '/$locale/suppliers/$slug': typeof LocaleSuppliersSlugRoute
+  '/$locale/suppliers': typeof LocaleSuppliersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/analyze': typeof AnalyzeRoute
-  '/resources': typeof ResourcesRoute
-  '/suppliers': typeof SuppliersRouteWithChildren
-  '/terms': typeof TermsRoute
+  '/$': typeof SplatRoute
+  '/$locale': typeof LocaleRouteWithChildren
+  '/$locale/about': typeof LocaleAboutRoute
+  '/$locale/analyze': typeof LocaleAnalyzeRoute
+  '/$locale/resources': typeof LocaleResourcesRoute
+  '/$locale/suppliers': typeof LocaleSuppliersRouteWithChildren
+  '/$locale/terms': typeof LocaleTermsRoute
   '/api/analyze-quotes': typeof ApiAnalyzeQuotesRoute
   '/api/extract-soil-test': typeof ApiExtractSoilTestRoute
   '/api/geocode': typeof ApiGeocodeRoute
   '/api/nearby-suppliers': typeof ApiNearbySuppliersRoute
   '/api/reverse-geocode': typeof ApiReverseGeocodeRoute
   '/api/weather': typeof ApiWeatherRoute
-  '/compare/dap-vs-map': typeof CompareDapVsMapRoute
-  '/compare/urea-vs-uan': typeof CompareUreaVsUanRoute
-  '/guides/cost-per-pound-of-nitrogen': typeof GuidesCostPerPoundOfNitrogenRoute
-  '/guides/fertilizer-cost-per-acre': typeof GuidesFertilizerCostPerAcreRoute
-  '/guides/how-freight-affects-fertilizer-cost': typeof GuidesHowFreightAffectsFertilizerCostRoute
-  '/guides/how-to-compare-fertilizer-quotes': typeof GuidesHowToCompareFertilizerQuotesRoute
-  '/methodology/usda-ams-fertilizer-data': typeof MethodologyUsdaAmsFertilizerDataRoute
-  '/results/$id': typeof ResultsIdRoute
-  '/suppliers/$slug': typeof SuppliersSlugRoute
-  '/suppliers/': typeof SuppliersIndexRoute
+  '/$locale/': typeof LocaleIndexRoute
+  '/$locale/compare/dap-vs-map': typeof LocaleCompareDapVsMapRoute
+  '/$locale/compare/urea-vs-uan': typeof LocaleCompareUreaVsUanRoute
+  '/$locale/guides/cost-per-pound-of-nitrogen': typeof LocaleGuidesCostPerPoundOfNitrogenRoute
+  '/$locale/guides/fertilizer-cost-per-acre': typeof LocaleGuidesFertilizerCostPerAcreRoute
+  '/$locale/guides/how-freight-affects-fertilizer-cost': typeof LocaleGuidesHowFreightAffectsFertilizerCostRoute
+  '/$locale/guides/how-to-compare-fertilizer-quotes': typeof LocaleGuidesHowToCompareFertilizerQuotesRoute
+  '/$locale/methodology/usda-ams-fertilizer-data': typeof LocaleMethodologyUsdaAmsFertilizerDataRoute
+  '/$locale/results/$id': typeof LocaleResultsIdRoute
+  '/$locale/suppliers/$slug': typeof LocaleSuppliersSlugRoute
+  '/$locale/suppliers/': typeof LocaleSuppliersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
-    | '/about'
-    | '/analyze'
-    | '/resources'
-    | '/suppliers'
-    | '/terms'
+    | '/$'
+    | '/$locale'
+    | '/$locale/about'
+    | '/$locale/analyze'
+    | '/$locale/resources'
+    | '/$locale/suppliers'
+    | '/$locale/terms'
     | '/api/analyze-quotes'
     | '/api/extract-soil-test'
     | '/api/geocode'
     | '/api/nearby-suppliers'
     | '/api/reverse-geocode'
     | '/api/weather'
-    | '/compare/dap-vs-map'
-    | '/compare/urea-vs-uan'
-    | '/guides/cost-per-pound-of-nitrogen'
-    | '/guides/fertilizer-cost-per-acre'
-    | '/guides/how-freight-affects-fertilizer-cost'
-    | '/guides/how-to-compare-fertilizer-quotes'
-    | '/methodology/usda-ams-fertilizer-data'
-    | '/results/$id'
-    | '/suppliers/$slug'
-    | '/suppliers/'
+    | '/$locale/'
+    | '/$locale/compare/dap-vs-map'
+    | '/$locale/compare/urea-vs-uan'
+    | '/$locale/guides/cost-per-pound-of-nitrogen'
+    | '/$locale/guides/fertilizer-cost-per-acre'
+    | '/$locale/guides/how-freight-affects-fertilizer-cost'
+    | '/$locale/guides/how-to-compare-fertilizer-quotes'
+    | '/$locale/methodology/usda-ams-fertilizer-data'
+    | '/$locale/results/$id'
+    | '/$locale/suppliers/$slug'
+    | '/$locale/suppliers/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
-    | '/about'
-    | '/analyze'
-    | '/resources'
-    | '/terms'
+    | '/$'
+    | '/$locale/about'
+    | '/$locale/analyze'
+    | '/$locale/resources'
+    | '/$locale/terms'
     | '/api/analyze-quotes'
     | '/api/extract-soil-test'
     | '/api/geocode'
     | '/api/nearby-suppliers'
     | '/api/reverse-geocode'
     | '/api/weather'
-    | '/compare/dap-vs-map'
-    | '/compare/urea-vs-uan'
-    | '/guides/cost-per-pound-of-nitrogen'
-    | '/guides/fertilizer-cost-per-acre'
-    | '/guides/how-freight-affects-fertilizer-cost'
-    | '/guides/how-to-compare-fertilizer-quotes'
-    | '/methodology/usda-ams-fertilizer-data'
-    | '/results/$id'
-    | '/suppliers/$slug'
-    | '/suppliers'
+    | '/$locale'
+    | '/$locale/compare/dap-vs-map'
+    | '/$locale/compare/urea-vs-uan'
+    | '/$locale/guides/cost-per-pound-of-nitrogen'
+    | '/$locale/guides/fertilizer-cost-per-acre'
+    | '/$locale/guides/how-freight-affects-fertilizer-cost'
+    | '/$locale/guides/how-to-compare-fertilizer-quotes'
+    | '/$locale/methodology/usda-ams-fertilizer-data'
+    | '/$locale/results/$id'
+    | '/$locale/suppliers/$slug'
+    | '/$locale/suppliers'
   id:
     | '__root__'
-    | '/'
-    | '/about'
-    | '/analyze'
-    | '/resources'
-    | '/suppliers'
-    | '/terms'
+    | '/$'
+    | '/$locale'
+    | '/$locale/about'
+    | '/$locale/analyze'
+    | '/$locale/resources'
+    | '/$locale/suppliers'
+    | '/$locale/terms'
     | '/api/analyze-quotes'
     | '/api/extract-soil-test'
     | '/api/geocode'
     | '/api/nearby-suppliers'
     | '/api/reverse-geocode'
     | '/api/weather'
-    | '/compare/dap-vs-map'
-    | '/compare/urea-vs-uan'
-    | '/guides/cost-per-pound-of-nitrogen'
-    | '/guides/fertilizer-cost-per-acre'
-    | '/guides/how-freight-affects-fertilizer-cost'
-    | '/guides/how-to-compare-fertilizer-quotes'
-    | '/methodology/usda-ams-fertilizer-data'
-    | '/results/$id'
-    | '/suppliers/$slug'
-    | '/suppliers/'
+    | '/$locale/'
+    | '/$locale/compare/dap-vs-map'
+    | '/$locale/compare/urea-vs-uan'
+    | '/$locale/guides/cost-per-pound-of-nitrogen'
+    | '/$locale/guides/fertilizer-cost-per-acre'
+    | '/$locale/guides/how-freight-affects-fertilizer-cost'
+    | '/$locale/guides/how-to-compare-fertilizer-quotes'
+    | '/$locale/methodology/usda-ams-fertilizer-data'
+    | '/$locale/results/$id'
+    | '/$locale/suppliers/$slug'
+    | '/$locale/suppliers/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  AboutRoute: typeof AboutRoute
-  AnalyzeRoute: typeof AnalyzeRoute
-  ResourcesRoute: typeof ResourcesRoute
-  SuppliersRoute: typeof SuppliersRouteWithChildren
-  TermsRoute: typeof TermsRoute
+  SplatRoute: typeof SplatRoute
+  LocaleRoute: typeof LocaleRouteWithChildren
   ApiAnalyzeQuotesRoute: typeof ApiAnalyzeQuotesRoute
   ApiExtractSoilTestRoute: typeof ApiExtractSoilTestRoute
   ApiGeocodeRoute: typeof ApiGeocodeRoute
   ApiNearbySuppliersRoute: typeof ApiNearbySuppliersRoute
   ApiReverseGeocodeRoute: typeof ApiReverseGeocodeRoute
   ApiWeatherRoute: typeof ApiWeatherRoute
-  CompareDapVsMapRoute: typeof CompareDapVsMapRoute
-  CompareUreaVsUanRoute: typeof CompareUreaVsUanRoute
-  GuidesCostPerPoundOfNitrogenRoute: typeof GuidesCostPerPoundOfNitrogenRoute
-  GuidesFertilizerCostPerAcreRoute: typeof GuidesFertilizerCostPerAcreRoute
-  GuidesHowFreightAffectsFertilizerCostRoute: typeof GuidesHowFreightAffectsFertilizerCostRoute
-  GuidesHowToCompareFertilizerQuotesRoute: typeof GuidesHowToCompareFertilizerQuotesRoute
-  MethodologyUsdaAmsFertilizerDataRoute: typeof MethodologyUsdaAmsFertilizerDataRoute
-  ResultsIdRoute: typeof ResultsIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/terms': {
-      id: '/terms'
-      path: '/terms'
-      fullPath: '/terms'
-      preLoaderRoute: typeof TermsRouteImport
+    '/$locale': {
+      id: '/$locale'
+      path: '/$locale'
+      fullPath: '/$locale'
+      preLoaderRoute: typeof LocaleRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/suppliers': {
-      id: '/suppliers'
-      path: '/suppliers'
-      fullPath: '/suppliers'
-      preLoaderRoute: typeof SuppliersRouteImport
+    '/$': {
+      id: '/$'
+      path: '/$'
+      fullPath: '/$'
+      preLoaderRoute: typeof SplatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/resources': {
-      id: '/resources'
-      path: '/resources'
-      fullPath: '/resources'
-      preLoaderRoute: typeof ResourcesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/analyze': {
-      id: '/analyze'
-      path: '/analyze'
-      fullPath: '/analyze'
-      preLoaderRoute: typeof AnalyzeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
+    '/$locale/': {
+      id: '/$locale/'
       path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/suppliers/': {
-      id: '/suppliers/'
-      path: '/'
-      fullPath: '/suppliers/'
-      preLoaderRoute: typeof SuppliersIndexRouteImport
-      parentRoute: typeof SuppliersRoute
-    }
-    '/suppliers/$slug': {
-      id: '/suppliers/$slug'
-      path: '/$slug'
-      fullPath: '/suppliers/$slug'
-      preLoaderRoute: typeof SuppliersSlugRouteImport
-      parentRoute: typeof SuppliersRoute
-    }
-    '/results/$id': {
-      id: '/results/$id'
-      path: '/results/$id'
-      fullPath: '/results/$id'
-      preLoaderRoute: typeof ResultsIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/methodology/usda-ams-fertilizer-data': {
-      id: '/methodology/usda-ams-fertilizer-data'
-      path: '/methodology/usda-ams-fertilizer-data'
-      fullPath: '/methodology/usda-ams-fertilizer-data'
-      preLoaderRoute: typeof MethodologyUsdaAmsFertilizerDataRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/guides/how-to-compare-fertilizer-quotes': {
-      id: '/guides/how-to-compare-fertilizer-quotes'
-      path: '/guides/how-to-compare-fertilizer-quotes'
-      fullPath: '/guides/how-to-compare-fertilizer-quotes'
-      preLoaderRoute: typeof GuidesHowToCompareFertilizerQuotesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/guides/how-freight-affects-fertilizer-cost': {
-      id: '/guides/how-freight-affects-fertilizer-cost'
-      path: '/guides/how-freight-affects-fertilizer-cost'
-      fullPath: '/guides/how-freight-affects-fertilizer-cost'
-      preLoaderRoute: typeof GuidesHowFreightAffectsFertilizerCostRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/guides/fertilizer-cost-per-acre': {
-      id: '/guides/fertilizer-cost-per-acre'
-      path: '/guides/fertilizer-cost-per-acre'
-      fullPath: '/guides/fertilizer-cost-per-acre'
-      preLoaderRoute: typeof GuidesFertilizerCostPerAcreRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/guides/cost-per-pound-of-nitrogen': {
-      id: '/guides/cost-per-pound-of-nitrogen'
-      path: '/guides/cost-per-pound-of-nitrogen'
-      fullPath: '/guides/cost-per-pound-of-nitrogen'
-      preLoaderRoute: typeof GuidesCostPerPoundOfNitrogenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/compare/urea-vs-uan': {
-      id: '/compare/urea-vs-uan'
-      path: '/compare/urea-vs-uan'
-      fullPath: '/compare/urea-vs-uan'
-      preLoaderRoute: typeof CompareUreaVsUanRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/compare/dap-vs-map': {
-      id: '/compare/dap-vs-map'
-      path: '/compare/dap-vs-map'
-      fullPath: '/compare/dap-vs-map'
-      preLoaderRoute: typeof CompareDapVsMapRouteImport
-      parentRoute: typeof rootRouteImport
+      fullPath: '/$locale/'
+      preLoaderRoute: typeof LocaleIndexRouteImport
+      parentRoute: typeof LocaleRoute
     }
     '/api/weather': {
       id: '/api/weather'
@@ -473,46 +392,179 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAnalyzeQuotesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$locale/terms': {
+      id: '/$locale/terms'
+      path: '/terms'
+      fullPath: '/$locale/terms'
+      preLoaderRoute: typeof LocaleTermsRouteImport
+      parentRoute: typeof LocaleRoute
+    }
+    '/$locale/suppliers': {
+      id: '/$locale/suppliers'
+      path: '/suppliers'
+      fullPath: '/$locale/suppliers'
+      preLoaderRoute: typeof LocaleSuppliersRouteImport
+      parentRoute: typeof LocaleRoute
+    }
+    '/$locale/resources': {
+      id: '/$locale/resources'
+      path: '/resources'
+      fullPath: '/$locale/resources'
+      preLoaderRoute: typeof LocaleResourcesRouteImport
+      parentRoute: typeof LocaleRoute
+    }
+    '/$locale/analyze': {
+      id: '/$locale/analyze'
+      path: '/analyze'
+      fullPath: '/$locale/analyze'
+      preLoaderRoute: typeof LocaleAnalyzeRouteImport
+      parentRoute: typeof LocaleRoute
+    }
+    '/$locale/about': {
+      id: '/$locale/about'
+      path: '/about'
+      fullPath: '/$locale/about'
+      preLoaderRoute: typeof LocaleAboutRouteImport
+      parentRoute: typeof LocaleRoute
+    }
+    '/$locale/suppliers/': {
+      id: '/$locale/suppliers/'
+      path: '/'
+      fullPath: '/$locale/suppliers/'
+      preLoaderRoute: typeof LocaleSuppliersIndexRouteImport
+      parentRoute: typeof LocaleSuppliersRoute
+    }
+    '/$locale/suppliers/$slug': {
+      id: '/$locale/suppliers/$slug'
+      path: '/$slug'
+      fullPath: '/$locale/suppliers/$slug'
+      preLoaderRoute: typeof LocaleSuppliersSlugRouteImport
+      parentRoute: typeof LocaleSuppliersRoute
+    }
+    '/$locale/results/$id': {
+      id: '/$locale/results/$id'
+      path: '/results/$id'
+      fullPath: '/$locale/results/$id'
+      preLoaderRoute: typeof LocaleResultsIdRouteImport
+      parentRoute: typeof LocaleRoute
+    }
+    '/$locale/methodology/usda-ams-fertilizer-data': {
+      id: '/$locale/methodology/usda-ams-fertilizer-data'
+      path: '/methodology/usda-ams-fertilizer-data'
+      fullPath: '/$locale/methodology/usda-ams-fertilizer-data'
+      preLoaderRoute: typeof LocaleMethodologyUsdaAmsFertilizerDataRouteImport
+      parentRoute: typeof LocaleRoute
+    }
+    '/$locale/guides/how-to-compare-fertilizer-quotes': {
+      id: '/$locale/guides/how-to-compare-fertilizer-quotes'
+      path: '/guides/how-to-compare-fertilizer-quotes'
+      fullPath: '/$locale/guides/how-to-compare-fertilizer-quotes'
+      preLoaderRoute: typeof LocaleGuidesHowToCompareFertilizerQuotesRouteImport
+      parentRoute: typeof LocaleRoute
+    }
+    '/$locale/guides/how-freight-affects-fertilizer-cost': {
+      id: '/$locale/guides/how-freight-affects-fertilizer-cost'
+      path: '/guides/how-freight-affects-fertilizer-cost'
+      fullPath: '/$locale/guides/how-freight-affects-fertilizer-cost'
+      preLoaderRoute: typeof LocaleGuidesHowFreightAffectsFertilizerCostRouteImport
+      parentRoute: typeof LocaleRoute
+    }
+    '/$locale/guides/fertilizer-cost-per-acre': {
+      id: '/$locale/guides/fertilizer-cost-per-acre'
+      path: '/guides/fertilizer-cost-per-acre'
+      fullPath: '/$locale/guides/fertilizer-cost-per-acre'
+      preLoaderRoute: typeof LocaleGuidesFertilizerCostPerAcreRouteImport
+      parentRoute: typeof LocaleRoute
+    }
+    '/$locale/guides/cost-per-pound-of-nitrogen': {
+      id: '/$locale/guides/cost-per-pound-of-nitrogen'
+      path: '/guides/cost-per-pound-of-nitrogen'
+      fullPath: '/$locale/guides/cost-per-pound-of-nitrogen'
+      preLoaderRoute: typeof LocaleGuidesCostPerPoundOfNitrogenRouteImport
+      parentRoute: typeof LocaleRoute
+    }
+    '/$locale/compare/urea-vs-uan': {
+      id: '/$locale/compare/urea-vs-uan'
+      path: '/compare/urea-vs-uan'
+      fullPath: '/$locale/compare/urea-vs-uan'
+      preLoaderRoute: typeof LocaleCompareUreaVsUanRouteImport
+      parentRoute: typeof LocaleRoute
+    }
+    '/$locale/compare/dap-vs-map': {
+      id: '/$locale/compare/dap-vs-map'
+      path: '/compare/dap-vs-map'
+      fullPath: '/$locale/compare/dap-vs-map'
+      preLoaderRoute: typeof LocaleCompareDapVsMapRouteImport
+      parentRoute: typeof LocaleRoute
+    }
   }
 }
 
-interface SuppliersRouteChildren {
-  SuppliersSlugRoute: typeof SuppliersSlugRoute
-  SuppliersIndexRoute: typeof SuppliersIndexRoute
+interface LocaleSuppliersRouteChildren {
+  LocaleSuppliersSlugRoute: typeof LocaleSuppliersSlugRoute
+  LocaleSuppliersIndexRoute: typeof LocaleSuppliersIndexRoute
 }
 
-const SuppliersRouteChildren: SuppliersRouteChildren = {
-  SuppliersSlugRoute: SuppliersSlugRoute,
-  SuppliersIndexRoute: SuppliersIndexRoute,
+const LocaleSuppliersRouteChildren: LocaleSuppliersRouteChildren = {
+  LocaleSuppliersSlugRoute: LocaleSuppliersSlugRoute,
+  LocaleSuppliersIndexRoute: LocaleSuppliersIndexRoute,
 }
 
-const SuppliersRouteWithChildren = SuppliersRoute._addFileChildren(
-  SuppliersRouteChildren,
+const LocaleSuppliersRouteWithChildren = LocaleSuppliersRoute._addFileChildren(
+  LocaleSuppliersRouteChildren,
 )
 
+interface LocaleRouteChildren {
+  LocaleAboutRoute: typeof LocaleAboutRoute
+  LocaleAnalyzeRoute: typeof LocaleAnalyzeRoute
+  LocaleResourcesRoute: typeof LocaleResourcesRoute
+  LocaleSuppliersRoute: typeof LocaleSuppliersRouteWithChildren
+  LocaleTermsRoute: typeof LocaleTermsRoute
+  LocaleIndexRoute: typeof LocaleIndexRoute
+  LocaleCompareDapVsMapRoute: typeof LocaleCompareDapVsMapRoute
+  LocaleCompareUreaVsUanRoute: typeof LocaleCompareUreaVsUanRoute
+  LocaleGuidesCostPerPoundOfNitrogenRoute: typeof LocaleGuidesCostPerPoundOfNitrogenRoute
+  LocaleGuidesFertilizerCostPerAcreRoute: typeof LocaleGuidesFertilizerCostPerAcreRoute
+  LocaleGuidesHowFreightAffectsFertilizerCostRoute: typeof LocaleGuidesHowFreightAffectsFertilizerCostRoute
+  LocaleGuidesHowToCompareFertilizerQuotesRoute: typeof LocaleGuidesHowToCompareFertilizerQuotesRoute
+  LocaleMethodologyUsdaAmsFertilizerDataRoute: typeof LocaleMethodologyUsdaAmsFertilizerDataRoute
+  LocaleResultsIdRoute: typeof LocaleResultsIdRoute
+}
+
+const LocaleRouteChildren: LocaleRouteChildren = {
+  LocaleAboutRoute: LocaleAboutRoute,
+  LocaleAnalyzeRoute: LocaleAnalyzeRoute,
+  LocaleResourcesRoute: LocaleResourcesRoute,
+  LocaleSuppliersRoute: LocaleSuppliersRouteWithChildren,
+  LocaleTermsRoute: LocaleTermsRoute,
+  LocaleIndexRoute: LocaleIndexRoute,
+  LocaleCompareDapVsMapRoute: LocaleCompareDapVsMapRoute,
+  LocaleCompareUreaVsUanRoute: LocaleCompareUreaVsUanRoute,
+  LocaleGuidesCostPerPoundOfNitrogenRoute:
+    LocaleGuidesCostPerPoundOfNitrogenRoute,
+  LocaleGuidesFertilizerCostPerAcreRoute:
+    LocaleGuidesFertilizerCostPerAcreRoute,
+  LocaleGuidesHowFreightAffectsFertilizerCostRoute:
+    LocaleGuidesHowFreightAffectsFertilizerCostRoute,
+  LocaleGuidesHowToCompareFertilizerQuotesRoute:
+    LocaleGuidesHowToCompareFertilizerQuotesRoute,
+  LocaleMethodologyUsdaAmsFertilizerDataRoute:
+    LocaleMethodologyUsdaAmsFertilizerDataRoute,
+  LocaleResultsIdRoute: LocaleResultsIdRoute,
+}
+
+const LocaleRouteWithChildren =
+  LocaleRoute._addFileChildren(LocaleRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  AboutRoute: AboutRoute,
-  AnalyzeRoute: AnalyzeRoute,
-  ResourcesRoute: ResourcesRoute,
-  SuppliersRoute: SuppliersRouteWithChildren,
-  TermsRoute: TermsRoute,
+  SplatRoute: SplatRoute,
+  LocaleRoute: LocaleRouteWithChildren,
   ApiAnalyzeQuotesRoute: ApiAnalyzeQuotesRoute,
   ApiExtractSoilTestRoute: ApiExtractSoilTestRoute,
   ApiGeocodeRoute: ApiGeocodeRoute,
   ApiNearbySuppliersRoute: ApiNearbySuppliersRoute,
   ApiReverseGeocodeRoute: ApiReverseGeocodeRoute,
   ApiWeatherRoute: ApiWeatherRoute,
-  CompareDapVsMapRoute: CompareDapVsMapRoute,
-  CompareUreaVsUanRoute: CompareUreaVsUanRoute,
-  GuidesCostPerPoundOfNitrogenRoute: GuidesCostPerPoundOfNitrogenRoute,
-  GuidesFertilizerCostPerAcreRoute: GuidesFertilizerCostPerAcreRoute,
-  GuidesHowFreightAffectsFertilizerCostRoute:
-    GuidesHowFreightAffectsFertilizerCostRoute,
-  GuidesHowToCompareFertilizerQuotesRoute:
-    GuidesHowToCompareFertilizerQuotesRoute,
-  MethodologyUsdaAmsFertilizerDataRoute: MethodologyUsdaAmsFertilizerDataRoute,
-  ResultsIdRoute: ResultsIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -4,7 +4,7 @@ import { getContentPage, contentRouteHead } from "@/lib/content";
 
 const PAGE = getContentPage("/compare/urea-vs-uan")!;
 
-export const Route = createFileRoute("/compare/urea-vs-uan")({
+export const Route = createFileRoute("/$locale/compare/urea-vs-uan")({
   head: () => contentRouteHead(PAGE),
   component: Page,
 });

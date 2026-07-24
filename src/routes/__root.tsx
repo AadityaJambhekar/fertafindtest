@@ -3,6 +3,7 @@ import {
   Link,
   createRootRoute,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -12,8 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { DEFAULT_OG_IMAGE, SITE_NAME } from "@/lib/seo";
 import { bootstrapAnalytics } from "@/lib/analytics";
-import { LocaleProvider } from "@/components/locale-provider";
-import { DEFAULT_LOCALE } from "@/lib/i18n";
+import { DEFAULT_LOCALE, stripLocale } from "@/lib/i18n";
 
 function NotFoundComponent() {
   return (
@@ -25,12 +25,12 @@ function NotFoundComponent() {
           The page you're looking for doesn't exist or has been moved.
         </p>
         <div className="mt-6">
-          <Link
-            to="/"
+          <a
+            href="/"
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             Go home
-          </Link>
+          </a>
         </div>
       </div>
     </div>
@@ -140,14 +140,18 @@ export const Route = createRootRoute({
 });
 
 function RootShell({ children }: { children: ReactNode }) {
+  // The locale lives in the URL, so <html lang> is correct on the server-rendered response
+  // — no post-hydration correction, and crawlers see the right language immediately.
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const lang = stripLocale(pathname).locale ?? DEFAULT_LOCALE;
+
   return (
-    // lang is the default for SSR; LocaleProvider updates it after the preference resolves.
-    <html lang={DEFAULT_LOCALE}>
+    <html lang={lang}>
       <head>
         <HeadContent />
       </head>
       <body>
-        <LocaleProvider>{children}</LocaleProvider>
+        {children}
         <Scripts />
       </body>
     </html>

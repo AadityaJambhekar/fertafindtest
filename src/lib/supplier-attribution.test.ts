@@ -202,7 +202,7 @@ test("no mentioned entity appears in the directory CollectionPage JSON-LD", () =
 // --- the public directory surface ---
 
 const directorySource = () =>
-  readFileSync(new URL("../routes/suppliers.index.tsx", import.meta.url), "utf8");
+  readFileSync(new URL("../routes/$locale.suppliers.index.tsx", import.meta.url), "utf8");
 
 test("the public supplier directory no longer renders Global Sourcing Origins", () => {
   const src = directorySource();

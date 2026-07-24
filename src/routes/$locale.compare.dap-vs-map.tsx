@@ -4,7 +4,7 @@ import { getContentPage, contentRouteHead } from "@/lib/content";
 
 const PAGE = getContentPage("/compare/dap-vs-map")!;
 
-export const Route = createFileRoute("/compare/dap-vs-map")({
+export const Route = createFileRoute("/$locale/compare/dap-vs-map")({
   head: () => contentRouteHead(PAGE),
   component: Page,
 });

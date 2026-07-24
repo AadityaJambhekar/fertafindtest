@@ -18,7 +18,9 @@
 // This module is intentionally framework-free (no React / @/ alias / import.meta) so it
 // can be unit-tested with `node --test` and imported by content.ts for the sitemap.
 
-import { SITE_URL, SITE_NAME, canonicalUrl, jsonLdScript, breadcrumbLd, pageMeta } from "./seo.ts";
+import { SITE_URL, SITE_NAME, canonicalUrl, jsonLdScript, breadcrumbLd } from "./seo.ts";
+import { DEFAULT_LOCALE, hreflangLinks, localePath, type Locale } from "./i18n.ts";
+import { localizedHead } from "./seo-i18n.ts";
 
 export type SupplierType =
   "manufacturer" | "distributor" | "cooperative" | "retailer" | "importer" | "trader";
@@ -497,9 +499,9 @@ export function suppliersCollectionLd() {
   };
 }
 
-export function suppliersRouteHead() {
+export function suppliersRouteHead(locale: Locale = DEFAULT_LOCALE) {
   return {
-    ...pageMeta("suppliers"),
+    ...localizedHead(locale, "suppliers", SUPPLIERS_DIRECTORY.path),
     scripts: [
       jsonLdScript(suppliersCollectionLd()),
       jsonLdScript(
@@ -540,8 +542,9 @@ export function supplierOrganizationLd(s: Supplier) {
  * verified, publishable supplier; an unverified (source-listed) supplier keeps its canonical
  * link, metadata and breadcrumb but never emits Organization JSON-LD.
  */
-export function supplierDetailRouteHead(s: Supplier) {
-  const url = canonicalUrl(supplierPath(s.slug));
+export function supplierDetailRouteHead(s: Supplier, locale: Locale = DEFAULT_LOCALE) {
+  const path = supplierPath(s.slug);
+  const url = `${SITE_URL}${localePath(locale, path)}`;
   const title = `${s.displayName} — Fertilizer supplier — FertaFind`;
   const description =
     s.description ??
@@ -564,10 +567,18 @@ export function supplierDetailRouteHead(s: Supplier) {
       { property: "og:description", content: description },
       { property: "og:url", content: url },
       { property: "og:type", content: "website" },
+      { property: "og:locale", content: locale },
       { name: "twitter:title", content: s.displayName },
       { name: "twitter:description", content: description },
     ],
-    links: [{ rel: "canonical", href: url }],
+    links: [
+      { rel: "canonical", href: url },
+      ...hreflangLinks(path).map((l) => ({
+        rel: "alternate",
+        href: l.href,
+        hrefLang: l.hreflang,
+      })),
+    ],
     scripts,
   };
 }
