@@ -286,14 +286,14 @@ test("the sitemap lists a Spanish URL for every translated page", () => {
 
 // --- data safeguards ---
 
-test("adding Spanish did not touch supplier state", () => {
-  assert.equal(listSupplierCompanies().length, 2);
-  assert.equal(listPublicSuppliers().length, 2);
+test("localization work did not disturb supplier state", () => {
+  assert.equal(listSupplierCompanies().length, 3);
+  assert.equal(listPublicSuppliers().length, 3);
   assert.deepEqual(
     listSupplierCompanies()
       .map((s) => s.displayName)
       .sort(),
-    ["FertiExpress Group", "Nanofert"],
+    ["FertiExpress Group", "KAP Organic Agro", "Nanofert"],
   );
   for (const m of listMentionedEntities()) {
     assert.equal(m.public, false, `${m.name} stays non-public`);

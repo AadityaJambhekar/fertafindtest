@@ -22,10 +22,6 @@ import {
   suppliersCollectionLd,
   supplierOrganizationLd,
   supplierDetailRouteHead,
-  directoryFilterOptions,
-  filterSupplierCompanies,
-  filterSourcingOrigins,
-  type SupplierDirectoryFilters,
 } from "./suppliers.ts";
 
 function completeVerifiedPublic(overrides: Partial<Supplier> = {}): Supplier {
@@ -44,6 +40,7 @@ function completeVerifiedPublic(overrides: Partial<Supplier> = {}): Supplier {
     city: "Ames",
     latitude: 42.03,
     longitude: -93.62,
+    corporateLocation: null,
     products: ["Urea"],
     productGrades: ["46-0-0"],
     serviceRegions: ["Midwest"],
@@ -58,14 +55,6 @@ function completeVerifiedPublic(overrides: Partial<Supplier> = {}): Supplier {
     ...overrides,
   };
 }
-
-const NO_FILTERS: SupplierDirectoryFilters = {
-  relationship: "",
-  verification: "",
-  type: "",
-  product: "",
-  origin: "",
-};
 
 // Price / financial / availability language that must never appear in any sourcing record.
 const FINANCIAL_LEAK =
@@ -96,7 +85,7 @@ test("records missing a required field are not publishable", () => {
 test("the network lists only supplier companies with a real FertaFind relationship", () => {
   assert.deepEqual(
     listSupplierCompanies().map((s) => s.slug),
-    ["fertiexpress-group", "nanofert"],
+    ["fertiexpress-group", "nanofert", "kap-organic-agro"],
   );
 });
 
@@ -104,9 +93,9 @@ test("only genuine suppliers are publishable — for JSON-LD and the sitemap", (
   const pub = listPublicSuppliers();
   assert.deepEqual(
     pub.map((s) => s.slug),
-    ["fertiexpress-group", "nanofert"],
+    ["fertiexpress-group", "nanofert", "kap-organic-agro"],
   );
-  assert.deepEqual(publicSupplierSlugs(), ["fertiexpress-group", "nanofert"]);
+  assert.deepEqual(publicSupplierSlugs(), ["fertiexpress-group", "nanofert", "kap-organic-agro"]);
 });
 
 // --- badges: partner / verified / pending ---
@@ -230,103 +219,11 @@ test("the discovery disclaimer disclaims endorsement, partnership, pricing and a
   );
 });
 
-// --- filters (pure functions) ---
-test("relationship filter: Partner returns only Nanofert and no sourcing origins", () => {
-  const f: SupplierDirectoryFilters = { ...NO_FILTERS, relationship: "partner" };
-  assert.deepEqual(
-    filterSupplierCompanies(listSupplierCompanies(), f).map((s) => s.slug),
-    ["nanofert"],
-  );
-  assert.deepEqual(filterSourcingOrigins(listSourcingOrigins(), f), []);
-});
-
-test("verification filter: Verified returns the verified suppliers and no sourcing origins", () => {
-  const f: SupplierDirectoryFilters = { ...NO_FILTERS, verification: "verified" };
-  assert.deepEqual(
-    filterSupplierCompanies(listSupplierCompanies(), f).map((s) => s.slug),
-    ["nanofert"],
-  );
-  assert.deepEqual(filterSourcingOrigins(listSourcingOrigins(), f), []);
-});
-
-test("verification filter: Provided returns the owner-provided supplier", () => {
-  const f: SupplierDirectoryFilters = { ...NO_FILTERS, verification: "provided" };
-  assert.deepEqual(
-    filterSupplierCompanies(listSupplierCompanies(), f).map((s) => s.slug),
-    ["fertiexpress-group"],
-  );
-});
-
-test("verification filter: Pending returns nothing — no unverified supplier remains", () => {
-  const f: SupplierDirectoryFilters = { ...NO_FILTERS, verification: "pending" };
-  assert.deepEqual(filterSupplierCompanies(listSupplierCompanies(), f), []);
-});
-
-test("supplier-type filter narrows to the matching company", () => {
-  const t = (type: SupplierDirectoryFilters["type"]) =>
-    filterSupplierCompanies(listSupplierCompanies(), { ...NO_FILTERS, type }).map((s) => s.slug);
-  assert.deepEqual(t("manufacturer"), ["nanofert"]);
-  assert.deepEqual(t("importer"), ["fertiexpress-group"]);
-  // The cooperative/trader records were corrected to non-public mentioned entities.
-  assert.deepEqual(t("cooperative"), []);
-  assert.deepEqual(t("trader"), []);
-});
-
-test("product filter: Urea returns the Urea supplier and the Urea origins", () => {
-  const f: SupplierDirectoryFilters = { ...NO_FILTERS, product: "Urea" };
-  assert.deepEqual(
-    filterSupplierCompanies(listSupplierCompanies(), f).map((s) => s.slug),
-    ["fertiexpress-group"],
-  );
-  assert.deepEqual(
-    filterSourcingOrigins(listSourcingOrigins(), f).map((o) => o.origin),
-    ["China", "Poland", "International Trading"],
-  );
-});
-
-test("origin filter: Brazil returns the Brazilian companies and no sourcing origin", () => {
-  const f: SupplierDirectoryFilters = { ...NO_FILTERS, origin: "Brazil" };
-  assert.deepEqual(
-    filterSupplierCompanies(listSupplierCompanies(), f).map((s) => s.slug),
-    ["fertiexpress-group", "nanofert"],
-  );
-  assert.deepEqual(filterSourcingOrigins(listSourcingOrigins(), f), []);
-});
-
-test("origin filter: Russia returns the Russia origin and no supplier company", () => {
-  const f: SupplierDirectoryFilters = { ...NO_FILTERS, origin: "Russia" };
-  assert.deepEqual(filterSupplierCompanies(listSupplierCompanies(), f), []);
-  assert.deepEqual(
-    filterSourcingOrigins(listSourcingOrigins(), f).map((o) => o.origin),
-    ["Russia"],
-  );
-});
-
-test("directory filter options expose all supplier types, products and origins", () => {
-  const opts = directoryFilterOptions();
-  assert.deepEqual(opts.supplierTypes, ["importer", "manufacturer"]);
-  // Options are drawn only from listed companies, so every choice returns at least one
-  // supplier. Sourcing-origin products/origins are deliberately absent: that section is no
-  // longer rendered, so offering them would be a dead end.
-  for (const product of [
-    "Ammonium sulphate",
-    "Liquid nano-fertilizers",
-    "Potassium chloride (KCL)",
-    "Urea",
-  ]) {
-    assert.ok(opts.products.includes(product), `products should include ${product}`);
-  }
-  assert.deepEqual(opts.origins, ["Brazil"]);
-  for (const stray of ["SSP", "KCL 60%"]) {
-    assert.ok(!opts.products.includes(stray), `${stray} must not be offered as a filter`);
-  }
-});
-
 // --- JSON-LD + detail head rules ---
 test("CollectionPage JSON-LD lists only the verified public suppliers", () => {
   const ld = suppliersCollectionLd() as unknown as { hasPart: Array<{ name: string }> };
   const names = ld.hasPart.map((p) => p.name);
-  assert.deepEqual(names, ["FertiExpress Group", "Nanofert"]);
+  assert.deepEqual(names, ["FertiExpress Group", "Nanofert", "KAP Organic Agro"]);
   assert.ok(!names.some((n) => /inmove|fecoagro/i.test(n)));
 });
 

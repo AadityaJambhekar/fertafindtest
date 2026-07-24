@@ -114,10 +114,7 @@ export function SiteFooter() {
               </a>
             </li>
             <li>
-              <a
-                href={`${lp("/suppliers")}?relationship=partner`}
-                className="hover:text-primary-foreground"
-              >
+              <a href={lp("/suppliers")} className="hover:text-primary-foreground">
                 {t.footer.partners}
               </a>
             </li>

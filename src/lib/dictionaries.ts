@@ -29,7 +29,6 @@ const en = {
     continue: "Continue",
     submit: "Submit",
     cancel: "Cancel",
-    clearFilters: "Clear filters",
     loading: "Loading…",
     optional: "Optional",
     required: "Required",
@@ -198,18 +197,10 @@ const en = {
     companyOne: "company",
     companyMany: "companies",
     viewSupplier: "View supplier",
+    detailTitleSuffix: "Fertilizer supplier",
     ctaTitle: "Already have quotes from a supplier?",
     ctaBody:
       "FertaFind puts every fertilizer quote on one clear, cost-based footing — grade, pack size and delivery — so you can compare them fairly.",
-    filterAll: "All",
-    filterVerified: "Verified",
-    filterProvided: "Supplier-provided",
-    filterPending: "Pending verification",
-    filterRelationship: "Relationship",
-    filterVerification: "Verification",
-    filterType: "Supplier type",
-    filterProduct: "Product",
-    filterOrigin: "Origin",
     products: "Products",
     grades: "Grades",
     servesRegions: "Serves",
@@ -300,9 +291,12 @@ const en = {
   },
   country: {
     Brazil: "Brazil",
+    "United States": "United States",
   },
   // Supplier prose, keyed by slug. Company and product names are never translated.
   supplierDescription: {
+    "kap-organic-agro":
+      "KAP Organic Agro distributes IFFCO nano-fertilizer products in the United States, alongside seaweed extract and other crop nutrition inputs. Confirm grades, availability and final pricing before purchase.",
     "fertiexpress-group":
       "FertiExpress Group imports and distributes fertilizers for Brazilian agriculture, connecting international and national suppliers to growers across the country. Confirm grades, availability and final pricing before purchase.",
     nanofert:
@@ -345,7 +339,6 @@ const ptBR: Dictionary = {
     continue: "Continuar",
     submit: "Enviar",
     cancel: "Cancelar",
-    clearFilters: "Limpar filtros",
     loading: "Carregando…",
     optional: "Opcional",
     required: "Obrigatório",
@@ -518,18 +511,10 @@ const ptBR: Dictionary = {
     companyOne: "empresa",
     companyMany: "empresas",
     viewSupplier: "Ver fornecedor",
+    detailTitleSuffix: "Fornecedor de fertilizantes",
     ctaTitle: "Já tem cotações de algum fornecedor?",
     ctaBody:
       "A FertaFind coloca cada cotação de fertilizante em uma base clara de custo — formulação, embalagem e entrega — para você comparar com justiça.",
-    filterAll: "Todos",
-    filterVerified: "Verificado",
-    filterProvided: "Informado pelo fornecedor",
-    filterPending: "Pendente de verificação",
-    filterRelationship: "Relacionamento",
-    filterVerification: "Verificação",
-    filterType: "Tipo de fornecedor",
-    filterProduct: "Produto",
-    filterOrigin: "Origem",
     products: "Produtos",
     grades: "Formulações",
     servesRegions: "Atende",
@@ -621,8 +606,11 @@ const ptBR: Dictionary = {
   },
   country: {
     Brazil: "Brasil",
+    "United States": "Estados Unidos",
   },
   supplierDescription: {
+    "kap-organic-agro":
+      "A KAP Organic Agro distribui os fertilizantes nano da IFFCO nos Estados Unidos, além de extrato de algas e outros insumos de nutrição de plantas. Confirme formulações, disponibilidade e preço final antes da compra.",
     "fertiexpress-group":
       "A FertiExpress Group importa e distribui fertilizantes para a agricultura brasileira, conectando fornecedores internacionais e nacionais a produtores de todo o país. Confirme formulações, disponibilidade e preço final antes da compra.",
     nanofert:
@@ -655,7 +643,6 @@ const es419: Dictionary = {
     continue: "Continuar",
     submit: "Enviar",
     cancel: "Cancelar",
-    clearFilters: "Borrar filtros",
     loading: "Cargando…",
     optional: "Opcional",
     required: "Obligatorio",
@@ -827,18 +814,10 @@ const es419: Dictionary = {
     companyOne: "empresa",
     companyMany: "empresas",
     viewSupplier: "Ver proveedor",
+    detailTitleSuffix: "Proveedor de fertilizantes",
     ctaTitle: "¿Ya tienes cotizaciones de algún proveedor?",
     ctaBody:
       "FertaFind pone cada cotización de fertilizante sobre una base clara de costo — formulación, presentación y entrega — para que puedas compararlas de forma justa.",
-    filterAll: "Todos",
-    filterVerified: "Verificado",
-    filterProvided: "Informado por el proveedor",
-    filterPending: "Pendiente de verificación",
-    filterRelationship: "Relación",
-    filterVerification: "Verificación",
-    filterType: "Tipo de proveedor",
-    filterProduct: "Producto",
-    filterOrigin: "Origen",
     products: "Productos",
     grades: "Formulaciones",
     servesRegions: "Atiende",
@@ -930,8 +909,11 @@ const es419: Dictionary = {
   },
   country: {
     Brazil: "Brasil",
+    "United States": "Estados Unidos",
   },
   supplierDescription: {
+    "kap-organic-agro":
+      "KAP Organic Agro distribuye los fertilizantes nano de IFFCO en Estados Unidos, además de extracto de algas y otros insumos de nutrición de cultivos. Confirma las formulaciones, la disponibilidad y el precio final antes de comprar.",
     "fertiexpress-group":
       "FertiExpress Group importa y distribuye fertilizantes para la agricultura brasileña, conectando a proveedores internacionales y nacionales con productores de todo el país. Confirma las formulaciones, la disponibilidad y el precio final antes de comprar.",
     nanofert:
