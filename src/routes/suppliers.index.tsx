@@ -1,23 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ArrowRight, Building2, Clock, Globe2, Handshake, MapPin, ShieldCheck } from "lucide-react";
+import { ArrowRight, Building2, Clock, Handshake, MapPin, ShieldCheck } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
 import {
   SUPPLIERS_DIRECTORY,
   SUPPLIER_TYPE_LABEL,
   SUPPLIER_BADGE_LABEL,
-  SOURCING_DISCLAIMER,
   SUPPLIER_DISCOVERY_DISCLAIMER,
   supplierBadgeKind,
   listSupplierCompanies,
-  listSourcingOrigins,
   directoryFilterOptions,
   filterSupplierCompanies,
-  filterSourcingOrigins,
   supplierPath,
   suppliersRouteHead,
   type Supplier,
-  type SourcingOrigin,
   type SupplierBadgeKind,
   type SupplierDirectoryFilters,
 } from "@/lib/suppliers";
@@ -42,7 +38,6 @@ const EMPTY_FILTERS: SupplierDirectoryFilters = {
 function SuppliersPage() {
   const { relationship } = Route.useSearch();
   const companies = listSupplierCompanies();
-  const origins = listSourcingOrigins();
   const options = directoryFilterOptions();
   const [filters, setFilters] = useState<SupplierDirectoryFilters>({
     ...EMPTY_FILTERS,
@@ -52,10 +47,6 @@ function SuppliersPage() {
   const filteredCompanies = useMemo(
     () => filterSupplierCompanies(companies, filters),
     [companies, filters],
-  );
-  const filteredOrigins = useMemo(
-    () => filterSourcingOrigins(origins, filters),
-    [origins, filters],
   );
 
   const isFiltering =
@@ -184,40 +175,6 @@ function SuppliersPage() {
             </button>
           )}
         </div>
-
-        {/* Section 2: Global sourcing origins — kept below the supplier companies. */}
-        <section className="mt-12" aria-labelledby="sourcing-origins-heading">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2
-              id="sourcing-origins-heading"
-              className="font-display text-2xl font-semibold text-foreground"
-            >
-              Global sourcing origins
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              {filteredOrigins.length} {filteredOrigins.length === 1 ? "origin" : "origins"}
-            </p>
-          </div>
-          <p className="mt-2 rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm leading-6 text-muted-foreground">
-            {SOURCING_DISCLAIMER}
-          </p>
-
-          {filteredOrigins.length > 0 ? (
-            <ul className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredOrigins.map((o) => (
-                <li key={`${o.origin}-${o.product}`}>
-                  <SourcingOriginCard origin={o} />
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-5 rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">
-              {filters.relationship !== "" || filters.verification !== "" || filters.type !== ""
-                ? "Sourcing origins are hidden while a supplier-only filter (relationship, verification or supplier type) is active."
-                : "No sourcing origins match the current filters."}
-            </p>
-          )}
-        </section>
 
         <div className="mt-16 rounded-3xl border border-border bg-card p-6 sm:p-8">
           <h2 className="font-display text-2xl font-semibold text-foreground">
@@ -348,21 +305,5 @@ function SupplierCard({ supplier }: { supplier: Supplier }) {
         <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
       </span>
     </Link>
-  );
-}
-
-function SourcingOriginCard({ origin }: { origin: SourcingOrigin }) {
-  return (
-    <div className="flex h-full flex-col rounded-2xl border border-dashed border-border bg-background p-5">
-      <span className="inline-flex w-fit items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        <Globe2 className="h-3 w-3" aria-hidden="true" />
-        Sourcing origin
-      </span>
-      <h3 className="mt-3 font-display text-lg font-semibold text-foreground">{origin.origin}</h3>
-      <p className="mt-1 text-sm text-muted-foreground">{origin.product}</p>
-      <p className="mt-3 text-xs leading-5 text-muted-foreground">
-        Market-discovery reference only — not a verified supplier company.
-      </p>
-    </div>
   );
 }

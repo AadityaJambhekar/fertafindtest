@@ -91,28 +91,27 @@ test("records missing a required field are not publishable", () => {
   assert.equal(isPublishable(completeVerifiedPublic({ products: [] })), false);
 });
 
-// --- registry: Nanofert (partner) + FECOAGRO (verified) + Inmove (source-listed) ---
-test("the network lists exactly three supplier companies: Nanofert, FECOAGRO, Inmove", () => {
+// --- registry: Nanofert only. Inmove/FECOAGRO were corrected to mentioned entities, and
+// --- FertiExpress Group cannot be added until the owner-provided deck is available. ---
+test("the network lists only supplier companies with a real FertaFind relationship", () => {
   assert.deepEqual(
     listSupplierCompanies().map((s) => s.slug),
-    ["nanofert", "fecoagro", "inmove"],
+    ["nanofert"],
   );
 });
 
-test("two suppliers are publishable (Nanofert + FECOAGRO) — for JSON-LD and the sitemap", () => {
+test("only genuine suppliers are publishable — for JSON-LD and the sitemap", () => {
   const pub = listPublicSuppliers();
   assert.deepEqual(
     pub.map((s) => s.slug),
-    ["nanofert", "fecoagro"],
+    ["nanofert"],
   );
-  assert.deepEqual(publicSupplierSlugs(), ["nanofert", "fecoagro"]);
+  assert.deepEqual(publicSupplierSlugs(), ["nanofert"]);
 });
 
 // --- badges: partner / verified / pending ---
 test("badge kinds resolve correctly for each supplier", () => {
   assert.equal(supplierBadgeKind(getListedSupplierBySlug("nanofert")!), "partner");
-  assert.equal(supplierBadgeKind(getListedSupplierBySlug("fecoagro")!), "verified");
-  assert.equal(supplierBadgeKind(getListedSupplierBySlug("inmove")!), "pending");
   assert.equal(SUPPLIER_BADGE_LABEL.partner, "FertaFind Partner");
   assert.equal(SUPPLIER_BADGE_LABEL.verified, "Public information verified");
   assert.equal(SUPPLIER_BADGE_LABEL.pending, "Information pending verification");
@@ -143,56 +142,20 @@ test("Nanofert detail head includes Organization JSON-LD (it is publishable)", (
   assert.ok(types.includes("BreadcrumbList"));
 });
 
-// --- FECOAGRO (unchanged verification rules) ---
-test("FECOAGRO renders as a verified public record with website-verified fields only", () => {
-  const s = getPublicSupplierBySlug("fecoagro");
-  assert.ok(s, "FECOAGRO must be public");
-  assert.equal(s!.verified, true);
-  assert.equal(s!.verificationStatus, "public-source-verified");
-  assert.equal(s!.relationship, "listed");
-  assert.equal(VERIFICATION_BADGE[s!.verificationStatus], "Public information verified");
-  assert.equal(s!.supplierType, "cooperative");
-  assert.equal(s!.country, "Brazil");
-  assert.equal(s!.state, "Santa Catarina");
-  assert.equal(s!.city, "Florianópolis");
-  assert.deepEqual(s!.products, [
-    "Fertilizers",
-    "Organomineral fertilizers",
-    "Pasture fertilizers",
-  ]);
-  // No FECOAGRO logo file was provided, so none is invented or hotlinked.
-  assert.equal(s!.logo, null);
+// --- Attribution correction: neither company is a supplier surface any more. Their
+// --- retained mentioned-entity records are covered in supplier-attribution.test.ts. ---
+test("FECOAGRO is no longer any kind of supplier record", () => {
+  assert.equal(getPublicSupplierBySlug("fecoagro"), undefined);
+  assert.equal(getListedSupplierBySlug("fecoagro"), undefined);
 });
 
-test("the FECOAGRO website + fertilizer page point to the official fecoagro.coop.br domain", () => {
-  const s = getPublicSupplierBySlug("fecoagro")!;
-  assert.equal(new URL(s.website!).host, "www.fecoagro.coop.br");
-  assert.equal(new URL(s.fertilizerPage!).host, "www.fecoagro.coop.br");
-});
-
-// --- Inmove: source-listed, unverified, no invented data (incl. no invented logo) ---
-test("Inmove is a source-listed, unverified public company with no invented fields", () => {
-  const inmove = getListedSupplierBySlug("inmove")!;
-  assert.equal(inmove.status, "public");
-  assert.equal(inmove.verified, false);
-  assert.equal(inmove.verificationStatus, "source-listed-unverified");
-  assert.equal(inmove.relationship, "listed");
-  assert.equal(inmove.supplierType, "trader");
-  assert.equal(SUPPLIER_TYPE_LABEL[inmove.supplierType], "Trading company");
-  assert.equal(isPublishable(inmove), false);
+test("Inmove is no longer any kind of supplier record", () => {
   assert.equal(getPublicSupplierBySlug("inmove"), undefined);
-  assert.equal(inmove.website, null);
-  assert.equal(inmove.logo, null);
-  assert.equal(inmove.legalName, null);
-  assert.equal(inmove.city, null);
-  assert.deepEqual(inmove.products, []);
-  assert.match(inmove.description!, /not yet been independently verified/i);
+  assert.equal(getListedSupplierBySlug("inmove"), undefined);
 });
 
-test("getListedSupplierBySlug resolves all three companies; unknown slugs do not", () => {
-  for (const slug of ["nanofert", "fecoagro", "inmove"]) {
-    assert.equal(getListedSupplierBySlug(slug)!.slug, slug);
-  }
+test("getListedSupplierBySlug resolves genuine suppliers; unknown slugs do not", () => {
+  assert.equal(getListedSupplierBySlug("nanofert")!.slug, "nanofert");
   assert.equal(getListedSupplierBySlug("does-not-exist"), undefined);
 });
 
@@ -275,29 +238,27 @@ test("relationship filter: Partner returns only Nanofert and no sourcing origins
   assert.deepEqual(filterSourcingOrigins(listSourcingOrigins(), f), []);
 });
 
-test("verification filter: Verified returns Nanofert + FECOAGRO and no sourcing origins", () => {
+test("verification filter: Verified returns the verified suppliers and no sourcing origins", () => {
   const f: SupplierDirectoryFilters = { ...NO_FILTERS, verification: "verified" };
   assert.deepEqual(
     filterSupplierCompanies(listSupplierCompanies(), f).map((s) => s.slug),
-    ["nanofert", "fecoagro"],
+    ["nanofert"],
   );
   assert.deepEqual(filterSourcingOrigins(listSourcingOrigins(), f), []);
 });
 
-test("verification filter: Pending returns only Inmove", () => {
+test("verification filter: Pending returns nothing — no unverified supplier remains", () => {
   const f: SupplierDirectoryFilters = { ...NO_FILTERS, verification: "pending" };
-  assert.deepEqual(
-    filterSupplierCompanies(listSupplierCompanies(), f).map((s) => s.slug),
-    ["inmove"],
-  );
+  assert.deepEqual(filterSupplierCompanies(listSupplierCompanies(), f), []);
 });
 
 test("supplier-type filter narrows to the matching company", () => {
   const t = (type: SupplierDirectoryFilters["type"]) =>
     filterSupplierCompanies(listSupplierCompanies(), { ...NO_FILTERS, type }).map((s) => s.slug);
   assert.deepEqual(t("manufacturer"), ["nanofert"]);
-  assert.deepEqual(t("cooperative"), ["fecoagro"]);
-  assert.deepEqual(t("trader"), ["inmove"]);
+  // The cooperative/trader records were corrected to non-public mentioned entities.
+  assert.deepEqual(t("cooperative"), []);
+  assert.deepEqual(t("trader"), []);
 });
 
 test("product filter: Urea returns the Urea origins and no supplier company", () => {
@@ -309,11 +270,11 @@ test("product filter: Urea returns the Urea origins and no supplier company", ()
   );
 });
 
-test("origin filter: Brazil returns all three companies and no sourcing origin", () => {
+test("origin filter: Brazil returns the Brazilian companies and no sourcing origin", () => {
   const f: SupplierDirectoryFilters = { ...NO_FILTERS, origin: "Brazil" };
   assert.deepEqual(
     filterSupplierCompanies(listSupplierCompanies(), f).map((s) => s.slug),
-    ["nanofert", "fecoagro", "inmove"],
+    ["nanofert"],
   );
   assert.deepEqual(filterSourcingOrigins(listSourcingOrigins(), f), []);
 });
@@ -329,10 +290,8 @@ test("origin filter: Russia returns the Russia origin and no supplier company", 
 
 test("directory filter options expose all supplier types, products and origins", () => {
   const opts = directoryFilterOptions();
-  for (const type of ["manufacturer", "cooperative", "trader"]) {
-    assert.ok(opts.supplierTypes.includes(type as Supplier["supplierType"]));
-  }
-  for (const product of ["KCL 60%", "Urea", "SSP", "Fertilizers", "Liquid nano-fertilizers"]) {
+  assert.deepEqual(opts.supplierTypes, ["manufacturer"]);
+  for (const product of ["KCL 60%", "Urea", "SSP", "Liquid nano-fertilizers"]) {
     assert.ok(opts.products.includes(product), `products should include ${product}`);
   }
   for (const origin of [
@@ -349,15 +308,16 @@ test("directory filter options expose all supplier types, products and origins",
 });
 
 // --- JSON-LD + detail head rules ---
-test("CollectionPage JSON-LD lists the verified public suppliers (Nanofert + FECOAGRO), Inmove excluded", () => {
+test("CollectionPage JSON-LD lists only the verified public suppliers", () => {
   const ld = suppliersCollectionLd() as unknown as { hasPart: Array<{ name: string }> };
   const names = ld.hasPart.map((p) => p.name);
-  assert.deepEqual(names, ["Nanofert", "FECOAGRO"]);
-  assert.ok(!names.some((n) => /inmove/i.test(n)));
+  assert.deepEqual(names, ["Nanofert"]);
+  assert.ok(!names.some((n) => /inmove|fecoagro/i.test(n)));
 });
 
-test("Inmove detail head emits NO Organization JSON-LD (breadcrumb only) but keeps canonical", () => {
-  const head = supplierDetailRouteHead(getListedSupplierBySlug("inmove")!);
+test("an unpublishable supplier emits NO Organization JSON-LD but keeps its canonical", () => {
+  const draft = completeVerifiedPublic({ slug: "draft-co", status: "draft" });
+  const head = supplierDetailRouteHead(draft);
   const types = (head.scripts ?? [])
     .filter((sc) => sc.type === "application/ld+json")
     .map((sc) => JSON.parse(sc.children)["@type"]);
@@ -366,12 +326,11 @@ test("Inmove detail head emits NO Organization JSON-LD (breadcrumb only) but kee
   assert.ok((head.links ?? []).some((l) => l.rel === "canonical"));
 });
 
-test("Organization JSON-LD for FECOAGRO uses only verified fields (no nulls emitted)", () => {
-  const ld = supplierOrganizationLd(getPublicSupplierBySlug("fecoagro")!);
+test("Organization JSON-LD for a verified supplier uses only verified fields (no nulls emitted)", () => {
+  const ld = supplierOrganizationLd(getPublicSupplierBySlug("nanofert")!);
   assert.equal(ld["@type"], "Organization");
-  assert.equal(ld.name, "FECOAGRO");
-  assert.equal((ld.sameAs as string[])[0], "https://www.fecoagro.coop.br/");
-  assert.equal("logo" in ld, false); // no verified logo
+  assert.equal(ld.name, "Nanofert");
+  assert.equal((ld.sameAs as string[])[0], "https://www.nanofert.com.br/");
   assert.equal("email" in ld, false);
   assert.equal("telephone" in ld, false);
 });
@@ -383,11 +342,11 @@ test("Organization JSON-LD includes a logo only when one is stored locally", () 
   assert.equal("logo" in withoutLogo, false);
 });
 
-test("listHiddenSuppliers contains only non-publishable records (Inmove)", () => {
+test("listHiddenSuppliers contains only non-publishable records", () => {
   const hidden = listHiddenSuppliers();
   assert.deepEqual(
     hidden.map((s) => s.slug),
-    ["inmove"],
+    [],
   );
   for (const s of hidden) assert.equal(isPublishable(s), false);
 });

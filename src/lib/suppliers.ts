@@ -71,21 +71,61 @@ export interface SourcingOrigin {
   product: string;
 }
 
+/**
+ * A company NAMED INSIDE a source document (deck, catalogue, PDF, quote, presentation).
+ *
+ * A mentioned entity is NOT a supplier. It has no slug, no route, no card, no sitemap entry
+ * and no structured data, and it can never be promoted to a supplier without an explicit
+ * human approval step. It exists only to preserve provenance — so that removing an incorrect
+ * supplier attribution never destroys the underlying source record.
+ */
+export interface MentionedEntity {
+  id: string;
+  name: string;
+  /** The supplier whose document named this company (the document's owner/uploader). */
+  sourceSupplierId: string | null;
+  sourceDocumentId: string;
+  extractionOrigin: "supplier-document";
+  extractionConfidence: "low" | "medium" | "high";
+  /** Verbatim context from the source document, for a human reviewer. */
+  sourceContext: string | null;
+  /** The top-level supplier name this record was incorrectly published under, if any. */
+  previousSupplierName: string | null;
+  reviewReason: string;
+  /** A CANDIDATE attribution only — never applied automatically. */
+  possibleSupplier: string | null;
+  /** Set only by an explicit human approval; null until then. */
+  confirmedSupplierId: string | null;
+  reviewState: "needs_manual_review" | "approved" | "rejected";
+  requiresReview: boolean;
+  reviewedAt: string | null;
+  reviewedBy: string | null;
+  /** Always false. A mentioned entity is never publicly visible. */
+  public: false;
+  /** Always false. A mentioned entity is never indexable. */
+  indexable: false;
+}
+
 // ---------------------------------------------------------------------------
 // Registry.
 //
-// FECOAGRO is a PUBLIC, verified record whose details were confirmed against its official
-// website (public-source verification only — NOT a partnership or endorsement). Inmove is a
-// PUBLIC but UNVERIFIED record: it is listed because it appeared in source material provided
-// to FertaFind, but every company/product detail beyond its name and national-trader role is
-// left null/empty until independently verified, and it never emits Organization JSON-LD or
-// enters the sitemap. Deliberately WITHHELD from the repo entirely (per directive): reference
-// prices, projections, customer names, internal financial data and any private operational
-// data from the FertiExpress material. Country/product rows from that material are surfaced as
-// Global Sourcing Origins (below), never as named supplier companies.
+// ATTRIBUTION CORRECTION (2026-07-23): "Inmove" and "FECOAGRO" were named INSIDE the
+// FertiExpress presentation as companies FertiExpress itself sources from. They were never
+// FertaFind suppliers and must not exist as top-level supplier records. They are retained
+// below as non-public MENTIONED_ENTITIES so the source record survives the correction.
+//
+// Deliberately WITHHELD from the repo entirely (per directive): reference prices,
+// projections, customer names, internal financial data and any private operational data
+// from the FertiExpress material.
+//
+// NOTE: FertiExpress Group is NOT yet a supplier record. The owner-provided presentation is
+// not present in this repository, so there is no source for its logo, website, country or
+// products. Creating the record from assumed values would fabricate supplier data, which the
+// rules above forbid. It must be added from the deck under the approval gate.
 // ---------------------------------------------------------------------------
-const FERTIEXPRESS_SOURCE =
-  "FertiExpress reference material (unverified) — pending independent verification before any public listing";
+
+/** Identifier for the owner-provided FertiExpress presentation these mentions came from. */
+export const FERTIEXPRESS_DOCUMENT_ID = "fertiexpress-presentation";
 
 export const SUPPLIERS: Supplier[] = [
   {
@@ -118,67 +158,73 @@ export const SUPPLIERS: Supplier[] = [
     lastVerifiedAt: "2026-07-23",
     status: "public",
   },
-  {
-    id: "fecoagro",
-    slug: "fecoagro",
-    displayName: "FECOAGRO",
-    legalName: "FECOAGRO – Federação das Cooperativas Agropecuárias do Estado de Santa Catarina",
-    logo: null,
-    // Public-source verification only: these details were confirmed against FECOAGRO's
-    // official website. This is not a partnership, endorsement, or availability claim.
-    verified: true,
-    verificationStatus: "public-source-verified",
-    relationship: "listed",
-    supplierType: "cooperative",
-    country: "Brazil",
-    state: "Santa Catarina",
-    city: "Florianópolis",
-    // No verified coordinates are published, so the map marker is intentionally omitted.
-    latitude: null,
-    longitude: null,
-    products: ["Fertilizers", "Organomineral fertilizers", "Pasture fertilizers"],
-    productGrades: [],
-    serviceRegions: [],
-    website: "https://www.fecoagro.coop.br/",
-    fertilizerPage: "https://www.fecoagro.coop.br/nossos-fertilizantes/",
-    publicEmail: null,
-    publicPhone: null,
-    description:
-      "FECOAGRO is a federation of agricultural cooperatives in Santa Catarina, Brazil, with fertilizer manufacturing and distribution activities.",
-    source: "Official FECOAGRO website",
-    lastVerifiedAt: "2026-07-23",
-    status: "public",
-  },
+];
+
+/**
+ * Companies named inside the FertiExpress presentation. NON-PUBLIC by construction.
+ *
+ * Their original source data is preserved here rather than deleted, but the incorrect
+ * "FertaFind supplier" attribution has been removed. Neither is reassigned to FertiExpress:
+ * the source does not prove that attribution, so each stays in `needs_manual_review`.
+ */
+export const MENTIONED_ENTITIES: MentionedEntity[] = [
   {
     id: "inmove",
-    slug: "inmove",
-    displayName: "Inmove",
-    legalName: null,
-    logo: null,
-    verified: false,
-    verificationStatus: "source-listed-unverified",
-    relationship: "listed",
-    supplierType: "trader",
-    country: "Brazil",
-    // Nothing below is independently verified, so every identity/contact field stays empty.
-    state: null,
-    city: null,
-    latitude: null,
-    longitude: null,
-    products: [],
-    productGrades: [],
-    serviceRegions: [],
-    website: null,
-    fertilizerPage: null,
-    publicEmail: null,
-    publicPhone: null,
-    description:
-      "Listed as a national trading supplier in source material provided to FertaFind. Additional company and product information has not yet been independently verified.",
-    source: FERTIEXPRESS_SOURCE,
-    lastVerifiedAt: null,
-    status: "public",
+    name: "Inmove",
+    sourceSupplierId: null,
+    sourceDocumentId: FERTIEXPRESS_DOCUMENT_ID,
+    extractionOrigin: "supplier-document",
+    extractionConfidence: "low",
+    sourceContext:
+      "Named in the FertiExpress presentation as a national trading company FertiExpress sources from.",
+    previousSupplierName: "Inmove",
+    reviewReason:
+      "Published as a top-level FertaFind supplier from a company name found inside the FertiExpress presentation. No direct FertaFind supplier relationship was ever established.",
+    possibleSupplier: "FertiExpress Group",
+    confirmedSupplierId: null,
+    reviewState: "needs_manual_review",
+    requiresReview: true,
+    reviewedAt: null,
+    reviewedBy: null,
+    public: false,
+    indexable: false,
+  },
+  {
+    id: "fecoagro",
+    name: "FECOAGRO",
+    sourceSupplierId: null,
+    sourceDocumentId: FERTIEXPRESS_DOCUMENT_ID,
+    extractionOrigin: "supplier-document",
+    extractionConfidence: "low",
+    sourceContext:
+      "Named in the FertiExpress presentation as a cooperative federation FertiExpress sources from. Company details were later corroborated against fecoagro.coop.br, but that corroborates the company's existence — not any FertaFind relationship.",
+    previousSupplierName: "FECOAGRO",
+    reviewReason:
+      "Published as a top-level FertaFind supplier from a company name found inside the FertiExpress presentation. Public-source verification of company details is not evidence of a FertaFind supplier relationship.",
+    possibleSupplier: "FertiExpress Group",
+    confirmedSupplierId: null,
+    reviewState: "needs_manual_review",
+    requiresReview: true,
+    reviewedAt: null,
+    reviewedBy: null,
+    public: false,
+    indexable: false,
   },
 ];
+
+/** Every retained mentioned entity. Never rendered publicly. */
+export function listMentionedEntities(): MentionedEntity[] {
+  return MENTIONED_ENTITIES;
+}
+
+export function getMentionedEntityById(id: string): MentionedEntity | undefined {
+  return MENTIONED_ENTITIES.find((m) => m.id === id);
+}
+
+/** Mentioned entities still awaiting a human attribution decision. */
+export function listEntitiesNeedingReview(): MentionedEntity[] {
+  return MENTIONED_ENTITIES.filter((m) => m.reviewState === "needs_manual_review");
+}
 
 // ---------------------------------------------------------------------------
 // Global Sourcing Origins — market-discovery reference only. No prices, availability,
@@ -217,8 +263,20 @@ const REQUIRED_PUBLIC_FIELDS: Array<keyof Supplier> = [
   "source",
 ];
 
+/**
+ * A record carrying document-extraction provenance is a mentioned entity, never a supplier —
+ * even if it has been given supplier-shaped fields. This is the structural backstop that stops
+ * a company name found inside a document from ever reaching a public surface.
+ */
+function hasExtractionProvenance(record: unknown): boolean {
+  if (typeof record !== "object" || record === null) return false;
+  if ("extractionOrigin" in record) return true;
+  return (record as { public?: unknown }).public === false;
+}
+
 /** True only for a verified, complete, explicitly-public record (Organization JSON-LD + sitemap). */
 export function isPublishable(s: Supplier): boolean {
+  if (hasExtractionProvenance(s)) return false;
   if (s.status !== "public") return false;
   if (!s.verified) return false;
   for (const key of REQUIRED_PUBLIC_FIELDS) {
@@ -238,7 +296,17 @@ export function listPublicSuppliers(): Supplier[] {
 
 /** Every company listed on the directory (verified or source-listed-unverified). */
 export function listSupplierCompanies(): Supplier[] {
-  return SUPPLIERS.filter((s) => s.status === "public");
+  return SUPPLIERS.filter((s) => s.status === "public" && !hasExtractionProvenance(s));
+}
+
+/** Active (directory-listed) supplier records. */
+export function activeSupplierCount(): number {
+  return listSupplierCompanies().length;
+}
+
+/** Publishable supplier records (Organization JSON-LD + sitemap). */
+export function publicSupplierCount(): number {
+  return listPublicSuppliers().length;
 }
 
 /** Records that are not publishable (unverified/draft/inactive) — never rendered as verified. */
