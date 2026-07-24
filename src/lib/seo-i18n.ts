@@ -69,6 +69,50 @@ const PT_BR_PAGES: Record<PageKey, LocalizedPageSeo> = {
   },
 };
 
+/** Curated Latin American Spanish metadata. Brand and product names stay verbatim. */
+const ES_419_PAGES: Record<PageKey, LocalizedPageSeo> = {
+  home: {
+    title: "FertaFind — Compara cotizaciones de fertilizantes con IA",
+    description:
+      "Compara cotizaciones de fertilizantes y recibe una recomendación asistida por IA y basada en costo, considerando tu cultivo, parcela, ubicación y la información de la cotización.",
+    ogTitle: "FertaFind — Compara cotizaciones de fertilizantes con IA",
+    ogDescription:
+      "Compara cotizaciones de fertilizantes y recibe una recomendación asistida por IA y basada en costo.",
+  },
+  analyze: {
+    title: "Analiza tus cotizaciones de fertilizantes — FertaFind",
+    description:
+      "Sube tus cotizaciones de fertilizantes y recibe una recomendación asistida por IA y basada en costo, usando tu cultivo, parcela, ubicación y los detalles de la cotización.",
+    ogTitle: "Analiza tus cotizaciones de fertilizantes",
+    ogDescription:
+      "Sube cotizaciones de fertilizantes para una comparación y recomendación basada en costo.",
+  },
+  terms: {
+    title: "Términos de uso — FertaFind",
+    description:
+      "Los términos de FertaFind sobre recomendaciones de socios, análisis de fertilizantes, compras a proveedores, responsabilidades de entrega y uso de los datos del campo.",
+    ogTitle: "Términos de uso de FertaFind",
+    ogDescription:
+      "Los términos que rigen las recomendaciones, los análisis y las compras a proveedores de FertaFind.",
+  },
+  resources: {
+    title: "Recursos sobre compra de fertilizantes — FertaFind",
+    description:
+      "Guías y comparaciones que explican cómo leer una cotización de fertilizante, comparar formulaciones por costo por unidad de nutriente y considerar el flete.",
+    ogTitle: "Recursos sobre compra de fertilizantes",
+    ogDescription:
+      "Guías sobre comparación de cotizaciones, costo por unidad de nutriente y flete.",
+  },
+  suppliers: {
+    title: "Directorio de proveedores de fertilizantes — FertaFind",
+    description:
+      "Un directorio de proveedores de fertilizantes en FertaFind. Cada proveedor está identificado como verificado de forma independiente, informado por el propio proveedor o pendiente de verificación.",
+    ogTitle: "Directorio de proveedores de fertilizantes",
+    ogDescription:
+      "Conoce a los proveedores de fertilizantes en FertaFind, cada uno con su nivel de verificación.",
+  },
+};
+
 const LOCALIZED_PAGES: Record<Locale, Record<PageKey, LocalizedPageSeo>> = {
   en: Object.fromEntries(
     (Object.keys(PAGES) as PageKey[]).map((key) => [
@@ -82,6 +126,7 @@ const LOCALIZED_PAGES: Record<Locale, Record<PageKey, LocalizedPageSeo>> = {
     ]),
   ) as Record<PageKey, LocalizedPageSeo>,
   "pt-BR": PT_BR_PAGES,
+  "es-419": ES_419_PAGES,
 };
 
 /** Localized metadata for a core page; unknown locales fall back to English. */

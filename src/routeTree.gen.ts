@@ -21,6 +21,7 @@ import { Route as ApiAnalyzeQuotesRouteImport } from './routes/api.analyze-quote
 import { Route as LocaleTermsRouteImport } from './routes/$locale.terms'
 import { Route as LocaleSuppliersRouteImport } from './routes/$locale.suppliers'
 import { Route as LocaleResourcesRouteImport } from './routes/$locale.resources'
+import { Route as LocaleFaqRouteImport } from './routes/$locale.faq'
 import { Route as LocaleAnalyzeRouteImport } from './routes/$locale.analyze'
 import { Route as LocaleAboutRouteImport } from './routes/$locale.about'
 import { Route as LocaleSuppliersIndexRouteImport } from './routes/$locale.suppliers.index'
@@ -94,6 +95,11 @@ const LocaleResourcesRoute = LocaleResourcesRouteImport.update({
   path: '/resources',
   getParentRoute: () => LocaleRoute,
 } as any)
+const LocaleFaqRoute = LocaleFaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => LocaleRoute,
+} as any)
 const LocaleAnalyzeRoute = LocaleAnalyzeRouteImport.update({
   id: '/analyze',
   path: '/analyze',
@@ -165,6 +171,7 @@ export interface FileRoutesByFullPath {
   '/$locale': typeof LocaleRouteWithChildren
   '/$locale/about': typeof LocaleAboutRoute
   '/$locale/analyze': typeof LocaleAnalyzeRoute
+  '/$locale/faq': typeof LocaleFaqRoute
   '/$locale/resources': typeof LocaleResourcesRoute
   '/$locale/suppliers': typeof LocaleSuppliersRouteWithChildren
   '/$locale/terms': typeof LocaleTermsRoute
@@ -190,6 +197,7 @@ export interface FileRoutesByTo {
   '/$': typeof SplatRoute
   '/$locale/about': typeof LocaleAboutRoute
   '/$locale/analyze': typeof LocaleAnalyzeRoute
+  '/$locale/faq': typeof LocaleFaqRoute
   '/$locale/resources': typeof LocaleResourcesRoute
   '/$locale/terms': typeof LocaleTermsRoute
   '/api/analyze-quotes': typeof ApiAnalyzeQuotesRoute
@@ -216,6 +224,7 @@ export interface FileRoutesById {
   '/$locale': typeof LocaleRouteWithChildren
   '/$locale/about': typeof LocaleAboutRoute
   '/$locale/analyze': typeof LocaleAnalyzeRoute
+  '/$locale/faq': typeof LocaleFaqRoute
   '/$locale/resources': typeof LocaleResourcesRoute
   '/$locale/suppliers': typeof LocaleSuppliersRouteWithChildren
   '/$locale/terms': typeof LocaleTermsRoute
@@ -244,6 +253,7 @@ export interface FileRouteTypes {
     | '/$locale'
     | '/$locale/about'
     | '/$locale/analyze'
+    | '/$locale/faq'
     | '/$locale/resources'
     | '/$locale/suppliers'
     | '/$locale/terms'
@@ -269,6 +279,7 @@ export interface FileRouteTypes {
     | '/$'
     | '/$locale/about'
     | '/$locale/analyze'
+    | '/$locale/faq'
     | '/$locale/resources'
     | '/$locale/terms'
     | '/api/analyze-quotes'
@@ -294,6 +305,7 @@ export interface FileRouteTypes {
     | '/$locale'
     | '/$locale/about'
     | '/$locale/analyze'
+    | '/$locale/faq'
     | '/$locale/resources'
     | '/$locale/suppliers'
     | '/$locale/terms'
@@ -413,6 +425,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LocaleResourcesRouteImport
       parentRoute: typeof LocaleRoute
     }
+    '/$locale/faq': {
+      id: '/$locale/faq'
+      path: '/faq'
+      fullPath: '/$locale/faq'
+      preLoaderRoute: typeof LocaleFaqRouteImport
+      parentRoute: typeof LocaleRoute
+    }
     '/$locale/analyze': {
       id: '/$locale/analyze'
       path: '/analyze'
@@ -517,6 +536,7 @@ const LocaleSuppliersRouteWithChildren = LocaleSuppliersRoute._addFileChildren(
 interface LocaleRouteChildren {
   LocaleAboutRoute: typeof LocaleAboutRoute
   LocaleAnalyzeRoute: typeof LocaleAnalyzeRoute
+  LocaleFaqRoute: typeof LocaleFaqRoute
   LocaleResourcesRoute: typeof LocaleResourcesRoute
   LocaleSuppliersRoute: typeof LocaleSuppliersRouteWithChildren
   LocaleTermsRoute: typeof LocaleTermsRoute
@@ -534,6 +554,7 @@ interface LocaleRouteChildren {
 const LocaleRouteChildren: LocaleRouteChildren = {
   LocaleAboutRoute: LocaleAboutRoute,
   LocaleAnalyzeRoute: LocaleAnalyzeRoute,
+  LocaleFaqRoute: LocaleFaqRoute,
   LocaleResourcesRoute: LocaleResourcesRoute,
   LocaleSuppliersRoute: LocaleSuppliersRouteWithChildren,
   LocaleTermsRoute: LocaleTermsRoute,

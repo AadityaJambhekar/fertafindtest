@@ -75,7 +75,7 @@ export function SiteHeader() {
         <a href={`${lp("/")}#faq`} className="shrink-0 text-xs font-semibold text-muted-foreground">
           {t.nav.faq}
         </a>
-        <LanguageSwitcher className="shrink-0" />
+        <LanguageSwitcher className="inline-flex shrink-0" />
       </nav>
     </header>
   );
@@ -114,10 +114,7 @@ export function SiteFooter() {
               </a>
             </li>
             <li>
-              <a
-                href={`${lp("/suppliers")}?relationship=partner`}
-                className="hover:text-primary-foreground"
-              >
+              <a href={lp("/suppliers")} className="hover:text-primary-foreground">
                 {t.footer.partners}
               </a>
             </li>

@@ -22,7 +22,6 @@ import {
   suppliersCollectionLd,
   activeSupplierCount,
   publicSupplierCount,
-  directoryFilterOptions,
   SUPPLIERS_DIRECTORY,
   FERTIEXPRESS_DOCUMENT_ID,
 } from "./suppliers.ts";
@@ -119,20 +118,28 @@ test("Nanofert remains an active, public supplier with its logo and website pres
   assert.equal(nanofert.website, "https://www.nanofert.com.br/");
 });
 
-test("exactly two suppliers are active and public: FertiExpress Group and Nanofert", () => {
-  assert.equal(activeSupplierCount(), 2);
-  assert.equal(publicSupplierCount(), 2);
+test("exactly three suppliers are active and public", () => {
+  assert.equal(activeSupplierCount(), 3);
+  assert.equal(publicSupplierCount(), 3);
+  const expected = ["FertiExpress Group", "KAP Organic Agro", "Nanofert"];
   assert.deepEqual(
     listSupplierCompanies()
       .map((s) => s.displayName)
       .sort(),
-    ["FertiExpress Group", "Nanofert"],
+    expected,
   );
   assert.deepEqual(
     listPublicSuppliers()
       .map((s) => s.displayName)
       .sort(),
-    ["FertiExpress Group", "Nanofert"],
+    expected,
+  );
+});
+
+test("the directory renders in the intended order", () => {
+  assert.deepEqual(
+    listSupplierCompanies().map((s) => s.displayName),
+    ["FertiExpress Group", "Nanofert", "KAP Organic Agro"],
   );
 });
 
@@ -213,31 +220,6 @@ test("the public supplier directory no longer renders Global Sourcing Origins", 
 test("the directory blurb does not advertise the removed sourcing-origins section", () => {
   const blurb = `${SUPPLIERS_DIRECTORY.description} ${SUPPLIERS_DIRECTORY.ogDescription}`;
   assert.ok(!/sourcing origin/i.test(blurb), "blurb still promises sourcing origins");
-});
-
-test("no filter option leads to an empty directory", () => {
-  // Every offered product/origin/type must be reachable on at least one listed supplier,
-  // otherwise the user picks a filter and lands on nothing.
-  const companies = listSupplierCompanies();
-  const options = directoryFilterOptions();
-  for (const product of options.products) {
-    assert.ok(
-      companies.some((s) => s.products.includes(product)),
-      `product filter "${product}" matches no supplier`,
-    );
-  }
-  for (const origin of options.origins) {
-    assert.ok(
-      companies.some((s) => s.country === origin),
-      `origin filter "${origin}" matches no supplier`,
-    );
-  }
-  for (const type of options.supplierTypes) {
-    assert.ok(
-      companies.some((s) => s.supplierType === type),
-      `type filter "${type}" matches no supplier`,
-    );
-  }
 });
 
 test("the public supplier directory names no mentioned entity", () => {

@@ -4,7 +4,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { SUPPORTED_LOCALES, DEFAULT_LOCALE, localePath, type Locale } from "./i18n.ts";
+import {
+  SUPPORTED_LOCALES,
+  DEFAULT_LOCALE,
+  localePath,
+  localeToSegment,
+  type Locale,
+} from "./i18n.ts";
 import { localizedPageMeta, localizedHead } from "./seo-i18n.ts";
 import {
   sitemapEntries,
@@ -50,7 +56,9 @@ test("every sitemap URL is locale-prefixed and absolute", () => {
   for (const loc of locs) {
     assert.ok(loc.startsWith(`${SITE_URL}/`), `${loc} is not absolute`);
     const path = loc.slice(SITE_URL.length);
-    assert.match(path, /^\/(en|pt-br)(\/|$)/, `${loc} has no locale segment`);
+    // Derived from the locale list so adding a locale cannot silently bypass this check.
+    const segments = SUPPORTED_LOCALES.map(localeToSegment).join("|");
+    assert.match(path, new RegExp(`^/(${segments})(/|$)`), `${loc} has no locale segment`);
   }
 });
 

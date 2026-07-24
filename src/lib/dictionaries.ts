@@ -29,7 +29,6 @@ const en = {
     continue: "Continue",
     submit: "Submit",
     cancel: "Cancel",
-    clearFilters: "Clear filters",
     loading: "Loading…",
     optional: "Optional",
     required: "Required",
@@ -47,7 +46,93 @@ const en = {
     whyTitle: "Why FertaFind",
     faqTitle: "Frequently asked questions",
     supplierNetworkTitle: "Our Supplier Network",
+    heroBadge: "AI-powered fertilizer intelligence",
+    // The animated headline is "headlineLead" + one rotating phrase.
+    headlineLead: "Find the fertilizer",
+    heroLede:
+      "Upload a quote. We compare nutrients, price and delivery to find a strong match for your crop.",
+    heroPrimaryCta: "Analyze for free",
+    heroSecondaryCta: "How it works",
+    proofVerified: "Verified partner data",
+    proofSeparate: "Quotes kept separate",
+    proofFlagged: "Missing details flagged",
+    howEyebrow: "01 / How it works",
+    howHeading: "From quote photo to smart decision — in minutes.",
+    howCta: "Start for free",
+    whyEyebrow: "02 / Why farmers use FertaFind",
+    whyHeading: "Clearer comparisons. Fewer bad surprises.",
+    whyLede:
+      "Fertilizer is one of the largest cash expenses on the farm. A small decision made better each season compounds fast.",
+    networkEyebrow: "03 / Our supplier network",
+    networkLede:
+      "The companies in the FertaFind network — each clearly marked as a FertaFind partner, verified from public sources, or pending independent verification.",
+    networkViewAll: "View all suppliers",
+    locationPending: "Location pending verification",
+    faqEyebrow: "04 / FAQ",
+    faqHeading: "Clear answers before you analyze.",
+    faqLede:
+      "What the recommendation does, what it does not do, and where better field data helps.",
   },
+  /** Animated headline phrases. Rendered after home.headlineLead, so each must complete it. */
+  homeRotating: ["worth buying.", "right for you.", "for healthy crops.", "for better yields."],
+  homeSteps: [
+    {
+      title: "Tell us your farm",
+      body: "Enter your location, crops, field size and the conditions that affect application.",
+    },
+    {
+      title: "Upload your quotes",
+      body: "Snap photos of every fertilizer quote you've received. That's it.",
+    },
+    {
+      title: "AI does the math",
+      body: "We extract NPK, price per unit, application rates and delivery costs.",
+    },
+    {
+      title: "See the recommendation",
+      body: "Get one clear recommended fertilizer, the reason it fits and the supporting costs.",
+    },
+  ],
+  homeBenefits: [
+    {
+      title: "See nutrient cost on one basis",
+      body: "Quotes can look similar until price, pack size and nutrient concentration are put on the same basis. We show that clearly for one quote or several.",
+    },
+    {
+      title: "Landed cost, not sticker price",
+      body: "When freight is stated on the quote, it is included so the recommendation reflects the cost of getting product to the farm.",
+    },
+    {
+      title: "Fit-first, not brand-first",
+      body: "Recommendations consider the quoted nutrient mix alongside the crop, soil information, weather and watering details you provide.",
+    },
+    {
+      title: "Important gaps stay visible",
+      body: "Missing rates, prices, soil tests or uncertain extraction are flagged instead of being quietly guessed.",
+    },
+  ],
+  homeFaq: [
+    {
+      question: "Does FertaFind recommend the same fertilizer every time?",
+      answer:
+        "No. Partner products are evaluated against the selected crop, lifecycle stage, soil information, nutrient targets, weather, irrigation, prior applications, preferences, and available supplier evidence.",
+    },
+    {
+      question: "What happens if my crop has no matching partner product?",
+      answer:
+        "FertaFind will say that no participating partner product currently matches. Your uploaded products can still appear in a separate quote comparison, but they will not be presented as a partner recommendation.",
+    },
+    {
+      question: "Do I need a laboratory soil test?",
+      answer:
+        "No. A soil test is optional, but it can materially improve the analysis. Without one, missing nutrient and soil-condition information is shown as a limitation rather than guessed.",
+    },
+    {
+      question: "Will the cheapest quote always win?",
+      answer:
+        "No. Agronomic suitability comes first. Price and delivery are considered only after crop and stage compatibility, and an estimated cost is shown only when enough real pricing information exists.",
+    },
+  ],
   analyze: {
     title: "Analyze your quotes",
     stepLocation: "Where is your farm?",
@@ -112,18 +197,10 @@ const en = {
     companyOne: "company",
     companyMany: "companies",
     viewSupplier: "View supplier",
+    detailTitleSuffix: "Fertilizer supplier",
     ctaTitle: "Already have quotes from a supplier?",
     ctaBody:
       "FertaFind puts every fertilizer quote on one clear, cost-based footing — grade, pack size and delivery — so you can compare them fairly.",
-    filterAll: "All",
-    filterVerified: "Verified",
-    filterProvided: "Supplier-provided",
-    filterPending: "Pending verification",
-    filterRelationship: "Relationship",
-    filterVerification: "Verification",
-    filterType: "Supplier type",
-    filterProduct: "Product",
-    filterOrigin: "Origin",
     products: "Products",
     grades: "Grades",
     servesRegions: "Serves",
@@ -214,9 +291,12 @@ const en = {
   },
   country: {
     Brazil: "Brazil",
+    "United States": "United States",
   },
   // Supplier prose, keyed by slug. Company and product names are never translated.
   supplierDescription: {
+    "kap-organic-agro":
+      "KAP Organic Agro distributes IFFCO nano-fertilizer products in the United States, alongside seaweed extract and other crop nutrition inputs. Confirm grades, availability and final pricing before purchase.",
     "fertiexpress-group":
       "FertiExpress Group imports and distributes fertilizers for Brazilian agriculture, connecting international and national suppliers to growers across the country. Confirm grades, availability and final pricing before purchase.",
     nanofert:
@@ -224,9 +304,22 @@ const en = {
   },
 } as const;
 
-/** The dictionary shape every locale must satisfy, derived from English. */
+/** Every field of an object becomes a translatable string. */
+type Translated<T> = { [P in keyof T]: string };
+
+/**
+ * The dictionary shape every locale must satisfy, derived from English.
+ *
+ * Sections are either a flat map of strings, a list of strings (the rotating headline),
+ * or a list of objects (steps, benefits, FAQ). Every shape is derived from `en`, so a new
+ * English key cannot be added without every locale being forced to supply it.
+ */
 export type Dictionary = {
-  [K in keyof typeof en]: { [P in keyof (typeof en)[K]]: string };
+  [K in keyof typeof en]: (typeof en)[K] extends readonly string[]
+    ? string[]
+    : (typeof en)[K] extends readonly (infer Item)[]
+      ? Array<Translated<Item>>
+      : Translated<(typeof en)[K]>;
 };
 
 const ptBR: Dictionary = {
@@ -246,7 +339,6 @@ const ptBR: Dictionary = {
     continue: "Continuar",
     submit: "Enviar",
     cancel: "Cancelar",
-    clearFilters: "Limpar filtros",
     loading: "Carregando…",
     optional: "Opcional",
     required: "Obrigatório",
@@ -259,12 +351,102 @@ const ptBR: Dictionary = {
     heroSubtitle:
       "Envie as cotações que você já tem. A FertaFind coloca formulação, embalagem e entrega na mesma base para você comparar com justiça.",
     heroCta: "Analisar suas cotações",
-    workingWith: "Trabalhando com a Nanofert",
+    workingWith: "Em parceria com a Nanofert",
     howTitle: "Como funciona",
     whyTitle: "Por que a FertaFind",
     faqTitle: "Perguntas frequentes",
     supplierNetworkTitle: "Nossa rede de fornecedores",
+    heroBadge: "Inteligência em fertilizantes com IA",
+    headlineLead: "Encontre o fertilizante",
+    heroLede:
+      "Envie uma cotação. Nós comparamos nutrientes, preço e entrega para encontrar a melhor opção para sua cultura.",
+    heroPrimaryCta: "Analisar gratuitamente",
+    heroSecondaryCta: "Como funciona",
+    proofVerified: "Dados verificados de parceiros",
+    proofSeparate: "Cotações analisadas separadamente",
+    proofFlagged: "Informações ausentes sinalizadas",
+    howEyebrow: "01 / Como funciona",
+    howHeading: "Da foto da cotação a uma decisão mais inteligente — em minutos.",
+    howCta: "Comece gratuitamente",
+    whyEyebrow: "02 / Por que produtores usam a FertaFind",
+    whyHeading: "Comparações mais claras. Menos surpresas desagradáveis.",
+    whyLede:
+      "O fertilizante é uma das maiores despesas em dinheiro da fazenda. Uma decisão um pouco melhor a cada safra se acumula rápido.",
+    networkEyebrow: "03 / Nossa rede de fornecedores",
+    networkLede:
+      "As empresas da rede FertaFind — cada uma claramente identificada como parceira FertaFind, verificada em fontes públicas ou pendente de verificação independente.",
+    networkViewAll: "Ver todos os fornecedores",
+    locationPending: "Localização pendente de verificação",
+    faqEyebrow: "04 / Perguntas frequentes",
+    faqHeading: "Respostas claras antes de você analisar.",
+    faqLede: "O que a recomendação faz, o que ela não faz e onde dados de campo melhores ajudam.",
   },
+  // The first phrase completes the requested headline:
+  // "Encontre o fertilizante certo para sua lavoura."
+  homeRotating: [
+    "certo para sua lavoura.",
+    "que vale a pena comprar.",
+    "ideal para sua cultura.",
+    "para melhores produtividades.",
+  ],
+  homeSteps: [
+    {
+      title: "Conte sobre sua propriedade",
+      body: "Informe sua localização, culturas, área do talhão e as condições que afetam a aplicação.",
+    },
+    {
+      title: "Envie suas cotações",
+      body: "Fotografe cada cotação de fertilizante que você recebeu. É só isso.",
+    },
+    {
+      title: "A IA faz as contas",
+      body: "Extraímos NPK, preço por unidade, doses de aplicação e custos de entrega.",
+    },
+    {
+      title: "Veja a recomendação",
+      body: "Receba um fertilizante recomendado com clareza, o motivo de ele se encaixar e os custos que sustentam a escolha.",
+    },
+  ],
+  homeBenefits: [
+    {
+      title: "Veja o custo do nutriente em uma única base",
+      body: "Cotações podem parecer semelhantes até que preço, embalagem e concentração de nutrientes sejam colocados na mesma base. Mostramos isso com clareza para uma ou várias cotações.",
+    },
+    {
+      title: "Custo posto na fazenda, não preço de tabela",
+      body: "Quando o frete está informado na cotação, ele é incluído para que a recomendação reflita o custo de levar o produto até a fazenda.",
+    },
+    {
+      title: "Adequação primeiro, marca depois",
+      body: "As recomendações consideram a combinação de nutrientes cotada junto com a cultura, as informações de solo, o clima e os detalhes de irrigação que você fornece.",
+    },
+    {
+      title: "Lacunas importantes ficam visíveis",
+      body: "Doses, preços, análises de solo ausentes ou extração incerta são sinalizados em vez de serem silenciosamente adivinhados.",
+    },
+  ],
+  homeFaq: [
+    {
+      question: "A FertaFind recomenda sempre o mesmo fertilizante?",
+      answer:
+        "Não. Os produtos de parceiros são avaliados em relação à cultura selecionada, ao estágio do ciclo, às informações de solo, às metas de nutrientes, ao clima, à irrigação, às aplicações anteriores, às preferências e às evidências disponíveis do fornecedor.",
+    },
+    {
+      question: "O que acontece se nenhum produto de parceiro servir para minha cultura?",
+      answer:
+        "A FertaFind informará que nenhum produto de parceiro participante corresponde no momento. Os produtos que você enviou ainda podem aparecer em uma comparação de cotações separada, mas não serão apresentados como recomendação de parceiro.",
+    },
+    {
+      question: "Preciso de uma análise laboratorial de solo?",
+      answer:
+        "Não. A análise de solo é opcional, mas pode melhorar bastante o resultado. Sem ela, as informações ausentes de nutrientes e de condição do solo são mostradas como limitação, em vez de adivinhadas.",
+    },
+    {
+      question: "A cotação mais barata sempre vence?",
+      answer:
+        "Não. A adequação agronômica vem primeiro. Preço e entrega só são considerados depois da compatibilidade com a cultura e o estágio, e um custo estimado só é exibido quando há informação de preço real suficiente.",
+    },
+  ],
   analyze: {
     title: "Analise suas cotações",
     stepLocation: "Onde fica sua propriedade?",
@@ -329,18 +511,10 @@ const ptBR: Dictionary = {
     companyOne: "empresa",
     companyMany: "empresas",
     viewSupplier: "Ver fornecedor",
+    detailTitleSuffix: "Fornecedor de fertilizantes",
     ctaTitle: "Já tem cotações de algum fornecedor?",
     ctaBody:
       "A FertaFind coloca cada cotação de fertilizante em uma base clara de custo — formulação, embalagem e entrega — para você comparar com justiça.",
-    filterAll: "Todos",
-    filterVerified: "Verificado",
-    filterProvided: "Informado pelo fornecedor",
-    filterPending: "Pendente de verificação",
-    filterRelationship: "Relacionamento",
-    filterVerification: "Verificação",
-    filterType: "Tipo de fornecedor",
-    filterProduct: "Produto",
-    filterOrigin: "Origem",
     products: "Produtos",
     grades: "Formulações",
     servesRegions: "Atende",
@@ -432,8 +606,11 @@ const ptBR: Dictionary = {
   },
   country: {
     Brazil: "Brasil",
+    "United States": "Estados Unidos",
   },
   supplierDescription: {
+    "kap-organic-agro":
+      "A KAP Organic Agro distribui os fertilizantes nano da IFFCO nos Estados Unidos, além de extrato de algas e outros insumos de nutrição de plantas. Confirme formulações, disponibilidade e preço final antes da compra.",
     "fertiexpress-group":
       "A FertiExpress Group importa e distribui fertilizantes para a agricultura brasileira, conectando fornecedores internacionais e nacionais a produtores de todo o país. Confirme formulações, disponibilidade e preço final antes da compra.",
     nanofert:
@@ -441,9 +618,313 @@ const ptBR: Dictionary = {
   },
 };
 
+/**
+ * Neutral Latin American Spanish (es-419).
+ *
+ * Deliberately region-neutral: "computadora"-style vocabulary, no voseo, no Iberian
+ * "vosotros", and agricultural terms chosen to read naturally from Mexico to Argentina
+ * ("cultivo", "parcela", "cotización"). Brand, product, grade, NPK, currency and unit
+ * tokens are never translated.
+ */
+const es419: Dictionary = {
+  nav: {
+    howItWorks: "Cómo funciona",
+    whyFertafind: "Por qué FertaFind",
+    suppliers: "Proveedores",
+    faq: "Preguntas frecuentes",
+    analyzeQuotes: "Analizar cotizaciones",
+    resources: "Recursos",
+    terms: "Términos",
+    language: "Idioma",
+  },
+  common: {
+    back: "Atrás",
+    next: "Siguiente",
+    continue: "Continuar",
+    submit: "Enviar",
+    cancel: "Cancelar",
+    loading: "Cargando…",
+    optional: "Opcional",
+    required: "Obligatorio",
+    learnMore: "Más información",
+    visitWebsite: "Visitar el sitio",
+    seeAll: "Ver todo",
+  },
+  home: {
+    heroTitle: "Compara cotizaciones de fertilizantes sobre una misma base de costo",
+    heroSubtitle:
+      "Sube las cotizaciones que ya tienes. FertaFind pone la formulación, la presentación y la entrega sobre la misma base para que puedas compararlas de forma justa.",
+    heroCta: "Analizar tus cotizaciones",
+    workingWith: "En alianza con Nanofert",
+    howTitle: "Cómo funciona",
+    whyTitle: "Por qué FertaFind",
+    faqTitle: "Preguntas frecuentes",
+    supplierNetworkTitle: "Nuestra red de proveedores",
+    heroBadge: "Inteligencia en fertilizantes con IA",
+    headlineLead: "Encuentra el fertilizante",
+    heroLede:
+      "Sube una cotización. Comparamos nutrientes, precio y entrega para encontrar la mejor opción para tu cultivo.",
+    heroPrimaryCta: "Analizar gratis",
+    heroSecondaryCta: "Cómo funciona",
+    proofVerified: "Datos verificados de socios",
+    proofSeparate: "Cotizaciones analizadas por separado",
+    proofFlagged: "Información faltante señalada",
+    howEyebrow: "01 / Cómo funciona",
+    howHeading: "De la foto de la cotización a una decisión más inteligente — en minutos.",
+    howCta: "Empieza gratis",
+    whyEyebrow: "02 / Por qué los productores usan FertaFind",
+    whyHeading: "Comparaciones más claras. Menos sorpresas desagradables.",
+    whyLede:
+      "El fertilizante es uno de los mayores gastos en efectivo del campo. Una decisión un poco mejor cada ciclo se acumula rápido.",
+    networkEyebrow: "03 / Nuestra red de proveedores",
+    networkLede:
+      "Las empresas de la red FertaFind: cada una identificada claramente como socia de FertaFind, verificada con fuentes públicas o pendiente de verificación independiente.",
+    networkViewAll: "Ver todos los proveedores",
+    locationPending: "Ubicación pendiente de verificación",
+    faqEyebrow: "04 / Preguntas frecuentes",
+    faqHeading: "Respuestas claras antes de analizar.",
+    faqLede: "Qué hace la recomendación, qué no hace y dónde ayudan mejores datos de campo.",
+  },
+  // The first phrase completes the headline: "Encuentra el fertilizante correcto para tu cultivo."
+  homeRotating: [
+    "correcto para tu cultivo.",
+    "que vale la pena comprar.",
+    "ideal para tu parcela.",
+    "para mejores rendimientos.",
+  ],
+  homeSteps: [
+    {
+      title: "Cuéntanos sobre tu campo",
+      body: "Ingresa tu ubicación, cultivos, superficie de la parcela y las condiciones que afectan la aplicación.",
+    },
+    {
+      title: "Sube tus cotizaciones",
+      body: "Toma fotos de cada cotización de fertilizante que hayas recibido. Eso es todo.",
+    },
+    {
+      title: "La IA hace los cálculos",
+      body: "Extraemos NPK, precio por unidad, dosis de aplicación y costos de entrega.",
+    },
+    {
+      title: "Consulta la recomendación",
+      body: "Recibe un fertilizante recomendado con claridad, el motivo por el que se ajusta y los costos que lo respaldan.",
+    },
+  ],
+  homeBenefits: [
+    {
+      title: "Observa el costo del nutriente sobre una sola base",
+      body: "Las cotizaciones pueden parecer similares hasta que el precio, la presentación y la concentración de nutrientes se colocan sobre la misma base. Lo mostramos con claridad para una o varias cotizaciones.",
+    },
+    {
+      title: "Costo puesto en campo, no precio de lista",
+      body: "Cuando el flete aparece en la cotización, se incluye para que la recomendación refleje el costo de llevar el producto hasta el campo.",
+    },
+    {
+      title: "Primero la aptitud, después la marca",
+      body: "Las recomendaciones consideran la mezcla de nutrientes cotizada junto con el cultivo, la información de suelo, el clima y los datos de riego que proporciones.",
+    },
+    {
+      title: "Los vacíos importantes quedan visibles",
+      body: "Las dosis, precios o análisis de suelo faltantes y las extracciones inciertas se señalan en lugar de adivinarse en silencio.",
+    },
+  ],
+  homeFaq: [
+    {
+      question: "¿FertaFind recomienda siempre el mismo fertilizante?",
+      answer:
+        "No. Los productos de socios se evalúan frente al cultivo seleccionado, la etapa del ciclo, la información de suelo, las metas de nutrientes, el clima, el riego, las aplicaciones previas, las preferencias y la evidencia disponible del proveedor.",
+    },
+    {
+      question: "¿Qué pasa si ningún producto de socio se ajusta a mi cultivo?",
+      answer:
+        "FertaFind indicará que actualmente ningún producto de socio participante coincide. Los productos que subiste aún pueden aparecer en una comparación de cotizaciones aparte, pero no se presentarán como recomendación de socio.",
+    },
+    {
+      question: "¿Necesito un análisis de suelo de laboratorio?",
+      answer:
+        "No. El análisis de suelo es opcional, pero puede mejorar mucho el resultado. Sin él, la información faltante de nutrientes y de condición del suelo se muestra como una limitación en lugar de adivinarse.",
+    },
+    {
+      question: "¿La cotización más barata siempre gana?",
+      answer:
+        "No. La aptitud agronómica va primero. El precio y la entrega se consideran solo después de la compatibilidad con el cultivo y la etapa, y solo se muestra un costo estimado cuando existe suficiente información real de precios.",
+    },
+  ],
+  analyze: {
+    title: "Analiza tus cotizaciones",
+    stepLocation: "¿Dónde está tu campo?",
+    stepCrop: "¿Qué estás cultivando?",
+    stepUpload: "Sube las cotizaciones",
+    stepReview: "Revisar y enviar",
+    locationLabel: "Ubicación del campo",
+    locationPlaceholder: "Ciudad, región o dirección",
+    locationHelp: "La usamos únicamente para el contexto de clima y entrega.",
+    useMap: "Seleccionar en el mapa",
+    cropLabel: "Cultivo",
+    growthStageLabel: "Etapa de desarrollo",
+    fieldSizeLabel: "Superficie de la parcela",
+    organicLabel: "Certificación orgánica",
+    goalTitle: "Tu objetivo",
+    goalSubtitle: "Elige cómo clasificar los productos adecuados.",
+    goalYield: "Aumentar el rendimiento",
+    goalYieldHelp: "Priorizar los nutrientes y la aptitud de la parcela",
+    goalCost: "Reducir costos",
+    goalCostHelp: "Priorizar el costo del nutriente puesto en campo",
+    goalBalanced: "Equilibrar ambos",
+    goalBalancedHelp: "Equilibrar el valor y la aptitud del cultivo",
+    uploadTitle: "Agrega tus cotizaciones",
+    uploadHelp: "Agrega fotos, documentos o el texto copiado de la cotización.",
+    uploadCta: "Elegir archivos",
+    analyzing: "Analizando tus cotizaciones…",
+    agreeToTerms: "Acepto los Términos",
+    stepperLocation: "Ubicación",
+    stepperCrop: "Cultivo",
+    stepperQuotes: "Cotizaciones",
+    locationTitle: "Ubicación del campo",
+    locationSubtitle: "Escribe una dirección o marca un punto en el mapa.",
+    cropTitle: "Cultivos y parcela",
+    cropSubtitle: "Elige un cultivo e ingresa la superficie de la parcela.",
+    uploadStepTitle: "Sube las cotizaciones",
+    uploadStepSubtitle: "Agrega fotos, documentos o el texto copiado de la cotización.",
+    checking: "Verificando…",
+    analyzeCta: "Analizar",
+    analyzingTitle: "Analizando tus cotizaciones",
+    analyzingBody:
+      "Extrayendo los valores de nutrientes, comparando proveedores de tu zona y calculando el costo puesto en campo.",
+    termsRequiredError: "Acepta los Términos de servicio antes de analizar tus cotizaciones.",
+    verificationLoading: "La verificación todavía está cargando. Inténtalo de nuevo en un momento.",
+    analysisFailed: "El análisis de las cotizaciones falló.",
+  },
+  results: {
+    title: "Tu comparación de cotizaciones",
+    recommended: "Recomendado",
+    lowestCost: "Menor costo",
+    sortBy: "Ordenar por",
+    noResults: "Todavía no hay resultados para mostrar.",
+    disclaimer:
+      "Esta comparación es solo orientativa. Confirma las formulaciones, dosis, disponibilidad y el precio final con el proveedor antes de comprar.",
+  },
+  suppliers: {
+    title: "Nuestra red de proveedores",
+    subtitle: "Proveedores de fertilizantes listados en FertaFind.",
+    eyebrow: "Red de proveedores",
+    description:
+      "Un directorio de proveedores de fertilizantes en FertaFind. Cada proveedor está identificado claramente como verificado de forma independiente, informado por el propio proveedor o pendiente de verificación.",
+    companiesHeading: "Empresas proveedoras",
+    companyOne: "empresa",
+    companyMany: "empresas",
+    viewSupplier: "Ver proveedor",
+    detailTitleSuffix: "Proveedor de fertilizantes",
+    ctaTitle: "¿Ya tienes cotizaciones de algún proveedor?",
+    ctaBody:
+      "FertaFind pone cada cotización de fertilizante sobre una base clara de costo — formulación, presentación y entrega — para que puedas compararlas de forma justa.",
+    products: "Productos",
+    grades: "Formulaciones",
+    servesRegions: "Atiende",
+    noneMatch: "Ningún proveedor coincide con los filtros actuales.",
+    disclaimer:
+      "La información sobre proveedores se ofrece con fines de descubrimiento y no implica respaldo, alianza, precio, disponibilidad ni aprobación comercial por parte de FertaFind.",
+  },
+  validation: {
+    locationTooShort: "Ingresa al menos 3 caracteres.",
+    locationNotFound: "No encontramos esa ubicación. Revisa la escritura e inténtalo de nuevo.",
+    locationFailed: "No pudimos verificar esa ubicación. Inténtalo de nuevo.",
+    cropRequired: "Elige al menos un cultivo.",
+    goalRequired: "Elige un objetivo.",
+    quotesRequired: "Agrega al menos una cotización.",
+    termsRequired: "Acepta los Términos para continuar.",
+  },
+  errors: {
+    generic: "Algo salió mal. Inténtalo de nuevo.",
+    network: "No pudimos conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.",
+    tooManyFiles: "Demasiados archivos. Quita algunos e inténtalo de nuevo.",
+    fileTooLarge: "Ese archivo es demasiado grande.",
+    notFound: "No encontramos esa página.",
+  },
+  empty: {
+    noQuotes: "Todavía no has agregado ninguna cotización.",
+    noSuppliers: "No hay proveedores para mostrar.",
+  },
+  terms: {
+    eyebrow: "Términos de FertaFind",
+    title: "Términos de uso",
+    lastUpdated: "Última actualización: 18 de julio de 2026",
+    courtesyNotice:
+      "Esta traducción al español se proporciona únicamente para comodidad. La versión en inglés sigue siendo la versión aplicable.",
+    partnerTitle: "Marketplace exclusivo de socios",
+    partnerBody:
+      "FertaFind compara y recomienda productos fertilizantes ofrecidos por proveedores y socios participantes de FertaFind. No busca ni clasifica todos los proveedores o productos fertilizantes disponibles en el mercado en general.",
+    recommendationsTitle: "Cómo funcionan las recomendaciones",
+    recommendationsBody:
+      "Usamos la información que proporcionas —incluidas cotizaciones, cultivos, ubicación, detalles de la parcela y el contexto disponible de suelo o clima— para clasificar los productos de socios elegibles según factores como la aptitud de nutrientes, el precio informado, la información de entrega y el valor estimado. Las relaciones comerciales con proveedores o socios pueden beneficiar a FertaFind.",
+    decisionTitle: "Solo apoyo a la decisión",
+    decisionBody:
+      "Los resultados son informativos y no constituyen asesoría agronómica, financiera, legal ni de seguridad. Una recomendación no garantiza precio, existencias, entrega, desempeño del cultivo, aptitud, ahorro ni retorno. Confirma la etiqueta del producto, la cotización final, la disponibilidad, el plan de aplicación y los requisitos locales con el proveedor y un asesor calificado.",
+    uploadsTitle: "Información subida",
+    uploadsBody:
+      "Debes proporcionar información correcta del campo y contar con permiso para subir cada archivo. No subas información que no estés autorizado a compartir. Los listados de proveedores, precios, zonas de servicio y datos de productos deben ser veraces y estar actualizados. Al marcar la casilla de aceptación antes del análisis, aceptas la versión de estos Términos mostrada en ese momento.",
+    soilTitle: "Información de suelo, clima y riego",
+    soilBody:
+      "El análisis de suelo de laboratorio es opcional, pero recomendable. El clima, la humedad, la temperatura superficial modelada del suelo, la humedad del suelo, la información de riego y otros datos ambientales pueden estimarse a partir de fuentes de terceros y podrían no coincidir con las condiciones de una parcela específica. FertaFind no realiza análisis físicos de suelo. Los usuarios son responsables de confirmar las recomendaciones con observaciones actuales de campo, etiquetas de productos, normas aplicables y un agrónomo calificado.",
+    purchasesTitle: "Compras, entrega y cumplimiento",
+    purchasesBody1:
+      "A menos que la confirmación del pedido identifique expresamente a FertaFind como vendedor, el fertilizante es vendido y entregado por el proveedor participante indicado en el pedido. El proveedor o su transportista controla la confirmación de existencias, el despacho, la programación de la entrega, la descarga, la transferencia de titularidad y riesgo, las devoluciones y cualquier cargo específico de entrega según los términos finales del pedido. Después de la compra, FertaFind no es responsable por demoras, entregas fallidas, pérdidas, daños, manejo incorrecto u otros actos u omisiones de un proveedor o transportista independiente, salvo en la medida en que hayan sido causados por FertaFind o cuando la ley aplicable no permita excluir esa responsabilidad.",
+    purchasesBody2:
+      "Los clientes deben revisar el precio final del proveedor, la ventana de entrega, los requisitos de acceso, los términos de cancelación y los términos de reembolso antes de hacer el pedido, y deben contactar primero al proveedor ante problemas de cumplimiento. Nada en estos Términos limita ningún derecho legal de cancelación, reembolso, protección al consumidor, responsabilidad por producto u otro derecho que no pueda renunciarse legalmente. Si FertaFind hace una promesa específica de entrega o la ley aplicable le asigna responsabilidad, esa promesa o ley prevalecerá.",
+    availabilityTitle: "Disponibilidad del servicio",
+    availabilityBody:
+      "Los análisis pueden quedar incompletos o no estar disponibles por archivos poco legibles, información faltante, servicios de terceros, cobertura de socios o límites técnicos. Podemos revisar, cambiar, suspender o retirar listados, recomendaciones o funciones cuando sea razonablemente necesario.",
+    changesTitle: "Cambios y contacto",
+    changesBody:
+      "Podemos actualizar estos términos a medida que el servicio evoluciona. Las dudas pueden enviarse a",
+  },
+  notice: {
+    untranslatedArticle: "Este artículo está disponible únicamente en inglés por el momento.",
+  },
+  supplierType: {
+    manufacturer: "Fabricante",
+    distributor: "Distribuidora",
+    cooperative: "Cooperativa",
+    retailer: "Comercializadora",
+    importer: "Importadora",
+    trader: "Empresa comercializadora",
+  },
+  badge: {
+    partner: "Socio de FertaFind",
+    supplier: "Proveedor de FertaFind",
+    verified: "Información pública verificada",
+    pending: "Información pendiente de verificación",
+  },
+  breadcrumb: {
+    home: "Inicio",
+    suppliers: "Proveedores",
+  },
+  footer: {
+    tagline:
+      "Decisiones más inteligentes sobre fertilizantes. Compara cotizaciones sobre una base clara de costo.",
+    productHeading: "Producto",
+    contactHeading: "Contacto",
+    partners: "Socios",
+    rights: "Todos los derechos reservados.",
+  },
+  country: {
+    Brazil: "Brasil",
+    "United States": "Estados Unidos",
+  },
+  supplierDescription: {
+    "kap-organic-agro":
+      "KAP Organic Agro distribuye los fertilizantes nano de IFFCO en Estados Unidos, además de extracto de algas y otros insumos de nutrición de cultivos. Confirma las formulaciones, la disponibilidad y el precio final antes de comprar.",
+    "fertiexpress-group":
+      "FertiExpress Group importa y distribuye fertilizantes para la agricultura brasileña, conectando a proveedores internacionales y nacionales con productores de todo el país. Confirma las formulaciones, la disponibilidad y el precio final antes de comprar.",
+    nanofert:
+      "Nanofert ofrece fertilizantes líquidos nano con programas documentados por cultivo y ciclo. Confirma las dosis, la disponibilidad y el precio final antes de comprar.",
+  },
+};
+
 const DICTIONARIES: Record<Locale, Dictionary> = {
   en: en as unknown as Dictionary,
   "pt-BR": ptBR,
+  "es-419": es419,
 };
 
 /** The dictionary for a locale; unknown locales safely fall back to English. */

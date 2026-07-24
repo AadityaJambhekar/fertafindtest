@@ -21,6 +21,7 @@
 import { SITE_URL, SITE_NAME, canonicalUrl, jsonLdScript, breadcrumbLd } from "./seo.ts";
 import { DEFAULT_LOCALE, hreflangLinks, localePath, type Locale } from "./i18n.ts";
 import { localizedHead } from "./seo-i18n.ts";
+import { getDictionary } from "./dictionaries.ts";
 
 export type SupplierType =
   "manufacturer" | "distributor" | "cooperative" | "retailer" | "importer" | "trader";
@@ -34,7 +35,10 @@ export type SupplierStatus = "draft" | "public" | "inactive";
  *   - source-listed-unverified: named in third-party material, nothing confirmed.
  */
 export type VerificationStatus =
-  "public-source-verified" | "owner-provided" | "source-listed-unverified";
+  | "owner-confirmed-public-source-verified"
+  | "public-source-verified"
+  | "owner-provided"
+  | "source-listed-unverified";
 
 /** A company's relationship to FertaFind. "partner" is a declared FertaFind partner,
  *  "supplier" is a direct supplying company, and every other listed company is a plain
@@ -57,6 +61,8 @@ export interface Supplier {
   city: string | null;
   latitude: number | null;
   longitude: number | null;
+  /** A second published business location (e.g. a corporate office), when stated. */
+  corporateLocation: string | null;
   products: string[];
   productGrades: string[];
   serviceRegions: string[];
@@ -155,6 +161,7 @@ export const SUPPLIERS: Supplier[] = [
     // The presentation names the operating base only as a city; the state is never stated.
     state: null,
     city: "Campinas",
+    corporateLocation: null,
     latitude: null,
     longitude: null,
     products: ["Potassium chloride (KCL)", "Urea", "Ammonium sulphate"],
@@ -186,6 +193,7 @@ export const SUPPLIERS: Supplier[] = [
     country: "Brazil",
     state: null,
     city: null,
+    corporateLocation: null,
     latitude: null,
     longitude: null,
     products: ["Liquid nano-fertilizers"],
@@ -198,6 +206,46 @@ export const SUPPLIERS: Supplier[] = [
     description:
       "Nanofert provides liquid nano-fertilizer products with documented crop and lifecycle programs. Confirm rates, availability and final pricing before purchase.",
     source: "Official Nanofert website",
+    lastVerifiedAt: "2026-07-23",
+    status: "public",
+  },
+  {
+    id: "kap-organic-agro",
+    slug: "kap-organic-agro",
+    displayName: "KAP Organic Agro",
+    legalName: null,
+    // Official badge logo taken from kaporganic.com and stored locally, never hotlinked.
+    logo: "/suppliers/kap-organic-agro.png",
+    // Confirmed by the company AND checked against its official website.
+    verified: true,
+    verificationStatus: "owner-confirmed-public-source-verified",
+    relationship: "supplier",
+    // A DISTRIBUTOR of IFFCO products — explicitly not the manufacturer.
+    supplierType: "distributor",
+    country: "United States",
+    state: "California",
+    // The site labels Livermore as Operations and Milpitas as Corporate.
+    city: "Livermore",
+    corporateLocation: "Milpitas, California",
+    latitude: null,
+    longitude: null,
+    products: ["Nano fertilizers", "Seaweed extract"],
+    productGrades: [
+      "Nano Urea Super Liquid (17-0-0)",
+      "Nano DAP Liquid (7-15-0)",
+      "Nano NPK Liquid (8-8-10)",
+      "Nano K Pulverized (0-0-25)",
+    ],
+    serviceRegions: ["United States"],
+    website: "https://www.kaporganic.com/",
+    fertilizerPage: null,
+    // The site publishes contact details, but republishing them is a separate approval;
+    // this record stays to verifiable company facts.
+    publicEmail: null,
+    publicPhone: null,
+    description:
+      "KAP Organic Agro distributes IFFCO nano-fertilizer products in the United States, alongside seaweed extract and other crop nutrition inputs. Confirm grades, availability and final pricing before purchase.",
+    source: "Official KAP Organic Agro website",
     lastVerifiedAt: "2026-07-23",
     status: "public",
   },
@@ -386,6 +434,7 @@ export const SUPPLIER_TYPE_LABEL: Record<SupplierType, string> = {
 };
 
 export const VERIFICATION_BADGE: Record<VerificationStatus, string> = {
+  "owner-confirmed-public-source-verified": "Confirmed by the supplier and publicly verified",
   "public-source-verified": "Public information verified",
   "owner-provided": "Information provided by the supplier",
   "source-listed-unverified": "Information pending verification",
@@ -409,62 +458,11 @@ export const SUPPLIER_BADGE_LABEL: Record<SupplierBadgeKind, string> = {
 };
 
 // ---------------------------------------------------------------------------
-// Directory filters (pure functions — unit-tested, driven by the UI).
+// The directory filter bar was removed: with a short, curated supplier list the
+// controls added friction and could strand a visitor on an empty result. Supplier
+// data fields (products, grades, service regions, origins) are all still stored and
+// exposed by the selectors above for future use.
 // ---------------------------------------------------------------------------
-
-export interface SupplierDirectoryFilters {
-  /** "" = any, "partner" = declared FertaFind partner, "supplier" = direct supplier. */
-  relationship: "" | "partner" | "supplier";
-  /** "" = any, else the verification level to narrow to. */
-  verification: "" | "verified" | "provided" | "pending";
-  type: "" | SupplierType;
-  product: string;
-  /** Country (for companies) or sourcing origin. */
-  origin: string;
-}
-
-export function filterSupplierCompanies(
-  companies: Supplier[],
-  f: SupplierDirectoryFilters,
-): Supplier[] {
-  return companies.filter((s) => {
-    if (f.relationship !== "" && s.relationship !== f.relationship) return false;
-    if (f.verification === "verified" && s.verificationStatus !== "public-source-verified")
-      return false;
-    if (f.verification === "provided" && s.verificationStatus !== "owner-provided") return false;
-    if (f.verification === "pending" && s.verificationStatus !== "source-listed-unverified")
-      return false;
-    if (f.type && s.supplierType !== f.type) return false;
-    if (f.product && !s.products.includes(f.product)) return false;
-    if (f.origin && s.country !== f.origin) return false;
-    return true;
-  });
-}
-
-export function filterSourcingOrigins(
-  origins: SourcingOrigin[],
-  f: SupplierDirectoryFilters,
-): SourcingOrigin[] {
-  // Relationship, verification and supplier-type are company-only concepts; when any is set the
-  // user is narrowing to supplier companies, so no sourcing origins apply.
-  if (f.relationship !== "" || f.verification !== "" || f.type !== "") return [];
-  return origins.filter((o) => {
-    if (f.product && o.product !== f.product) return false;
-    if (f.origin && o.origin !== f.origin) return false;
-    return true;
-  });
-}
-
-/** Distinct filter values across supplier companies AND sourcing origins. */
-export function directoryFilterOptions() {
-  const companies = listSupplierCompanies();
-  const uniq = (arr: string[]) => [...new Set(arr.filter(Boolean))].sort();
-  return {
-    supplierTypes: uniq(companies.map((s) => s.supplierType)) as SupplierType[],
-    products: uniq(companies.flatMap((s) => s.products)),
-    origins: uniq(companies.map((s) => s.country)),
-  };
-}
 
 // ---------------------------------------------------------------------------
 // SEO surface for the directory and detail pages.
@@ -545,10 +543,11 @@ export function supplierOrganizationLd(s: Supplier) {
 export function supplierDetailRouteHead(s: Supplier, locale: Locale = DEFAULT_LOCALE) {
   const path = supplierPath(s.slug);
   const url = `${SITE_URL}${localePath(locale, path)}`;
-  const title = `${s.displayName} — Fertilizer supplier — FertaFind`;
+  const t = getDictionary(locale);
+  const title = `${s.displayName} — ${t.suppliers.detailTitleSuffix} — ${SITE_NAME}`;
+  // Prefer the curated translation; fall back to the registry's own English prose.
   const description =
-    s.description ??
-    `${s.displayName} is a fertilizer ${SUPPLIER_TYPE_LABEL[s.supplierType].toLowerCase()} listed on FertaFind.`;
+    t.supplierDescription[s.slug as keyof typeof t.supplierDescription] ?? s.description ?? "";
   const breadcrumb = jsonLdScript(
     breadcrumbLd([
       { name: "Home", path: "/" },

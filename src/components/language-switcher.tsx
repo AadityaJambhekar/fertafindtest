@@ -1,14 +1,18 @@
 import { useLocale } from "@/components/locale-context";
 import { SUPPORTED_LOCALES, UI_TRANSLATIONS_READY, type Locale } from "@/lib/i18n";
 
+/** Switcher labels. "PT-BR" is explicit: this is Brazilian Portuguese, not European. */
 const LOCALE_LABEL: Record<Locale, string> = {
   en: "EN",
-  "pt-BR": "PT",
+  "pt-BR": "PT-BR",
+  "es-419": "ES",
 };
 
+/** Accessible names, each written in its own language. */
 const LOCALE_FULL_NAME: Record<Locale, string> = {
   en: "English",
   "pt-BR": "Português (Brasil)",
+  "es-419": "Español (Latinoamérica)",
 };
 
 /**
@@ -26,7 +30,9 @@ export function LanguageSwitcher({ className = "" }: { className?: string }) {
 
   return (
     <div
-      className={`inline-flex items-center rounded-lg border border-border p-0.5 ${className}`}
+      // No display utility here on purpose: each call site owns its own visibility, so the
+      // desktop instance's `hidden` is not fought by a hard-coded `inline-flex`.
+      className={`items-center rounded-lg border border-border p-0.5 ${className}`}
       role="group"
       aria-label="Language"
     >

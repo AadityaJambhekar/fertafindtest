@@ -1,6 +1,6 @@
 import { DEFAULT_LOCALE, segmentToLocale } from "@/lib/i18n";
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import { useLocale, useLocalePath } from "@/components/locale-context";
+import { useDictionary, useLocale, useLocalePath } from "@/components/locale-context";
 import {
   AlertTriangle,
   ArrowRight,
@@ -80,9 +80,14 @@ function SupplierLogo({ supplier }: { supplier: Supplier }) {
 
 function SupplierDetailPage() {
   const { locale } = useLocale();
+  const t = useDictionary();
   const lp = useLocalePath();
   const { supplier } = Route.useLoaderData();
-  const place = [supplier.city, supplier.state, supplier.country].filter(Boolean).join(", ");
+  const country = t.country[supplier.country as keyof typeof t.country] ?? supplier.country;
+  const description =
+    t.supplierDescription[supplier.slug as keyof typeof t.supplierDescription] ??
+    supplier.description;
+  const place = [supplier.city, supplier.state, country].filter(Boolean).join(", ");
   const kind = supplierBadgeKind(supplier);
   const BadgeIcon = kind === "partner" ? Handshake : kind === "verified" ? ShieldCheck : Clock;
   const badgeStyle =
@@ -176,7 +181,7 @@ function SupplierDetailPage() {
                 rel="noopener noreferrer"
                 className="inline-flex h-11 items-center gap-2 rounded-full border border-border bg-background px-5 text-sm font-semibold text-foreground transition-colors hover:border-primary hover:text-primary"
               >
-                Visit website
+                {t.common.visitWebsite}
                 <ExternalLink className="h-4 w-4" aria-hidden="true" />
               </a>
             )}
@@ -194,8 +199,8 @@ function SupplierDetailPage() {
           </div>
         )}
 
-        {supplier.description && (
-          <p className="mt-6 text-[1.05rem] leading-8 text-foreground">{supplier.description}</p>
+        {description && (
+          <p className="mt-6 text-[1.05rem] leading-8 text-foreground">{description}</p>
         )}
 
         <div className="mt-8 grid gap-6">

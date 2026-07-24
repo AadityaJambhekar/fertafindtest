@@ -9,11 +9,19 @@
     <priority>1.0</priority>
   </url>
   <url>
+    <loc>https://www.fertafind.com/es</loc>
+    <priority>1.0</priority>
+  </url>
+  <url>
     <loc>https://www.fertafind.com/en/analyze</loc>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.fertafind.com/pt-br/analyze</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/es/analyze</loc>
     <priority>0.8</priority>
   </url>
   <url>
@@ -25,11 +33,19 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://www.fertafind.com/es/suppliers</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.fertafind.com/en/resources</loc>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.fertafind.com/pt-br/resources</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/es/resources</loc>
     <priority>0.7</priority>
   </url>
   <url>
@@ -69,6 +85,10 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://www.fertafind.com/es/suppliers/fertiexpress-group</loc>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://www.fertafind.com/en/suppliers/nanofert</loc>
     <priority>0.5</priority>
   </url>
@@ -77,11 +97,31 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://www.fertafind.com/es/suppliers/nanofert</loc>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/en/suppliers/kap-organic-agro</loc>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/pt-br/suppliers/kap-organic-agro</loc>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/es/suppliers/kap-organic-agro</loc>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://www.fertafind.com/en/terms</loc>
     <priority>0.4</priority>
   </url>
   <url>
     <loc>https://www.fertafind.com/pt-br/terms</loc>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://www.fertafind.com/es/terms</loc>
     <priority>0.4</priority>
   </url>
 </urlset>
