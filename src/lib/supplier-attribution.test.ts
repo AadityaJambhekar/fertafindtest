@@ -56,10 +56,12 @@ test("FertiExpress Group publishes only the products the deck supports", () => {
   assert.deepEqual(s.productGrades, ["KCL 60%", "Urea 46%"]);
 });
 
-test("FertiExpress Group invents no contact details the deck does not contain", () => {
+test("FertiExpress Group publishes its verified official website but invents no other contact details", () => {
   const s = getPublicSupplierBySlug("fertiexpress-group")!;
-  // The presentation contains no website, e-mail or phone anywhere.
-  assert.equal(s.website, null);
+  // The verified official website is published; it opens the "Visit website" button.
+  assert.equal(s.website, "https://www.fertiexpress.com/");
+  assert.equal(new URL(s.website!).host, "www.fertiexpress.com");
+  // The deck still contains no e-mail, phone, fertilizer page or legal entity name anywhere.
   assert.equal(s.fertilizerPage, null);
   assert.equal(s.publicEmail, null);
   assert.equal(s.publicPhone, null);

@@ -1,8 +1,13 @@
-import { DEFAULT_LOCALE, segmentToLocale } from "@/lib/i18n";
+import { DEFAULT_LOCALE, localeToSegment, segmentToLocale } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Building2, Clock, Handshake, MapPin, ShieldCheck } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
-import { useDictionary, useLocale, useLocalePath } from "@/components/locale-context";
+import {
+  useDictionary,
+  useLocale,
+  useLocalePath,
+  useLocaleSegment,
+} from "@/components/locale-context";
 import {
   SUPPLIERS_DIRECTORY,
   SUPPLIER_TYPE_LABEL,
@@ -10,7 +15,6 @@ import {
   SUPPLIER_DISCOVERY_DISCLAIMER,
   supplierBadgeKind,
   listSupplierCompanies,
-  supplierPath,
   suppliersRouteHead,
   type Supplier,
   type SupplierBadgeKind,
@@ -91,7 +95,7 @@ function SuppliersPage() {
           <p className="mt-2 max-w-2xl text-muted-foreground">{t.suppliers.ctaBody}</p>
           <Link
             to="/$locale/analyze"
-            params={{ locale }}
+            params={{ locale: localeToSegment(locale) }}
             className="mt-5 inline-flex h-12 items-center gap-2 rounded-full bg-primary px-7 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-colors hover:bg-primary-soft"
           >
             {t.home.heroCta}
@@ -145,6 +149,7 @@ function SupplierLogo({ supplier }: { supplier: Supplier }) {
 
 function SupplierCard({ supplier }: { supplier: Supplier }) {
   const t = useDictionary();
+  const localeSegment = useLocaleSegment();
   const country = t.country[supplier.country as keyof typeof t.country] ?? supplier.country;
   // Translated prose when we have it; otherwise the registry's own English description.
   const description =
@@ -154,7 +159,8 @@ function SupplierCard({ supplier }: { supplier: Supplier }) {
   const kind = supplierBadgeKind(supplier);
   return (
     <Link
-      to={supplierPath(supplier.slug)}
+      to="/$locale/suppliers/$slug"
+      params={{ locale: localeSegment, slug: supplier.slug }}
       className="group flex h-full flex-col rounded-2xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-foreground hover:shadow-[var(--shadow-soft)]"
     >
       <div className="flex items-start justify-between gap-3">

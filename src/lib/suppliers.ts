@@ -167,8 +167,9 @@ export const SUPPLIERS: Supplier[] = [
     products: ["Potassium chloride (KCL)", "Urea", "Ammonium sulphate"],
     productGrades: ["KCL 60%", "Urea 46%"],
     serviceRegions: ["Brazil"],
-    // No website, e-mail or phone appears anywhere in the presentation, so none is invented.
-    website: null,
+    // Verified official website (fertiexpress.com). No e-mail or phone appears anywhere in the
+    // presentation, so neither is invented; only the confirmed public website is published.
+    website: "https://www.fertiexpress.com/",
     fertilizerPage: null,
     publicEmail: null,
     publicPhone: null,

@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import { DEFAULT_LOCALE, localePath, type Locale } from "@/lib/i18n";
+import { DEFAULT_LOCALE, localePath, localeToSegment, type Locale } from "@/lib/i18n";
 import { getDictionary, type Dictionary } from "@/lib/dictionaries";
 
 export interface LocaleContextValue {
@@ -28,4 +28,14 @@ export function useDictionary(): Dictionary {
 export function useLocalePath(): (path: string) => string {
   const { locale } = useLocale();
   return (path: string) => localePath(locale, path);
+}
+
+/**
+ * The active locale's URL SEGMENT ("en" / "pt-br" / "es"), for TanStack `<Link to="/$locale...">`
+ * `params`. The `$locale` value is substituted verbatim into the URL, so it must be the segment,
+ * never the tag ("pt-BR" / "es-419") that useLocale() returns — the tag yields a non-canonical
+ * `/pt-BR/...` or a broken `/es-419/...` route.
+ */
+export function useLocaleSegment(): string {
+  return localeToSegment(useLocale().locale);
 }

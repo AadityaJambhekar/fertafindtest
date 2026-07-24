@@ -1,17 +1,21 @@
 import { Link } from "@tanstack/react-router";
 import { BrandMark } from "@/components/brand-mark";
 import { LanguageSwitcher } from "@/components/language-switcher";
-import { useDictionary, useLocale, useLocalePath } from "@/components/locale-context";
+import { useDictionary, useLocaleSegment, useLocalePath } from "@/components/locale-context";
 
 export function SiteHeader() {
   const t = useDictionary();
-  const { locale } = useLocale();
+  const localeSegment = useLocaleSegment();
   const lp = useLocalePath();
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-4 sm:h-20 sm:gap-4 sm:px-6">
-        <Link to="/$locale" params={{ locale }} className="group flex min-w-0 items-center gap-2">
+        <Link
+          to="/$locale"
+          params={{ locale: localeSegment }}
+          className="group flex min-w-0 items-center gap-2"
+        >
           <BrandMark className="h-10 w-10 shrink-0 sm:h-12 sm:w-12" />
           <span className="hidden truncate font-display text-lg font-bold tracking-[-0.04em] text-foreground min-[360px]:inline sm:text-xl">
             FertaFind
@@ -32,7 +36,7 @@ export function SiteHeader() {
           </a>
           <Link
             to="/$locale/suppliers"
-            params={{ locale }}
+            params={{ locale: localeSegment }}
             className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             {t.nav.suppliers}
@@ -48,7 +52,7 @@ export function SiteHeader() {
           <LanguageSwitcher className="hidden md:inline-flex" />
           <Link
             to="/$locale/analyze"
-            params={{ locale }}
+            params={{ locale: localeSegment }}
             className="inline-flex h-10 shrink-0 items-center rounded-lg bg-primary px-4 text-xs font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-all hover:-translate-y-0.5 hover:bg-primary-soft sm:h-11 sm:px-6 sm:text-sm"
           >
             {t.nav.analyzeQuotes}
@@ -67,7 +71,7 @@ export function SiteHeader() {
         </a>
         <Link
           to="/$locale/suppliers"
-          params={{ locale }}
+          params={{ locale: localeSegment }}
           className="shrink-0 text-xs font-semibold text-muted-foreground"
         >
           {t.nav.suppliers}
@@ -83,7 +87,7 @@ export function SiteHeader() {
 
 export function SiteFooter() {
   const t = useDictionary();
-  const { locale } = useLocale();
+  const localeSegment = useLocaleSegment();
   const lp = useLocalePath();
 
   return (
@@ -102,7 +106,7 @@ export function SiteFooter() {
             <li>
               <Link
                 to="/$locale/analyze"
-                params={{ locale }}
+                params={{ locale: localeSegment }}
                 className="hover:text-primary-foreground"
               >
                 {t.nav.analyzeQuotes}
@@ -131,7 +135,7 @@ export function SiteFooter() {
             <li>
               <Link
                 to="/$locale/terms"
-                params={{ locale }}
+                params={{ locale: localeSegment }}
                 className="hover:text-primary-foreground"
               >
                 {t.nav.terms}
