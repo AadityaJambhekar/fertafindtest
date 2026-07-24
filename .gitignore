@@ -10,6 +10,12 @@ dist/
 .env.*
 !.env.example
 
+# Owner-provided source documents (supplier decks, catalogues, quotes).
+# These are private commercial material: they may contain pricing, projections,
+# customer names and operational data. Only facts extracted and reviewed for
+# publication ever enter the repo — never the document itself.
+source-material/
+
 # Logs & OS files
 *.log
 .DS_Store

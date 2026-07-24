@@ -6,6 +6,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
+import { SUPPORTED_LOCALES } from "./i18n.ts";
+import { getDictionary } from "./dictionaries.ts";
+
 import {
   SUPPLIERS,
   listSupplierCompanies,
@@ -22,6 +25,82 @@ import {
   FERTIEXPRESS_DOCUMENT_ID,
 } from "./suppliers.ts";
 
+// --- FertiExpress Group: created from the owner-provided presentation ---
+
+test("FertiExpress Group is an active, public supplier", () => {
+  const s = getPublicSupplierBySlug("fertiexpress-group");
+  assert.ok(s, "FertiExpress Group must be public");
+  assert.equal(s.displayName, "FertiExpress Group");
+  assert.equal(s.status, "public");
+  assert.equal(s.verified, true);
+  assert.equal(s.relationship, "supplier");
+  assert.equal(s.verificationStatus, "owner-provided");
+});
+
+test("FertiExpress Group records the owner-provided deck as its source", () => {
+  const s = getPublicSupplierBySlug("fertiexpress-group")!;
+  assert.match(s.source, /owner-provided/i);
+  assert.equal(s.lastVerifiedAt, "2026-07-23");
+});
+
+test("FertiExpress Group carries its real logo, stored locally", () => {
+  const s = getPublicSupplierBySlug("fertiexpress-group")!;
+  assert.equal(s.logo, "/suppliers/fertiexpress-group.png");
+  assert.ok(s.logo.startsWith("/suppliers/"), "logo must be local, never hotlinked");
+});
+
+test("FertiExpress Group publishes only the products the deck supports", () => {
+  const s = getPublicSupplierBySlug("fertiexpress-group")!;
+  assert.deepEqual(s.products, ["Potassium chloride (KCL)", "Urea", "Ammonium sulphate"]);
+  assert.deepEqual(s.productGrades, ["KCL 60%", "Urea 46%"]);
+});
+
+test("FertiExpress Group invents no contact details the deck does not contain", () => {
+  const s = getPublicSupplierBySlug("fertiexpress-group")!;
+  // The presentation contains no website, e-mail or phone anywhere.
+  assert.equal(s.website, null);
+  assert.equal(s.fertilizerPage, null);
+  assert.equal(s.publicEmail, null);
+  assert.equal(s.publicPhone, null);
+  assert.equal(s.legalName, null);
+  // Only the city appears in the deck; the state is never stated, so it stays null.
+  assert.equal(s.city, "Campinas");
+  assert.equal(s.state, null);
+  assert.equal(s.latitude, null);
+  assert.equal(s.longitude, null);
+});
+
+test("no private deck information reaches any published supplier record", () => {
+  // Every one of these appears in the FertiExpress presentation and must never ship:
+  // revenue, margins, EBITDA, projections, customer names, reference prices, freight
+  // costs, import arrival dates, staff names, payment terms and the unearned ISO claim.
+  const forbidden = [
+    /206[.,]4/,
+    /\bEBITDA\b/i,
+    /\bROI\b/i,
+    /payback/i,
+    /\bmargin/i,
+    /revenue/i,
+    /projection|forecast/i,
+    /faturamento/i,
+    /\bCIF\b|\bFOB\b/,
+    /USD\s*\d/,
+    /R\$/,
+    /freight cost|custo.*frete/i,
+    /ISO\s*9001/i,
+    /Novellino|Angelina|Renato/i,
+    /Nutriverde|Nativia|Bom Jesus|Tera Fertilizantes|PMG Comercial|Viterra|Embrafos/i,
+    /agosto\s*\/?\s*2026|august\s*2026/i,
+    /CNPJ/i,
+  ];
+  for (const s of listPublicSuppliers()) {
+    const text = JSON.stringify(s);
+    for (const pattern of forbidden) {
+      assert.ok(!pattern.test(text), `${s.displayName} leaks private deck data: ${pattern}`);
+    }
+  }
+});
+
 // --- registry composition ---
 
 test("no company mentioned inside a source document is a first-class supplier", () => {
@@ -36,6 +115,23 @@ test("Nanofert remains an active, public supplier with its logo and website pres
   assert.equal(nanofert.relationship, "partner");
   assert.equal(nanofert.logo, "/suppliers/nanofert.png");
   assert.equal(nanofert.website, "https://www.nanofert.com.br/");
+});
+
+test("exactly two suppliers are active and public: FertiExpress Group and Nanofert", () => {
+  assert.equal(activeSupplierCount(), 2);
+  assert.equal(publicSupplierCount(), 2);
+  assert.deepEqual(
+    listSupplierCompanies()
+      .map((s) => s.displayName)
+      .sort(),
+    ["FertiExpress Group", "Nanofert"],
+  );
+  assert.deepEqual(
+    listPublicSuppliers()
+      .map((s) => s.displayName)
+      .sort(),
+    ["FertiExpress Group", "Nanofert"],
+  );
 });
 
 test("active and public supplier counts are reported and agree with the registry", () => {
@@ -119,7 +215,16 @@ test("the public supplier directory names no mentioned entity", () => {
 });
 
 test('the public supplier directory heading is "Our Supplier Network"', () => {
-  assert.ok(directorySource().includes("Our Supplier Network"));
+  // The heading is rendered from the dictionary, so assert it there and confirm the route
+  // reads it from the dictionary rather than hard-coding a second copy.
+  assert.equal(getDictionary("en").suppliers.title, "Our Supplier Network");
+  assert.ok(directorySource().includes("{t.suppliers.title}"));
+});
+
+test("the supplier directory heading is translated for every locale", () => {
+  for (const locale of SUPPORTED_LOCALES) {
+    assert.ok(getDictionary(locale).suppliers.title.trim().length > 0);
+  }
 });
 
 test("a mentioned entity cannot satisfy the supplier publication gate even if coerced", () => {

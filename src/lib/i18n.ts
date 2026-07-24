@@ -132,13 +132,13 @@ export function validateRequestLocale(value: unknown): Locale {
 /**
  * Whether curated UI translations exist for every non-default locale.
  *
- * FALSE today: the locale engine, the persisted preference and the server-side AI language
- * selection are all live, but the pt-BR UI dictionaries have not been written yet. Until they
- * land, the language switcher stays hidden — a visible control that changes nothing on screen
- * is a worse experience than no control at all. Flip to true in the same commit as the
- * dictionaries.
+ * TRUE: the pt-BR dictionaries in dictionaries.ts cover the navigation, the Analyze wizard,
+ * the supplier directory, validation, errors and empty states, and dictionaries.test.ts fails
+ * the build if English gains a key a locale has not translated. Long-form editorial bodies
+ * (guides, comparisons, methodology, Terms) are still English and say so via
+ * notice.untranslatedArticle.
  */
-export const UI_TRANSLATIONS_READY = false;
+export const UI_TRANSLATIONS_READY = true;
 
 export const LOCALE_STORAGE_KEY = "fertafind:locale";
 

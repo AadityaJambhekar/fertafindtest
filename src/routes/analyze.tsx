@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useLocale } from "@/components/locale-context";
+import { useLocale, useDictionary } from "@/components/locale-context";
 import {
   ArrowLeft,
   ArrowRight,
@@ -127,6 +127,7 @@ const CROP_STAGES: Record<string, string[]> = {
 function AnalyzePage() {
   const navigate = useNavigate();
   const { locale: activeLocale } = useLocale();
+  const t = useDictionary();
   const [step, setStep] = useState<Step>(0);
   const [location, setLocation] = useState("");
   const [matchedLocation, setMatchedLocation] = useState<MatchedLocation | null>(null);
@@ -1324,29 +1325,27 @@ function AnalyzePage() {
           {step === 2 && (
             <StepShell title="Upload quotes" subtitle="Add photos, documents or copied quote text.">
               <section className="mb-6 rounded-2xl border border-primary/25 bg-primary/5 p-5">
-                <h2 className="font-semibold text-foreground">Your goal</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Choose how to rank suitable products.
-                </p>
+                <h2 className="font-semibold text-foreground">{t.analyze.goalTitle}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">{t.analyze.goalSubtitle}</p>
                 <div className="mt-4 grid gap-2 sm:grid-cols-3">
                   {(
                     [
                       {
                         value: "yield",
-                        label: "Improve yield",
-                        description: "Prioritize nutrient and field fit",
+                        label: t.analyze.goalYield,
+                        description: t.analyze.goalYieldHelp,
                         icon: TrendingUp,
                       },
                       {
                         value: "cost",
-                        label: "Reduce costs",
-                        description: "Prioritize landed nutrient cost",
+                        label: t.analyze.goalCost,
+                        description: t.analyze.goalCostHelp,
                         icon: CircleDollarSign,
                       },
                       {
                         value: "balanced",
-                        label: "Balance both",
-                        description: "Balance value and crop fit",
+                        label: t.analyze.goalBalanced,
+                        description: t.analyze.goalBalancedHelp,
                         icon: Scale,
                       },
                     ] as const

@@ -25,12 +25,19 @@ export type SupplierType =
 
 export type SupplierStatus = "draft" | "public" | "inactive";
 
-/** How much of a listed company's information we have independently confirmed. */
-export type VerificationStatus = "public-source-verified" | "source-listed-unverified";
+/**
+ * How much of a listed company's information we have independently confirmed.
+ *   - public-source-verified: checked against the company's own public website.
+ *   - owner-provided:         supplied by the company itself in material it gave FertaFind.
+ *   - source-listed-unverified: named in third-party material, nothing confirmed.
+ */
+export type VerificationStatus =
+  "public-source-verified" | "owner-provided" | "source-listed-unverified";
 
-/** A company's relationship to FertaFind. "partner" is a declared FertaFind partner; every
- *  other listed company is a plain directory listing. */
-export type SupplierRelationship = "partner" | "listed";
+/** A company's relationship to FertaFind. "partner" is a declared FertaFind partner,
+ *  "supplier" is a direct supplying company, and every other listed company is a plain
+ *  directory listing. */
+export type SupplierRelationship = "partner" | "supplier" | "listed";
 
 export interface Supplier {
   id: string;
@@ -128,6 +135,40 @@ export interface MentionedEntity {
 export const FERTIEXPRESS_DOCUMENT_ID = "fertiexpress-presentation";
 
 export const SUPPLIERS: Supplier[] = [
+  {
+    id: "fertiexpress-group",
+    slug: "fertiexpress-group",
+    displayName: "FertiExpress Group",
+    // The deck shows the wordmark and a registration number but no full legal entity name.
+    legalName: null,
+    // Brand mark extracted from page 1 of the owner-provided presentation, stored locally.
+    logo: "/suppliers/fertiexpress-group.png",
+    // "Verified" here means the company itself supplied this material — NOT independently
+    // confirmed against a public source, which the badge states plainly.
+    verified: true,
+    verificationStatus: "owner-provided",
+    relationship: "supplier",
+    supplierType: "importer",
+    country: "Brazil",
+    // The presentation names the operating base only as a city; the state is never stated.
+    state: null,
+    city: "Campinas",
+    latitude: null,
+    longitude: null,
+    products: ["Potassium chloride (KCL)", "Urea", "Ammonium sulphate"],
+    productGrades: ["KCL 60%", "Urea 46%"],
+    serviceRegions: ["Brazil"],
+    // No website, e-mail or phone appears anywhere in the presentation, so none is invented.
+    website: null,
+    fertilizerPage: null,
+    publicEmail: null,
+    publicPhone: null,
+    description:
+      "FertiExpress Group imports and distributes fertilizers for Brazilian agriculture, connecting international and national suppliers to growers across the country. Confirm grades, availability and final pricing before purchase.",
+    source: "Owner-provided FertiExpress Group supplier presentation",
+    lastVerifiedAt: "2026-07-23",
+    status: "public",
+  },
   {
     id: "nanofert",
     slug: "nanofert",
@@ -344,20 +385,23 @@ export const SUPPLIER_TYPE_LABEL: Record<SupplierType, string> = {
 
 export const VERIFICATION_BADGE: Record<VerificationStatus, string> = {
   "public-source-verified": "Public information verified",
+  "owner-provided": "Information provided by the supplier",
   "source-listed-unverified": "Information pending verification",
 };
 
 /** The single badge kind shown for a company card: a partner badge wins, otherwise the
  *  verification level (verified vs pending). */
-export type SupplierBadgeKind = "partner" | "verified" | "pending";
+export type SupplierBadgeKind = "partner" | "supplier" | "verified" | "pending";
 
 export function supplierBadgeKind(s: Supplier): SupplierBadgeKind {
   if (s.relationship === "partner") return "partner";
+  if (s.relationship === "supplier") return "supplier";
   return s.verificationStatus === "public-source-verified" ? "verified" : "pending";
 }
 
 export const SUPPLIER_BADGE_LABEL: Record<SupplierBadgeKind, string> = {
   partner: "FertaFind Partner",
+  supplier: "FertaFind Supplier",
   verified: "Public information verified",
   pending: "Information pending verification",
 };
@@ -367,10 +411,10 @@ export const SUPPLIER_BADGE_LABEL: Record<SupplierBadgeKind, string> = {
 // ---------------------------------------------------------------------------
 
 export interface SupplierDirectoryFilters {
-  /** "" = any, "partner" = declared FertaFind partner. */
-  relationship: "" | "partner";
-  /** "" = any, "verified" = public-source-verified, "pending" = source-listed-unverified. */
-  verification: "" | "verified" | "pending";
+  /** "" = any, "partner" = declared FertaFind partner, "supplier" = direct supplier. */
+  relationship: "" | "partner" | "supplier";
+  /** "" = any, else the verification level to narrow to. */
+  verification: "" | "verified" | "provided" | "pending";
   type: "" | SupplierType;
   product: string;
   /** Country (for companies) or sourcing origin. */
@@ -382,9 +426,10 @@ export function filterSupplierCompanies(
   f: SupplierDirectoryFilters,
 ): Supplier[] {
   return companies.filter((s) => {
-    if (f.relationship === "partner" && s.relationship !== "partner") return false;
+    if (f.relationship !== "" && s.relationship !== f.relationship) return false;
     if (f.verification === "verified" && s.verificationStatus !== "public-source-verified")
       return false;
+    if (f.verification === "provided" && s.verificationStatus !== "owner-provided") return false;
     if (f.verification === "pending" && s.verificationStatus !== "source-listed-unverified")
       return false;
     if (f.type && s.supplierType !== f.type) return false;

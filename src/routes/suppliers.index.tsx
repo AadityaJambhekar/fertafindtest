@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { ArrowRight, Building2, Clock, Handshake, MapPin, ShieldCheck } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
+import { useDictionary } from "@/components/locale-context";
 import {
   SUPPLIERS_DIRECTORY,
   SUPPLIER_TYPE_LABEL,
@@ -36,6 +37,7 @@ const EMPTY_FILTERS: SupplierDirectoryFilters = {
 };
 
 function SuppliersPage() {
+  const t = useDictionary();
   const { relationship } = Route.useSearch();
   const companies = listSupplierCompanies();
   const options = directoryFilterOptions();
@@ -80,10 +82,10 @@ function SuppliersPage() {
           Supplier network
         </p>
         <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
-          Our Supplier Network
+          {t.suppliers.title}
         </h1>
         <p className="mt-3 max-w-3xl text-base leading-7 text-muted-foreground">
-          {SUPPLIERS_DIRECTORY.description} {SUPPLIER_DISCOVERY_DISCLAIMER}
+          {SUPPLIERS_DIRECTORY.description} {t.suppliers.disclaimer}
         </p>
 
         {/* Section 1: the supplier companies — shown up front, before the filters. */}
@@ -118,7 +120,7 @@ function SuppliersPage() {
         {/* Filters — placed below the first supplier-card section. */}
         <div className="mt-8 flex flex-wrap items-end gap-3 rounded-2xl border border-border bg-card p-4">
           <FilterSelect
-            label="Relationship"
+            label={t.suppliers.filterRelationship}
             value={filters.relationship}
             onChange={(v) =>
               setFilters((f) => ({
@@ -126,10 +128,13 @@ function SuppliersPage() {
                 relationship: v as SupplierDirectoryFilters["relationship"],
               }))
             }
-            entries={[{ value: "partner", label: SUPPLIER_BADGE_LABEL.partner }]}
+            entries={[
+              { value: "supplier", label: SUPPLIER_BADGE_LABEL.supplier },
+              { value: "partner", label: SUPPLIER_BADGE_LABEL.partner },
+            ]}
           />
           <FilterSelect
-            label="Verification"
+            label={t.suppliers.filterVerification}
             value={filters.verification}
             onChange={(v) =>
               setFilters((f) => ({
@@ -139,11 +144,12 @@ function SuppliersPage() {
             }
             entries={[
               { value: "verified", label: "Verified" },
+              { value: "provided", label: "Supplier-provided" },
               { value: "pending", label: "Pending verification" },
             ]}
           />
           <FilterSelect
-            label="Supplier type"
+            label={t.suppliers.filterType}
             value={filters.type}
             onChange={(v) =>
               setFilters((f) => ({ ...f, type: v as SupplierDirectoryFilters["type"] }))
@@ -154,13 +160,13 @@ function SuppliersPage() {
             }))}
           />
           <FilterSelect
-            label="Product"
+            label={t.suppliers.filterProduct}
             value={filters.product}
             onChange={(v) => setFilters((f) => ({ ...f, product: v }))}
             entries={options.products.map((p) => ({ value: p, label: p }))}
           />
           <FilterSelect
-            label="Country or origin"
+            label={t.suppliers.filterOrigin}
             value={filters.origin}
             onChange={(v) => setFilters((f) => ({ ...f, origin: v }))}
             entries={options.origins.map((o) => ({ value: o, label: o }))}
@@ -171,7 +177,7 @@ function SuppliersPage() {
               onClick={() => setFilters(EMPTY_FILTERS)}
               className="ml-auto h-9 rounded-lg border border-border px-3 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
             >
-              Clear filters
+              {t.common.clearFilters}
             </button>
           )}
         </div>
@@ -188,7 +194,7 @@ function SuppliersPage() {
             to="/analyze"
             className="mt-5 inline-flex h-12 items-center gap-2 rounded-full bg-primary px-7 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-colors hover:bg-primary-soft"
           >
-            Analyze your quotes
+            {t.home.heroCta}
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
@@ -230,6 +236,7 @@ function FilterSelect({
 
 const BADGE_STYLE: Record<SupplierBadgeKind, string> = {
   partner: "bg-primary/10 text-primary",
+  supplier: "bg-primary/10 text-primary",
   verified: "bg-primary/10 text-primary",
   pending: "bg-amber-100 text-amber-800",
 };

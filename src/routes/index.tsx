@@ -335,6 +335,7 @@ function SupplierNetwork() {
 
 const HOME_BADGE_STYLE: Record<SupplierBadgeKind, string> = {
   partner: "bg-primary/10 text-primary",
+  supplier: "bg-primary/10 text-primary",
   verified: "bg-primary/10 text-primary",
   pending: "bg-amber-100 text-amber-800",
 };

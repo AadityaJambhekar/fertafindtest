@@ -1,8 +1,11 @@
 import { Link } from "@tanstack/react-router";
 import { BrandMark } from "@/components/brand-mark";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { useDictionary } from "@/components/locale-context";
 
 export function SiteHeader() {
+  const t = useDictionary();
+
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-4 sm:h-20 sm:gap-4 sm:px-6">
@@ -17,25 +20,25 @@ export function SiteHeader() {
             href="/#how"
             className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
-            How it works
+            {t.nav.howItWorks}
           </a>
           <a
             href="/#why"
             className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
-            Why FertaFind
+            {t.nav.whyFertafind}
           </a>
           <Link
             to="/suppliers"
             className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
-            Suppliers
+            {t.nav.suppliers}
           </Link>
           <a
             href="/#faq"
             className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
-            FAQ
+            {t.nav.faq}
           </a>
         </nav>
         <div className="flex items-center gap-2 sm:gap-3">
@@ -44,7 +47,7 @@ export function SiteHeader() {
             to="/analyze"
             className="inline-flex h-10 shrink-0 items-center rounded-lg bg-primary px-4 text-xs font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-all hover:-translate-y-0.5 hover:bg-primary-soft sm:h-11 sm:px-6 sm:text-sm"
           >
-            Analyze quotes
+            {t.nav.analyzeQuotes}
           </Link>
         </div>
       </div>
@@ -53,16 +56,16 @@ export function SiteHeader() {
         aria-label="Homepage sections"
       >
         <a href="/#how" className="shrink-0 text-xs font-semibold text-muted-foreground">
-          How it works
+          {t.nav.howItWorks}
         </a>
         <a href="/#why" className="shrink-0 text-xs font-semibold text-muted-foreground">
-          Why FertaFind
+          {t.nav.whyFertafind}
         </a>
         <Link to="/suppliers" className="shrink-0 text-xs font-semibold text-muted-foreground">
-          Suppliers
+          {t.nav.suppliers}
         </Link>
         <a href="/#faq" className="shrink-0 text-xs font-semibold text-muted-foreground">
-          FAQ
+          {t.nav.faq}
         </a>
         <LanguageSwitcher className="shrink-0" />
       </nav>
