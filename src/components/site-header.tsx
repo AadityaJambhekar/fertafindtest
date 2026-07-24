@@ -75,7 +75,7 @@ export function SiteHeader() {
         <a href={`${lp("/")}#faq`} className="shrink-0 text-xs font-semibold text-muted-foreground">
           {t.nav.faq}
         </a>
-        <LanguageSwitcher className="shrink-0" />
+        <LanguageSwitcher className="inline-flex shrink-0" />
       </nav>
     </header>
   );

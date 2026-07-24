@@ -47,7 +47,93 @@ const en = {
     whyTitle: "Why FertaFind",
     faqTitle: "Frequently asked questions",
     supplierNetworkTitle: "Our Supplier Network",
+    heroBadge: "AI-powered fertilizer intelligence",
+    // The animated headline is "headlineLead" + one rotating phrase.
+    headlineLead: "Find the fertilizer",
+    heroLede:
+      "Upload a quote. We compare nutrients, price and delivery to find a strong match for your crop.",
+    heroPrimaryCta: "Analyze for free",
+    heroSecondaryCta: "How it works",
+    proofVerified: "Verified partner data",
+    proofSeparate: "Quotes kept separate",
+    proofFlagged: "Missing details flagged",
+    howEyebrow: "01 / How it works",
+    howHeading: "From quote photo to smart decision — in minutes.",
+    howCta: "Start for free",
+    whyEyebrow: "02 / Why farmers use FertaFind",
+    whyHeading: "Clearer comparisons. Fewer bad surprises.",
+    whyLede:
+      "Fertilizer is one of the largest cash expenses on the farm. A small decision made better each season compounds fast.",
+    networkEyebrow: "03 / Our supplier network",
+    networkLede:
+      "The companies in the FertaFind network — each clearly marked as a FertaFind partner, verified from public sources, or pending independent verification.",
+    networkViewAll: "View all suppliers",
+    locationPending: "Location pending verification",
+    faqEyebrow: "04 / FAQ",
+    faqHeading: "Clear answers before you analyze.",
+    faqLede:
+      "What the recommendation does, what it does not do, and where better field data helps.",
   },
+  /** Animated headline phrases. Rendered after home.headlineLead, so each must complete it. */
+  homeRotating: ["worth buying.", "right for you.", "for healthy crops.", "for better yields."],
+  homeSteps: [
+    {
+      title: "Tell us your farm",
+      body: "Enter your location, crops, field size and the conditions that affect application.",
+    },
+    {
+      title: "Upload your quotes",
+      body: "Snap photos of every fertilizer quote you've received. That's it.",
+    },
+    {
+      title: "AI does the math",
+      body: "We extract NPK, price per unit, application rates and delivery costs.",
+    },
+    {
+      title: "See the recommendation",
+      body: "Get one clear recommended fertilizer, the reason it fits and the supporting costs.",
+    },
+  ],
+  homeBenefits: [
+    {
+      title: "See nutrient cost on one basis",
+      body: "Quotes can look similar until price, pack size and nutrient concentration are put on the same basis. We show that clearly for one quote or several.",
+    },
+    {
+      title: "Landed cost, not sticker price",
+      body: "When freight is stated on the quote, it is included so the recommendation reflects the cost of getting product to the farm.",
+    },
+    {
+      title: "Fit-first, not brand-first",
+      body: "Recommendations consider the quoted nutrient mix alongside the crop, soil information, weather and watering details you provide.",
+    },
+    {
+      title: "Important gaps stay visible",
+      body: "Missing rates, prices, soil tests or uncertain extraction are flagged instead of being quietly guessed.",
+    },
+  ],
+  homeFaq: [
+    {
+      question: "Does FertaFind recommend the same fertilizer every time?",
+      answer:
+        "No. Partner products are evaluated against the selected crop, lifecycle stage, soil information, nutrient targets, weather, irrigation, prior applications, preferences, and available supplier evidence.",
+    },
+    {
+      question: "What happens if my crop has no matching partner product?",
+      answer:
+        "FertaFind will say that no participating partner product currently matches. Your uploaded products can still appear in a separate quote comparison, but they will not be presented as a partner recommendation.",
+    },
+    {
+      question: "Do I need a laboratory soil test?",
+      answer:
+        "No. A soil test is optional, but it can materially improve the analysis. Without one, missing nutrient and soil-condition information is shown as a limitation rather than guessed.",
+    },
+    {
+      question: "Will the cheapest quote always win?",
+      answer:
+        "No. Agronomic suitability comes first. Price and delivery are considered only after crop and stage compatibility, and an estimated cost is shown only when enough real pricing information exists.",
+    },
+  ],
   analyze: {
     title: "Analyze your quotes",
     stepLocation: "Where is your farm?",
@@ -224,9 +310,22 @@ const en = {
   },
 } as const;
 
-/** The dictionary shape every locale must satisfy, derived from English. */
+/** Every field of an object becomes a translatable string. */
+type Translated<T> = { [P in keyof T]: string };
+
+/**
+ * The dictionary shape every locale must satisfy, derived from English.
+ *
+ * Sections are either a flat map of strings, a list of strings (the rotating headline),
+ * or a list of objects (steps, benefits, FAQ). Every shape is derived from `en`, so a new
+ * English key cannot be added without every locale being forced to supply it.
+ */
 export type Dictionary = {
-  [K in keyof typeof en]: { [P in keyof (typeof en)[K]]: string };
+  [K in keyof typeof en]: (typeof en)[K] extends readonly string[]
+    ? string[]
+    : (typeof en)[K] extends readonly (infer Item)[]
+      ? Array<Translated<Item>>
+      : Translated<(typeof en)[K]>;
 };
 
 const ptBR: Dictionary = {
@@ -259,12 +358,102 @@ const ptBR: Dictionary = {
     heroSubtitle:
       "Envie as cotações que você já tem. A FertaFind coloca formulação, embalagem e entrega na mesma base para você comparar com justiça.",
     heroCta: "Analisar suas cotações",
-    workingWith: "Trabalhando com a Nanofert",
+    workingWith: "Em parceria com a Nanofert",
     howTitle: "Como funciona",
     whyTitle: "Por que a FertaFind",
     faqTitle: "Perguntas frequentes",
     supplierNetworkTitle: "Nossa rede de fornecedores",
+    heroBadge: "Inteligência em fertilizantes com IA",
+    headlineLead: "Encontre o fertilizante",
+    heroLede:
+      "Envie uma cotação. Nós comparamos nutrientes, preço e entrega para encontrar a melhor opção para sua cultura.",
+    heroPrimaryCta: "Analisar gratuitamente",
+    heroSecondaryCta: "Como funciona",
+    proofVerified: "Dados verificados de parceiros",
+    proofSeparate: "Cotações analisadas separadamente",
+    proofFlagged: "Informações ausentes sinalizadas",
+    howEyebrow: "01 / Como funciona",
+    howHeading: "Da foto da cotação a uma decisão mais inteligente — em minutos.",
+    howCta: "Comece gratuitamente",
+    whyEyebrow: "02 / Por que produtores usam a FertaFind",
+    whyHeading: "Comparações mais claras. Menos surpresas desagradáveis.",
+    whyLede:
+      "O fertilizante é uma das maiores despesas em dinheiro da fazenda. Uma decisão um pouco melhor a cada safra se acumula rápido.",
+    networkEyebrow: "03 / Nossa rede de fornecedores",
+    networkLede:
+      "As empresas da rede FertaFind — cada uma claramente identificada como parceira FertaFind, verificada em fontes públicas ou pendente de verificação independente.",
+    networkViewAll: "Ver todos os fornecedores",
+    locationPending: "Localização pendente de verificação",
+    faqEyebrow: "04 / Perguntas frequentes",
+    faqHeading: "Respostas claras antes de você analisar.",
+    faqLede: "O que a recomendação faz, o que ela não faz e onde dados de campo melhores ajudam.",
   },
+  // The first phrase completes the requested headline:
+  // "Encontre o fertilizante certo para sua lavoura."
+  homeRotating: [
+    "certo para sua lavoura.",
+    "que vale a pena comprar.",
+    "ideal para sua cultura.",
+    "para melhores produtividades.",
+  ],
+  homeSteps: [
+    {
+      title: "Conte sobre sua propriedade",
+      body: "Informe sua localização, culturas, área do talhão e as condições que afetam a aplicação.",
+    },
+    {
+      title: "Envie suas cotações",
+      body: "Fotografe cada cotação de fertilizante que você recebeu. É só isso.",
+    },
+    {
+      title: "A IA faz as contas",
+      body: "Extraímos NPK, preço por unidade, doses de aplicação e custos de entrega.",
+    },
+    {
+      title: "Veja a recomendação",
+      body: "Receba um fertilizante recomendado com clareza, o motivo de ele se encaixar e os custos que sustentam a escolha.",
+    },
+  ],
+  homeBenefits: [
+    {
+      title: "Veja o custo do nutriente em uma única base",
+      body: "Cotações podem parecer semelhantes até que preço, embalagem e concentração de nutrientes sejam colocados na mesma base. Mostramos isso com clareza para uma ou várias cotações.",
+    },
+    {
+      title: "Custo posto na fazenda, não preço de tabela",
+      body: "Quando o frete está informado na cotação, ele é incluído para que a recomendação reflita o custo de levar o produto até a fazenda.",
+    },
+    {
+      title: "Adequação primeiro, marca depois",
+      body: "As recomendações consideram a combinação de nutrientes cotada junto com a cultura, as informações de solo, o clima e os detalhes de irrigação que você fornece.",
+    },
+    {
+      title: "Lacunas importantes ficam visíveis",
+      body: "Doses, preços, análises de solo ausentes ou extração incerta são sinalizados em vez de serem silenciosamente adivinhados.",
+    },
+  ],
+  homeFaq: [
+    {
+      question: "A FertaFind recomenda sempre o mesmo fertilizante?",
+      answer:
+        "Não. Os produtos de parceiros são avaliados em relação à cultura selecionada, ao estágio do ciclo, às informações de solo, às metas de nutrientes, ao clima, à irrigação, às aplicações anteriores, às preferências e às evidências disponíveis do fornecedor.",
+    },
+    {
+      question: "O que acontece se nenhum produto de parceiro servir para minha cultura?",
+      answer:
+        "A FertaFind informará que nenhum produto de parceiro participante corresponde no momento. Os produtos que você enviou ainda podem aparecer em uma comparação de cotações separada, mas não serão apresentados como recomendação de parceiro.",
+    },
+    {
+      question: "Preciso de uma análise laboratorial de solo?",
+      answer:
+        "Não. A análise de solo é opcional, mas pode melhorar bastante o resultado. Sem ela, as informações ausentes de nutrientes e de condição do solo são mostradas como limitação, em vez de adivinhadas.",
+    },
+    {
+      question: "A cotação mais barata sempre vence?",
+      answer:
+        "Não. A adequação agronômica vem primeiro. Preço e entrega só são considerados depois da compatibilidade com a cultura e o estágio, e um custo estimado só é exibido quando há informação de preço real suficiente.",
+    },
+  ],
   analyze: {
     title: "Analise suas cotações",
     stepLocation: "Onde fica sua propriedade?",

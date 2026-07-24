@@ -1,7 +1,8 @@
 import { localizedHead } from "@/lib/seo-i18n";
 import { DEFAULT_LOCALE, segmentToLocale } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useLocale } from "@/components/locale-context";
+import { useDictionary, useLocale } from "@/components/locale-context";
+import { getDictionary } from "@/lib/dictionaries";
 import { useEffect, useState } from "react";
 import {
   ArrowRight,
@@ -18,27 +19,23 @@ import {
   Check,
 } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
-import { pageMeta, jsonLdScript, organizationLd, websiteLd, faqLd } from "@/lib/seo";
+import { jsonLdScript, organizationLd, websiteLd, faqLd } from "@/lib/seo";
 import {
   listSupplierCompanies,
   supplierBadgeKind,
-  SUPPLIER_BADGE_LABEL,
   type Supplier,
   type SupplierBadgeKind,
 } from "@/lib/suppliers";
 
-const rotatingPhrases = [
-  "worth buying.",
-  "right for you.",
-  "for healthy crops.",
-  "for better yields.",
-];
+// Deliberately NOT translated: a proper-noun easter egg, documented in the i18n allowlist.
 const easterEggPhrase = "Aaditya is the best.";
 
 export const Route = createFileRoute("/$locale/")({
   head: ({ params }) => {
     const locale = segmentToLocale(params.locale) ?? DEFAULT_LOCALE;
     const base = localizedHead(locale, "home", "/");
+    // Structured data mirrors the VISIBLE localized FAQ, never the English source.
+    const faqs = getDictionary(locale).homeFaq;
     return {
       ...base,
       // Homepage structured data: Organization + WebSite, plus a FAQPage generated
@@ -73,6 +70,7 @@ function HomePage() {
 
 function Hero() {
   const { locale } = useLocale();
+  const t = useDictionary();
   return (
     <section
       className="relative overflow-hidden border-b border-border"
@@ -83,23 +81,22 @@ function Hero() {
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm font-semibold">
             <span className="inline-flex items-center gap-2 text-primary">
               <Sparkles className="h-3.5 w-3.5" />
-              AI-powered fertilizer intelligence
+              {t.home.heroBadge}
             </span>
             <a
               href="#suppliers"
               className="inline-flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground"
             >
-              Working with Nanofert
+              {t.home.workingWith}
               <span aria-hidden="true">↘</span>
             </a>
           </div>
           <h1 className="mt-6 font-display text-[clamp(2.2rem,5vw,3.5rem)] font-medium leading-[1.02] text-foreground">
-            <span className="block whitespace-nowrap">Find the fertilizer</span>
+            <span className="block whitespace-nowrap">{t.home.headlineLead}</span>
             <RotatingPhrase />
           </h1>
           <p className="mx-auto mt-6 max-w-xl text-base leading-7 text-muted-foreground sm:mt-7 sm:text-lg sm:leading-8">
-            Upload a quote. We compare nutrients, price and delivery to find a strong match for your
-            crop.
+            {t.home.heroLede}
           </p>
           <div className="mt-8 grid gap-3 min-[420px]:flex min-[420px]:flex-wrap min-[420px]:items-center min-[420px]:justify-center sm:mt-10 sm:gap-4">
             <Link
@@ -107,20 +104,20 @@ function Hero() {
               params={{ locale }}
               className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-primary px-7 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-colors hover:bg-primary-soft"
             >
-              Analyze for free
+              {t.home.heroPrimaryCta}
               <ArrowRight className="h-4 w-4" />
             </Link>
             <a
               href="#how"
               className="inline-flex h-12 items-center justify-center rounded-lg border border-border bg-background px-7 text-sm font-medium text-foreground transition-colors hover:border-primary hover:text-primary"
             >
-              How it works
+              {t.home.heroSecondaryCta}
             </a>
           </div>
           <div className="mx-auto mt-10 grid max-w-2xl gap-3 border-t border-border pt-6 min-[440px]:flex min-[440px]:flex-wrap min-[440px]:justify-center min-[440px]:gap-x-6 sm:mt-12">
-            <ProofPoint>Verified partner data</ProofPoint>
-            <ProofPoint>Quotes kept separate</ProofPoint>
-            <ProofPoint>Missing details flagged</ProofPoint>
+            <ProofPoint>{t.home.proofVerified}</ProofPoint>
+            <ProofPoint>{t.home.proofSeparate}</ProofPoint>
+            <ProofPoint>{t.home.proofFlagged}</ProofPoint>
           </div>
         </div>
       </div>
@@ -129,6 +126,7 @@ function Hero() {
 }
 
 function RotatingPhrase() {
+  const rotatingPhrases = useDictionary().homeRotating;
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [showEasterEgg, setShowEasterEgg] = useState(false);
   const [visible, setVisible] = useState("");
@@ -151,7 +149,7 @@ function RotatingPhrase() {
       } else setVisible(phrase.slice(0, visible.length + (deleting ? -1 : 1)));
     }, delay);
     return () => window.clearTimeout(timer);
-  }, [deleting, phraseIndex, showEasterEgg, visible]);
+  }, [deleting, phraseIndex, rotatingPhrases, showEasterEgg, visible]);
 
   return (
     <span className="rotating-phrase mx-auto block min-h-[1.08em] text-primary" aria-live="polite">
@@ -174,36 +172,18 @@ function ProofPoint({ children }: { children: string }) {
 
 function HowItWorks() {
   const { locale } = useLocale();
-  const steps = [
-    {
-      icon: MapPin,
-      title: "Tell us your farm",
-      body: "Enter your location, crops, field size and the conditions that affect application.",
-    },
-    {
-      icon: Camera,
-      title: "Upload your quotes",
-      body: "Snap photos of every fertilizer quote you've received. That's it.",
-    },
-    {
-      icon: Sparkles,
-      title: "AI does the math",
-      body: "We extract NPK, price per unit, application rates and delivery costs.",
-    },
-    {
-      icon: TrendingUp,
-      title: "See the recommendation",
-      body: "Get one clear recommended fertilizer, the reason it fits and the supporting costs.",
-    },
-  ];
+  const t = useDictionary();
+  // Icons stay in code; every word comes from the dictionary.
+  const stepIcons = [MapPin, Camera, Sparkles, TrendingUp];
+  const steps = t.homeSteps.map((step, i) => ({ ...step, icon: stepIcons[i] }));
   return (
     <section id="how" className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24 lg:py-28">
       <div className="max-w-2xl">
         <p className="text-sm font-medium uppercase tracking-wider eyebrow-accent">
-          01 / How it works
+          {t.home.howEyebrow}
         </p>
         <h2 className="mt-2 font-display text-3xl font-semibold text-foreground sm:text-4xl md:text-5xl">
-          From quote photo to smart decision — in minutes.
+          {t.home.howHeading}
         </h2>
       </div>
       <div className="mt-9 grid gap-4 sm:mt-14 sm:gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -231,7 +211,7 @@ function HowItWorks() {
           params={{ locale }}
           className="inline-flex h-12 items-center gap-2 rounded-lg bg-primary px-8 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-all hover:-translate-y-0.5 hover:bg-primary-soft"
         >
-          Start for free
+          {t.home.howCta}
           <ArrowRight className="h-4 w-4" />
         </Link>
       </div>
@@ -240,28 +220,9 @@ function HowItWorks() {
 }
 
 function Benefits() {
-  const items = [
-    {
-      icon: Wallet,
-      title: "See nutrient cost on one basis",
-      body: "Quotes can look similar until price, pack size and nutrient concentration are put on the same basis. We show that clearly for one quote or several.",
-    },
-    {
-      icon: Truck,
-      title: "Landed cost, not sticker price",
-      body: "When freight is stated on the quote, it is included so the recommendation reflects the cost of getting product to the farm.",
-    },
-    {
-      icon: TrendingUp,
-      title: "Fit-first, not brand-first",
-      body: "Recommendations consider the quoted nutrient mix alongside the crop, soil information, weather and watering details you provide.",
-    },
-    {
-      icon: ShieldCheck,
-      title: "Important gaps stay visible",
-      body: "Missing rates, prices, soil tests or uncertain extraction are flagged instead of being quietly guessed.",
-    },
-  ];
+  const t = useDictionary();
+  const benefitIcons = [Wallet, Truck, TrendingUp, ShieldCheck];
+  const items = t.homeBenefits.map((item, i) => ({ ...item, icon: benefitIcons[i] }));
   return (
     <section
       id="why"
@@ -272,15 +233,12 @@ function Benefits() {
         <div className="grid gap-12 lg:grid-cols-[1fr_1.4fr] lg:gap-16">
           <div>
             <p className="text-sm font-medium uppercase tracking-wider eyebrow-accent">
-              02 / Why farmers use FertaFind
+              {t.home.whyEyebrow}
             </p>
             <h2 className="mt-2 font-display text-3xl font-semibold text-foreground sm:text-4xl md:text-5xl">
-              Clearer comparisons. Fewer bad surprises.
+              {t.home.whyHeading}
             </h2>
-            <p className="mt-4 max-w-md text-muted-foreground">
-              Fertilizer is one of the largest cash expenses on the farm. A small decision made
-              better each season compounds fast.
-            </p>
+            <p className="mt-4 max-w-md text-muted-foreground">{t.home.whyLede}</p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             {items.map((item) => (
@@ -306,20 +264,20 @@ function Benefits() {
 
 function SupplierNetwork() {
   const { locale } = useLocale();
+  const t = useDictionary();
   const suppliers = listSupplierCompanies();
   return (
     <section id="suppliers" className="scroll-mt-28 border-b border-border bg-card">
       <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
         <div className="max-w-2xl">
           <p className="text-sm font-medium uppercase tracking-wider eyebrow-accent">
-            03 / Our supplier network
+            {t.home.networkEyebrow}
           </p>
           <h2 className="mt-3 font-display text-4xl font-semibold text-foreground sm:text-5xl">
-            Our Supplier Network
+            {t.home.supplierNetworkTitle}
           </h2>
           <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
-            The companies in the FertaFind network — each clearly marked as a FertaFind partner,
-            verified from public sources, or pending independent verification.
+            {t.home.networkLede}
           </p>
         </div>
 
@@ -334,7 +292,7 @@ function SupplierNetwork() {
             params={{ locale }}
             className="inline-flex items-center gap-1.5 text-sm font-semibold content-accent hover:underline"
           >
-            View all suppliers and sourcing origins
+            {t.home.networkViewAll}
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
@@ -352,9 +310,11 @@ const HOME_BADGE_STYLE: Record<SupplierBadgeKind, string> = {
 
 function HomeSupplierCard({ supplier }: { supplier: Supplier }) {
   const { locale } = useLocale();
+  const t = useDictionary();
   const kind = supplierBadgeKind(supplier);
   const BadgeIcon = kind === "partner" ? Handshake : kind === "verified" ? ShieldCheck : Clock;
-  const place = [supplier.city, supplier.state, supplier.country].filter(Boolean).join(", ");
+  const country = t.country[supplier.country as keyof typeof t.country] ?? supplier.country;
+  const place = [supplier.city, supplier.state, country].filter(Boolean).join(", ");
   return (
     <Link
       to="/$locale/suppliers/$slug"
@@ -379,54 +339,31 @@ function HomeSupplierCard({ supplier }: { supplier: Supplier }) {
           className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${HOME_BADGE_STYLE[kind]}`}
         >
           <BadgeIcon className="h-3 w-3" aria-hidden="true" />
-          {SUPPLIER_BADGE_LABEL[kind]}
+          {t.badge[kind]}
         </span>
       </div>
       <h3 className="mt-4 font-display text-xl font-semibold text-foreground">
         {supplier.displayName}
       </h3>
-      <p className="mt-1 text-sm text-muted-foreground">
-        {place || "Location pending verification"}
-      </p>
+      <p className="mt-1 text-sm text-muted-foreground">{place || t.home.locationPending}</p>
     </Link>
   );
 }
 
-const faqs = [
-  {
-    question: "Does FertaFind recommend the same fertilizer every time?",
-    answer:
-      "No. Partner products are evaluated against the selected crop, lifecycle stage, soil information, nutrient targets, weather, irrigation, prior applications, preferences, and available supplier evidence.",
-  },
-  {
-    question: "What happens if my crop has no matching partner product?",
-    answer:
-      "FertaFind will say that no participating partner product currently matches. Your uploaded products can still appear in a separate quote comparison, but they will not be presented as a partner recommendation.",
-  },
-  {
-    question: "Do I need a laboratory soil test?",
-    answer:
-      "No. A soil test is optional, but it can materially improve the analysis. Without one, missing nutrient and soil-condition information is shown as a limitation rather than guessed.",
-  },
-  {
-    question: "Will the cheapest quote always win?",
-    answer:
-      "No. Agronomic suitability comes first. Price and delivery are considered only after crop and stage compatibility, and an estimated cost is shown only when enough real pricing information exists.",
-  },
-];
-
 function FrequentlyAskedQuestions() {
+  const t = useDictionary();
+  const faqs = t.homeFaq;
   return (
     <section id="faq" className="scroll-mt-28 border-y border-border bg-card">
       <div className="mx-auto grid max-w-6xl gap-9 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-[.7fr_1.3fr] lg:gap-12">
         <div>
-          <p className="text-sm font-medium uppercase tracking-wider eyebrow-accent">04 / FAQ</p>
-          <h2 className="mt-3 font-display text-3xl font-semibold text-foreground sm:text-4xl md:text-5xl">
-            Clear answers before you analyze.
-          </h2>
-          <p className="mt-4 max-w-sm text-muted-foreground">
-            What the recommendation does, what it does not do, and where better field data helps.
+          <p className="text-sm font-medium uppercase tracking-wider eyebrow-accent">
+            {t.home.faqEyebrow}
           </p>
+          <h2 className="mt-3 font-display text-3xl font-semibold text-foreground sm:text-4xl md:text-5xl">
+            {t.home.faqHeading}
+          </h2>
+          <p className="mt-4 max-w-sm text-muted-foreground">{t.home.faqLede}</p>
         </div>
         <div className="divide-y divide-border border-y border-border">
           {faqs.map((item) => (
