@@ -35,19 +35,33 @@ function fakeStorage(seed: Record<string, string> = {}) {
 
 // --- the supported set ---
 
-test("exactly English and Brazilian Portuguese are public today", () => {
-  assert.deepEqual([...SUPPORTED_LOCALES], ["en", "pt-BR"]);
+test("English, Brazilian Portuguese and Latin American Spanish are public", () => {
+  assert.deepEqual([...SUPPORTED_LOCALES], ["en", "pt-BR", "es-419"]);
   assert.equal(DEFAULT_LOCALE, "en");
 });
 
-test("Spanish is not shipped until its content exists", () => {
-  assert.ok(!SUPPORTED_LOCALES.includes("es" as Locale));
-  assert.equal(parseLocale("es"), null);
+test("the Spanish URL segment is /es/, not the full es-419 tag", () => {
+  // The internal tag is a UN M49 region code; the public URL stays short and familiar.
+  assert.equal(localeToSegment("es-419"), "es");
+  assert.equal(segmentToLocale("es"), "es-419");
+  assert.equal(localePath("es-419", "/analyze"), "/es/analyze");
+  assert.deepEqual(stripLocale("/es/analyze"), { locale: "es-419", path: "/analyze" });
+});
+
+test("the es-419 tag itself is not a valid URL segment", () => {
+  // Only one canonical URL per locale, so /es-419/... must not silently resolve.
+  assert.equal(segmentToLocale("es-419"), null);
+});
+
+test("regional Spanish variants all resolve to the Latin American dictionary", () => {
+  for (const tag of ["es", "es-419", "es-MX", "es-AR", "es-CL", "es-CO", "ES-mx"]) {
+    assert.equal(parseLocale(tag), "es-419", `${tag} should resolve to es-419`);
+  }
 });
 
 // --- URL segments are lowercase; locale tags keep their canonical casing ---
 
-test("locale tags map to lowercase URL segments and back", () => {
+test("locale tags map to their URL segments and back", () => {
   assert.equal(localeToSegment("en"), "en");
   assert.equal(localeToSegment("pt-BR"), "pt-br");
   assert.equal(segmentToLocale("en"), "en");
@@ -56,9 +70,19 @@ test("locale tags map to lowercase URL segments and back", () => {
   assert.equal(segmentToLocale("fr"), null);
 });
 
-test("html lang uses the full locale tag", () => {
+test("every supported locale round-trips tag -> segment -> tag", () => {
+  for (const locale of SUPPORTED_LOCALES) {
+    assert.equal(segmentToLocale(localeToSegment(locale)), locale, `${locale} round-trip`);
+  }
+  // Segments are unique, so no two locales can claim the same URL prefix.
+  const segments = SUPPORTED_LOCALES.map(localeToSegment);
+  assert.equal(new Set(segments).size, segments.length, "segments must be unique");
+});
+
+test("html lang uses the full locale tag, not the short URL segment", () => {
   assert.equal(localeHtmlLang("en"), "en");
   assert.equal(localeHtmlLang("pt-BR"), "pt-BR");
+  assert.equal(localeHtmlLang("es-419"), "es-419");
 });
 
 // --- parsing is strict ---
@@ -68,7 +92,7 @@ test("parseLocale accepts known tags case-insensitively and rejects everything e
   assert.equal(parseLocale("pt-BR"), "pt-BR");
   assert.equal(parseLocale("pt-br"), "pt-BR");
   assert.equal(parseLocale("  pt-BR  "), "pt-BR");
-  for (const bad of ["", "xx", "en-US-x-hack", null, undefined, 42, {}, [], "pt_BR"]) {
+  for (const bad of ["", "xx", "en-US-x-hack", null, undefined, 42, {}, [], "pt_BR", "fr-CA"]) {
     assert.equal(parseLocale(bad), null, `${JSON.stringify(bad)} must not parse`);
   }
 });
@@ -101,6 +125,14 @@ test("resolution falls back to English for unknown or absent signals", () => {
   assert.equal(resolveLocale({}), "en");
   assert.equal(resolveLocale({ acceptLanguage: "fr-FR,fr;q=0.9" }), "en");
   assert.equal(resolveLocale({ explicit: "klingon", saved: "nope" }), "en");
+});
+
+test("a Spanish browser is offered Spanish unless the user chose otherwise", () => {
+  assert.equal(resolveLocale({ acceptLanguage: "es-MX,es;q=0.9,en;q=0.8" }), "es-419");
+  assert.equal(resolveLocale({ acceptLanguage: "es-419" }), "es-419");
+  // An explicit choice always wins over browser detection.
+  assert.equal(resolveLocale({ explicit: "en", acceptLanguage: "es-MX,es;q=0.9" }), "en");
+  assert.equal(resolveLocale({ saved: "pt-BR", acceptLanguage: "es-MX,es;q=0.9" }), "pt-BR");
 });
 
 test("an unparseable explicit value falls through to the next signal, not to English", () => {
@@ -161,7 +193,7 @@ test("validateRequestLocale accepts a valid locale", () => {
 });
 
 test("validateRequestLocale falls back to English for anything unknown", () => {
-  for (const bad of ["es", "fr", "", null, undefined, 7, {}, "<script>"]) {
+  for (const bad of ["fr", "de", "", null, undefined, 7, {}, "<script>"]) {
     assert.equal(validateRequestLocale(bad), "en", `${JSON.stringify(bad)} must fall back`);
   }
 });
@@ -173,8 +205,10 @@ test("hreflang links are reciprocal and include x-default", () => {
   const byLang = Object.fromEntries(links.map((l) => [l.hreflang, l.href]));
   assert.equal(byLang.en, "https://www.fertafind.com/en/analyze");
   assert.equal(byLang["pt-BR"], "https://www.fertafind.com/pt-br/analyze");
+  // hreflang advertises the full tag while the URL keeps the short segment.
+  assert.equal(byLang["es-419"], "https://www.fertafind.com/es/analyze");
   assert.equal(byLang["x-default"], "https://www.fertafind.com/en/analyze");
-  assert.equal(links.length, 3);
+  assert.equal(links.length, SUPPORTED_LOCALES.length + 1);
 });
 
 test("hreflang links are computed from the bare path even if given a localized one", () => {
@@ -214,6 +248,19 @@ test("storage that throws (private mode, blocked cookies) degrades quietly", () 
 test("Brazilian Portuguese asks the model for Portuguese prose", () => {
   const instruction = aiLanguageInstruction("pt-BR");
   assert.match(instruction, /Brazilian Portuguese/i);
+});
+
+test("Latin American Spanish asks the model for neutral Latin American prose", () => {
+  assert.match(aiLanguageInstruction("es-419"), /Latin American Spanish/i);
+});
+
+test("the server accepts exactly en, pt-BR and es-419", () => {
+  assert.equal(validateRequestLocale("es-419"), "es-419");
+  assert.equal(validateRequestLocale("es"), "es-419");
+  assert.equal(validateRequestLocale("es-MX"), "es-419");
+  for (const bad of ["fr", "de", "zh", "", null, undefined, {}]) {
+    assert.equal(validateRequestLocale(bad), "en", `${JSON.stringify(bad)} falls back`);
+  }
 });
 
 test("English asks the model for English prose", () => {

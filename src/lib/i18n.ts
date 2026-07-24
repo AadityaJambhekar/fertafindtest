@@ -13,21 +13,38 @@
 
 import { SITE_URL } from "./seo.ts";
 
-export const SUPPORTED_LOCALES = ["en", "pt-BR"] as const;
+export const SUPPORTED_LOCALES = ["en", "pt-BR", "es-419"] as const;
 
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
 
 export const DEFAULT_LOCALE: Locale = "en";
 
-/** Lowercase URL segment for a locale ("pt-BR" -> "pt-br"). */
+/**
+ * URL segment per locale — declared, never derived.
+ *
+ * The internal tag and the public URL deliberately differ for Spanish: "es-419" is the UN
+ * M49 code for Latin America, correct for <html lang> and hreflang, but an unfamiliar and
+ * ugly URL. The public prefix stays "/es/". Deriving segments by lowercasing (as this used
+ * to) would have produced "/es-419/".
+ */
+const LOCALE_SEGMENT: Record<Locale, string> = {
+  en: "en",
+  "pt-BR": "pt-br",
+  "es-419": "es",
+};
+
+/** The URL segment for a locale ("pt-BR" -> "pt-br", "es-419" -> "es"). */
 export function localeToSegment(locale: Locale): string {
-  return locale.toLowerCase();
+  return LOCALE_SEGMENT[locale];
 }
 
-/** A URL segment back to its canonical locale tag, or null if unsupported. */
+/**
+ * A URL segment back to its canonical locale tag, or null if unsupported.
+ * Only the declared segment resolves, so each locale has exactly one canonical URL.
+ */
 export function segmentToLocale(segment: string): Locale | null {
   const wanted = segment.trim().toLowerCase();
-  return SUPPORTED_LOCALES.find((l) => l.toLowerCase() === wanted) ?? null;
+  return SUPPORTED_LOCALES.find((l) => LOCALE_SEGMENT[l] === wanted) ?? null;
 }
 
 /**
@@ -41,9 +58,23 @@ export function parseLocale(value: unknown): Locale | null {
   if (typeof value !== "string") return null;
   const raw = value.trim();
   if (raw === "") return null;
-  const exact = segmentToLocale(raw);
-  if (exact) return exact;
-  if (raw.toLowerCase() === "pt") return "pt-BR";
+
+  const lower = raw.toLowerCase();
+
+  // Exact locale tags (what we store and send to the server).
+  const exactTag = SUPPORTED_LOCALES.find((l) => l.toLowerCase() === lower);
+  if (exactTag) return exactTag;
+
+  // URL segments.
+  const bySegment = segmentToLocale(raw);
+  if (bySegment) return bySegment;
+
+  // Primary-subtag families. Every regional Spanish (es-MX, es-AR, es-CL...) is served the
+  // neutral Latin American dictionary — far better than falling back to English. Likewise
+  // bare "pt" is served the Brazilian dictionary, the only Portuguese content we have.
+  const primary = lower.split("-")[0];
+  if (primary === "pt") return "pt-BR";
+  if (primary === "es") return "es-419";
   return null;
 }
 
@@ -185,6 +216,7 @@ export function saveLocale(storage: LocaleStorage | null | undefined, locale: Lo
 const LOCALE_LANGUAGE_NAME: Record<Locale, string> = {
   en: "English",
   "pt-BR": "Brazilian Portuguese",
+  "es-419": "neutral Latin American Spanish",
 };
 
 /**

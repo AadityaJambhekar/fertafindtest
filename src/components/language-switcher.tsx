@@ -5,11 +5,14 @@ import { SUPPORTED_LOCALES, UI_TRANSLATIONS_READY, type Locale } from "@/lib/i18
 const LOCALE_LABEL: Record<Locale, string> = {
   en: "EN",
   "pt-BR": "PT-BR",
+  "es-419": "ES",
 };
 
+/** Accessible names, each written in its own language. */
 const LOCALE_FULL_NAME: Record<Locale, string> = {
   en: "English",
   "pt-BR": "Português (Brasil)",
+  "es-419": "Español (Latinoamérica)",
 };
 
 /**
