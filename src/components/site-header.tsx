@@ -74,6 +74,8 @@ export function SiteHeader() {
 }
 
 export function SiteFooter() {
+  const t = useDictionary();
+
   return (
     <footer className="mt-24 border-t border-border/60 bg-primary text-primary-foreground">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:px-6 sm:py-12 md:grid-cols-3">
@@ -82,52 +84,50 @@ export function SiteFooter() {
             <BrandMark className="h-12 w-12" />
             <span className="font-display text-xl font-semibold">FertaFind</span>
           </div>
-          <p className="mt-3 max-w-xs text-sm text-primary-foreground/80">
-            Smarter fertilizer decisions for growers. Compare quotes on one clear, cost-based basis.
-          </p>
+          <p className="mt-3 max-w-xs text-sm text-primary-foreground/80">{t.footer.tagline}</p>
         </div>
         <div className="text-sm">
-          <h2 className="font-display text-base">Product</h2>
+          <h2 className="font-display text-base">{t.footer.productHeading}</h2>
           <ul className="mt-3 space-y-2 text-primary-foreground/80">
             <li>
               <Link to="/analyze" className="hover:text-primary-foreground">
-                Analyze quotes
+                {t.nav.analyzeQuotes}
               </Link>
             </li>
             <li>
               <a href="/#how" className="hover:text-primary-foreground">
-                How it works
+                {t.nav.howItWorks}
               </a>
             </li>
             <li>
               <a href="/suppliers?relationship=partner" className="hover:text-primary-foreground">
-                Partners
+                {t.footer.partners}
               </a>
             </li>
             <li>
               <a href="/#faq" className="hover:text-primary-foreground">
-                FAQ
+                {t.nav.faq}
               </a>
             </li>
             <li>
               <a href="/resources" className="hover:text-primary-foreground">
-                Resources
+                {t.nav.resources}
               </a>
             </li>
             <li>
               <Link to="/terms" className="hover:text-primary-foreground">
-                Terms
+                {t.nav.terms}
               </Link>
             </li>
           </ul>
         </div>
         <div className="text-sm">
-          <h2 className="font-display text-base">Contact</h2>
+          <h2 className="font-display text-base">{t.footer.contactHeading}</h2>
           <p className="mt-3 text-primary-foreground/80">fertafind@gmail.com</p>
         </div>
       </div>
       <div className="border-t border-primary-foreground/10 py-4 text-center text-xs text-primary-foreground/80">
-        © {new Date().getFullYear()} FertaFind. All rights reserved.
+        © {new Date().getFullYear()} FertaFind. {t.footer.rights}
       </div>
     </footer>
   );

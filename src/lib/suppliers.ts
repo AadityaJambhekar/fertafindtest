@@ -456,12 +456,11 @@ export function filterSourcingOrigins(
 /** Distinct filter values across supplier companies AND sourcing origins. */
 export function directoryFilterOptions() {
   const companies = listSupplierCompanies();
-  const origins = listSourcingOrigins();
   const uniq = (arr: string[]) => [...new Set(arr.filter(Boolean))].sort();
   return {
     supplierTypes: uniq(companies.map((s) => s.supplierType)) as SupplierType[],
-    products: uniq([...companies.flatMap((s) => s.products), ...origins.map((o) => o.product)]),
-    origins: uniq([...companies.map((s) => s.country), ...origins.map((o) => o.origin)]),
+    products: uniq(companies.flatMap((s) => s.products)),
+    origins: uniq(companies.map((s) => s.country)),
   };
 }
 
@@ -473,10 +472,10 @@ export const SUPPLIERS_DIRECTORY = {
   path: "/suppliers",
   title: "Fertilizer supplier directory — FertaFind",
   description:
-    "A directory of fertilizer suppliers and global sourcing origins. FertaFind marks each supplier as verified or pending verification, and shows sourcing origins for market discovery only.",
+    "A directory of fertilizer suppliers on FertaFind. Each supplier is clearly marked as independently verified, supplier-provided, or pending verification.",
   ogTitle: "Fertilizer supplier directory",
   ogDescription:
-    "Browse fertilizer suppliers and global sourcing origins on FertaFind. Each entry is clearly marked verified or pending verification.",
+    "Browse fertilizer suppliers on FertaFind. Each entry is clearly marked as independently verified, supplier-provided, or pending verification.",
 };
 
 /** CollectionPage structured data listing the VERIFIED public suppliers only. */

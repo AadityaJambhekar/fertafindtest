@@ -22,6 +22,8 @@ import {
   suppliersCollectionLd,
   activeSupplierCount,
   publicSupplierCount,
+  directoryFilterOptions,
+  SUPPLIERS_DIRECTORY,
   FERTIEXPRESS_DOCUMENT_ID,
 } from "./suppliers.ts";
 
@@ -206,6 +208,36 @@ test("the public supplier directory no longer renders Global Sourcing Origins", 
   const src = directorySource();
   assert.ok(!/listSourcingOrigins/.test(src), "must not read sourcing origins");
   assert.ok(!/Global sourcing origins/i.test(src), "must not render the sourcing-origins section");
+});
+
+test("the directory blurb does not advertise the removed sourcing-origins section", () => {
+  const blurb = `${SUPPLIERS_DIRECTORY.description} ${SUPPLIERS_DIRECTORY.ogDescription}`;
+  assert.ok(!/sourcing origin/i.test(blurb), "blurb still promises sourcing origins");
+});
+
+test("no filter option leads to an empty directory", () => {
+  // Every offered product/origin/type must be reachable on at least one listed supplier,
+  // otherwise the user picks a filter and lands on nothing.
+  const companies = listSupplierCompanies();
+  const options = directoryFilterOptions();
+  for (const product of options.products) {
+    assert.ok(
+      companies.some((s) => s.products.includes(product)),
+      `product filter "${product}" matches no supplier`,
+    );
+  }
+  for (const origin of options.origins) {
+    assert.ok(
+      companies.some((s) => s.country === origin),
+      `origin filter "${origin}" matches no supplier`,
+    );
+  }
+  for (const type of options.supplierTypes) {
+    assert.ok(
+      companies.some((s) => s.supplierType === type),
+      `type filter "${type}" matches no supplier`,
+    );
+  }
 });
 
 test("the public supplier directory names no mentioned entity", () => {

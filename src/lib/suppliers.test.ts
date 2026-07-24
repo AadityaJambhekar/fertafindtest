@@ -305,19 +305,20 @@ test("origin filter: Russia returns the Russia origin and no supplier company", 
 test("directory filter options expose all supplier types, products and origins", () => {
   const opts = directoryFilterOptions();
   assert.deepEqual(opts.supplierTypes, ["importer", "manufacturer"]);
-  for (const product of ["KCL 60%", "Urea", "SSP", "Liquid nano-fertilizers"]) {
+  // Options are drawn only from listed companies, so every choice returns at least one
+  // supplier. Sourcing-origin products/origins are deliberately absent: that section is no
+  // longer rendered, so offering them would be a dead end.
+  for (const product of [
+    "Ammonium sulphate",
+    "Liquid nano-fertilizers",
+    "Potassium chloride (KCL)",
+    "Urea",
+  ]) {
     assert.ok(opts.products.includes(product), `products should include ${product}`);
   }
-  for (const origin of [
-    "Brazil",
-    "Russia",
-    "Germany",
-    "China",
-    "Poland",
-    "International Trading",
-    "Egypt",
-  ]) {
-    assert.ok(opts.origins.includes(origin), `origins should include ${origin}`);
+  assert.deepEqual(opts.origins, ["Brazil"]);
+  for (const stray of ["SSP", "KCL 60%"]) {
+    assert.ok(!opts.products.includes(stray), `${stray} must not be offered as a filter`);
   }
 });
 

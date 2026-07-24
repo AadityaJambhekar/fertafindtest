@@ -40,7 +40,11 @@ test("no dictionary value is empty or a leftover placeholder", () => {
   for (const locale of SUPPORTED_LOCALES) {
     for (const value of values(getDictionary(locale))) {
       assert.ok(value.trim().length > 0, `${locale} has an empty string`);
-      assert.ok(!/^TODO|^FIXME|^XXX|\bTRANSLATE\b/i.test(value), `${locale} has a placeholder`);
+      // Word-bounded: Portuguese "Todos"/"Todas" must not read as a "TODO" marker.
+      assert.ok(
+        !/^(TODO|FIXME|XXX)\b|\bTRANSLATE ME\b/i.test(value),
+        `${locale} has a placeholder: ${value}`,
+      );
     }
   }
 });

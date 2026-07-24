@@ -66,26 +66,26 @@ function SuppliersPage() {
           <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
             <li>
               <a href="/" className="transition-colors hover:text-foreground">
-                Home
+                {t.breadcrumb.home}
               </a>
             </li>
             <li className="flex items-center gap-2">
               <span aria-hidden="true">/</span>
               <span className="text-foreground" aria-current="page">
-                Suppliers
+                {t.breadcrumb.suppliers}
               </span>
             </li>
           </ol>
         </nav>
 
         <p className="mt-5 text-sm font-semibold uppercase tracking-[0.16em] content-accent">
-          Supplier network
+          {t.suppliers.eyebrow}
         </p>
         <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
           {t.suppliers.title}
         </h1>
         <p className="mt-3 max-w-3xl text-base leading-7 text-muted-foreground">
-          {SUPPLIERS_DIRECTORY.description} {t.suppliers.disclaimer}
+          {t.suppliers.description} {t.suppliers.disclaimer}
         </p>
 
         {/* Section 1: the supplier companies — shown up front, before the filters. */}
@@ -95,10 +95,11 @@ function SuppliersPage() {
               id="supplier-companies-heading"
               className="font-display text-2xl font-semibold text-foreground"
             >
-              Supplier companies
+              {t.suppliers.companiesHeading}
             </h2>
             <p className="text-sm text-muted-foreground">
-              {filteredCompanies.length} {filteredCompanies.length === 1 ? "company" : "companies"}
+              {filteredCompanies.length}{" "}
+              {filteredCompanies.length === 1 ? t.suppliers.companyOne : t.suppliers.companyMany}
             </p>
           </div>
 
@@ -129,8 +130,8 @@ function SuppliersPage() {
               }))
             }
             entries={[
-              { value: "supplier", label: SUPPLIER_BADGE_LABEL.supplier },
-              { value: "partner", label: SUPPLIER_BADGE_LABEL.partner },
+              { value: "supplier", label: t.badge.supplier },
+              { value: "partner", label: t.badge.partner },
             ]}
           />
           <FilterSelect
@@ -143,9 +144,9 @@ function SuppliersPage() {
               }))
             }
             entries={[
-              { value: "verified", label: "Verified" },
-              { value: "provided", label: "Supplier-provided" },
-              { value: "pending", label: "Pending verification" },
+              { value: "verified", label: t.suppliers.filterVerified },
+              { value: "provided", label: t.suppliers.filterProvided },
+              { value: "pending", label: t.suppliers.filterPending },
             ]}
           />
           <FilterSelect
@@ -154,9 +155,9 @@ function SuppliersPage() {
             onChange={(v) =>
               setFilters((f) => ({ ...f, type: v as SupplierDirectoryFilters["type"] }))
             }
-            entries={options.supplierTypes.map((t) => ({
-              value: t,
-              label: SUPPLIER_TYPE_LABEL[t],
+            entries={options.supplierTypes.map((type) => ({
+              value: type,
+              label: t.supplierType[type],
             }))}
           />
           <FilterSelect
@@ -169,7 +170,10 @@ function SuppliersPage() {
             label={t.suppliers.filterOrigin}
             value={filters.origin}
             onChange={(v) => setFilters((f) => ({ ...f, origin: v }))}
-            entries={options.origins.map((o) => ({ value: o, label: o }))}
+            entries={options.origins.map((o) => ({
+              value: o,
+              label: t.country[o as keyof typeof t.country] ?? o,
+            }))}
           />
           {isFiltering && (
             <button
@@ -184,12 +188,9 @@ function SuppliersPage() {
 
         <div className="mt-16 rounded-3xl border border-border bg-card p-6 sm:p-8">
           <h2 className="font-display text-2xl font-semibold text-foreground">
-            Already have quotes from a supplier?
+            {t.suppliers.ctaTitle}
           </h2>
-          <p className="mt-2 max-w-2xl text-muted-foreground">
-            FertaFind puts every fertilizer quote on one clear, cost-based footing — grade, pack
-            size and delivery — so you can compare them fairly.
-          </p>
+          <p className="mt-2 max-w-2xl text-muted-foreground">{t.suppliers.ctaBody}</p>
           <Link
             to="/analyze"
             className="mt-5 inline-flex h-12 items-center gap-2 rounded-full bg-primary px-7 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-soft)] transition-colors hover:bg-primary-soft"
@@ -215,6 +216,7 @@ function FilterSelect({
   onChange: (v: string) => void;
   entries: Array<{ value: string; label: string }>;
 }) {
+  const t = useDictionary();
   return (
     <label className="grid gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
       {label}
@@ -223,7 +225,7 @@ function FilterSelect({
         onChange={(e) => onChange(e.target.value)}
         className="min-w-40 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium normal-case tracking-normal text-foreground outline-none focus:border-primary focus:ring-4 focus:ring-primary/10"
       >
-        <option value="">All</option>
+        <option value="">{t.suppliers.filterAll}</option>
         {entries.map((entry) => (
           <option key={entry.value} value={entry.value}>
             {entry.label}
@@ -242,13 +244,14 @@ const BADGE_STYLE: Record<SupplierBadgeKind, string> = {
 };
 
 function SupplierBadge({ kind }: { kind: SupplierBadgeKind }) {
+  const t = useDictionary();
   const Icon = kind === "partner" ? Handshake : kind === "verified" ? ShieldCheck : Clock;
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${BADGE_STYLE[kind]}`}
     >
       <Icon className="h-3 w-3" aria-hidden="true" />
-      {SUPPLIER_BADGE_LABEL[kind]}
+      {t.badge[kind]}
     </span>
   );
 }
@@ -273,7 +276,13 @@ function SupplierLogo({ supplier }: { supplier: Supplier }) {
 }
 
 function SupplierCard({ supplier }: { supplier: Supplier }) {
-  const place = [supplier.city, supplier.state, supplier.country].filter(Boolean).join(", ");
+  const t = useDictionary();
+  const country = t.country[supplier.country as keyof typeof t.country] ?? supplier.country;
+  // Translated prose when we have it; otherwise the registry's own English description.
+  const description =
+    t.supplierDescription[supplier.slug as keyof typeof t.supplierDescription] ??
+    supplier.description;
+  const place = [supplier.city, supplier.state, country].filter(Boolean).join(", ");
   const kind = supplierBadgeKind(supplier);
   return (
     <Link
@@ -287,19 +296,15 @@ function SupplierCard({ supplier }: { supplier: Supplier }) {
       <h3 className="mt-4 font-display text-lg font-semibold text-foreground">
         {supplier.displayName}
       </h3>
-      <p className="mt-1 text-sm text-muted-foreground">
-        {SUPPLIER_TYPE_LABEL[supplier.supplierType]}
-      </p>
+      <p className="mt-1 text-sm text-muted-foreground">{t.supplierType[supplier.supplierType]}</p>
       {place && (
         <p className="mt-2 inline-flex items-center gap-1.5 text-sm text-muted-foreground">
           <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
           {place}
         </p>
       )}
-      {supplier.description && (
-        <p className="mt-3 flex-1 text-sm leading-6 text-muted-foreground">
-          {supplier.description}
-        </p>
+      {description && (
+        <p className="mt-3 flex-1 text-sm leading-6 text-muted-foreground">{description}</p>
       )}
       {kind === "pending" && (
         <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800">
@@ -308,7 +313,7 @@ function SupplierCard({ supplier }: { supplier: Supplier }) {
         </p>
       )}
       <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold content-accent">
-        View supplier
+        {t.suppliers.viewSupplier}
         <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
       </span>
     </Link>

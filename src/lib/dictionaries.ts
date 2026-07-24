@@ -88,6 +88,20 @@ const en = {
   suppliers: {
     title: "Our Supplier Network",
     subtitle: "Fertilizer suppliers listed on FertaFind.",
+    eyebrow: "Supplier network",
+    description:
+      "A directory of fertilizer suppliers on FertaFind. Each supplier is clearly marked as independently verified, supplier-provided, or pending verification.",
+    companiesHeading: "Supplier companies",
+    companyOne: "company",
+    companyMany: "companies",
+    viewSupplier: "View supplier",
+    ctaTitle: "Already have quotes from a supplier?",
+    ctaBody:
+      "FertaFind puts every fertilizer quote on one clear, cost-based footing — grade, pack size and delivery — so you can compare them fairly.",
+    filterAll: "All",
+    filterVerified: "Verified",
+    filterProvided: "Supplier-provided",
+    filterPending: "Pending verification",
     filterRelationship: "Relationship",
     filterVerification: "Verification",
     filterType: "Supplier type",
@@ -122,6 +136,42 @@ const en = {
   },
   notice: {
     untranslatedArticle: "This article is currently available in English only.",
+  },
+  supplierType: {
+    manufacturer: "Manufacturer",
+    distributor: "Distributor",
+    cooperative: "Cooperative",
+    retailer: "Retailer",
+    importer: "Importer",
+    trader: "Trading company",
+  },
+  badge: {
+    partner: "FertaFind Partner",
+    supplier: "FertaFind Supplier",
+    verified: "Public information verified",
+    pending: "Information pending verification",
+  },
+  breadcrumb: {
+    home: "Home",
+    suppliers: "Suppliers",
+  },
+  footer: {
+    tagline:
+      "Smarter fertilizer decisions for growers. Compare quotes on one clear, cost-based basis.",
+    productHeading: "Product",
+    contactHeading: "Contact",
+    partners: "Partners",
+    rights: "All rights reserved.",
+  },
+  country: {
+    Brazil: "Brazil",
+  },
+  // Supplier prose, keyed by slug. Company and product names are never translated.
+  supplierDescription: {
+    "fertiexpress-group":
+      "FertiExpress Group imports and distributes fertilizers for Brazilian agriculture, connecting international and national suppliers to growers across the country. Confirm grades, availability and final pricing before purchase.",
+    nanofert:
+      "Nanofert provides liquid nano-fertilizer products with documented crop and lifecycle programs. Confirm rates, availability and final pricing before purchase.",
   },
 } as const;
 
@@ -206,6 +256,20 @@ const ptBR: Dictionary = {
   suppliers: {
     title: "Nossa rede de fornecedores",
     subtitle: "Fornecedores de fertilizantes listados na FertaFind.",
+    eyebrow: "Rede de fornecedores",
+    description:
+      "Um diretório de fornecedores de fertilizantes na FertaFind. Cada fornecedor é claramente identificado como verificado de forma independente, informado pelo próprio fornecedor ou pendente de verificação.",
+    companiesHeading: "Empresas fornecedoras",
+    companyOne: "empresa",
+    companyMany: "empresas",
+    viewSupplier: "Ver fornecedor",
+    ctaTitle: "Já tem cotações de algum fornecedor?",
+    ctaBody:
+      "A FertaFind coloca cada cotação de fertilizante em uma base clara de custo — formulação, embalagem e entrega — para você comparar com justiça.",
+    filterAll: "Todos",
+    filterVerified: "Verificado",
+    filterProvided: "Informado pelo fornecedor",
+    filterPending: "Pendente de verificação",
     filterRelationship: "Relacionamento",
     filterVerification: "Verificação",
     filterType: "Tipo de fornecedor",
@@ -240,6 +304,41 @@ const ptBR: Dictionary = {
   },
   notice: {
     untranslatedArticle: "Este artigo está disponível apenas em inglês no momento.",
+  },
+  supplierType: {
+    manufacturer: "Fabricante",
+    distributor: "Distribuidora",
+    cooperative: "Cooperativa",
+    retailer: "Revenda",
+    importer: "Importadora",
+    trader: "Trading",
+  },
+  badge: {
+    partner: "Parceira FertaFind",
+    supplier: "Fornecedora FertaFind",
+    verified: "Informações públicas verificadas",
+    pending: "Informações pendentes de verificação",
+  },
+  breadcrumb: {
+    home: "Início",
+    suppliers: "Fornecedores",
+  },
+  footer: {
+    tagline:
+      "Decisões mais inteligentes sobre fertilizantes. Compare cotações em uma base clara de custo.",
+    productHeading: "Produto",
+    contactHeading: "Contato",
+    partners: "Parceiras",
+    rights: "Todos os direitos reservados.",
+  },
+  country: {
+    Brazil: "Brasil",
+  },
+  supplierDescription: {
+    "fertiexpress-group":
+      "A FertiExpress Group importa e distribui fertilizantes para a agricultura brasileira, conectando fornecedores internacionais e nacionais a produtores de todo o país. Confirme formulações, disponibilidade e preço final antes da compra.",
+    nanofert:
+      "A Nanofert oferece fertilizantes líquidos nano com programas documentados por cultura e ciclo. Confirme doses, disponibilidade e preço final antes da compra.",
   },
 };
 
